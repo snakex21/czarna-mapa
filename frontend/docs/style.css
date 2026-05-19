@@ -1,0 +1,1582 @@
+/* ==========================================================================
+   Plik: style.css
+   Opis: Główny arkusz stylów dla interaktywnej dokumentacji technicznej
+         systemu mapy katastralnej. Zawiera nowoczesny design z motywami
+         jasnym/ciemnym oraz zaawansowane animacje
+   ========================================================================== */
+
+/* ==========================================================================
+   IMPORTY I RESET
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   ZMIENNE CSS - SYSTEM KOLORÓW I TYPOGRAFII
+   ========================================================================== */
+:root {
+  /* Paleta kolorów - motyw ciemny */
+  --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --bg-main: #0f0f1e;
+  --bg-secondary: #1a1a2e;
+  --bg-section: rgba(255, 255, 255, 0.02);
+  --bg-card: rgba(255, 255, 255, 0.05);
+
+  /* Kolory tekstu */
+  --text-primary: #e4e4e7;
+  --text-secondary: #a1a1aa;
+  --text-accent: #818cf8;
+
+  /* Kolory akcyjne */
+  --primary-color: #818cf8;
+  --primary-hover: #6366f1;
+  --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+  /* Cienie i obramowania */
+  --border-color: rgba(255, 255, 255, 0.1);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 30px rgba(129, 140, 248, 0.3);
+
+  /* System typografii */
+  --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-code: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+  /* Czasowanie animacji */
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-medium: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Motyw jasny - nadpisanie zmiennych */
+body.light-mode {
+  --bg-main: #f8fafc;
+  --bg-container: #ffffff;
+  --bg-section: #ffffff;
+  --bg-card: #f8fafc;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --border-color: #e2e8f0;
+  --shadow-glow: 0 0 30px rgba(129, 140, 248, 0.1);
+}
+
+/* ==========================================================================
+   UKŁAD PODSTAWOWY
+   ========================================================================== */
+body {
+  font-family: var(--font-main);
+  background: var(--bg-main);
+  color: var(--text-primary);
+  line-height: 1.7;
+  font-size: 16px;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  transition: background-color var(--transition-medium), color var(--transition-medium);
+}
+
+/* Gradient tła - warstwa dolna */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  background: var(--bg-gradient);
+  opacity: 0.05;
+  z-index: -2;
+}
+
+/* Animowane tło - warstwa górna */
+body::after {
+  content: '';
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 20% 80%, rgba(129, 140, 248, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(167, 139, 250, 0.1) 0%, transparent 50%);
+  animation: float 20s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    transform: rotate(180deg);
+  }
+}
+
+/* ==========================================================================
+   KONTENER GŁÓWNY
+   ========================================================================== */
+.container {
+  max-width: 1000px;
+  margin: 40px auto;
+  background: var(--bg-container);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), var(--shadow-glow);
+  animation: slideUp 0.6s ease-out;
+  transition: background-color var(--transition-medium), border-color var(--transition-medium);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   NAGŁÓWEK STRONY
+   ========================================================================== */
+header {
+  padding: 60px 40px 40px;
+  text-align: center;
+  background: var(--accent-gradient);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Dekoracyjna fala SVG */
+header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.03" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,133.3C960,128,1056,96,1152,90.7C1248,85,1344,107,1392,117.3L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+  background-size: cover;
+  opacity: 0.3;
+}
+
+header h1 {
+  font-size: 2.8rem;
+  font-weight: 800;
+  margin: 0;
+  color: white;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.5px;
+  position: relative;
+  z-index: 1;
+}
+
+header .subtitle {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 10px;
+  font-weight: 400;
+  position: relative;
+  z-index: 1;
+}
+
+/* ==========================================================================
+   NAWIGACJA PRZYLEPNA
+   ========================================================================== */
+#navbar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  background: rgba(15, 15, 30, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 15px 80px;
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  position: -webkit-sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+/* Stan przewinięcia */
+#navbar.scrolled {
+  padding: 10px 80px;
+  background: rgba(15, 15, 30, 0.98);
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Kontener linków nawigacji */
+.nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 120px;
+  /* Zabezpieczenie przed nakładaniem się na ikony */
+}
+
+/* Przyciski akcji po prawej stronie */
+.nav-actions {
+  position: absolute;
+  right: 25px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  display: flex;
+  gap: 10px;
+}
+
+/* Linki nawigacji */
+#navbar a {
+  text-decoration: none;
+  color: var(--text-secondary);
+  padding: 10px 20px;
+  font-weight: 500;
+  border-radius: 10px;
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Efekt hover z gradientem */
+#navbar a::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--accent-gradient);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  border-radius: 10px;
+  z-index: -1;
+}
+
+#navbar a:hover {
+  color: white;
+  transform: translateY(-2px);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+#navbar a:hover::before {
+  opacity: 1;
+}
+
+/* Aktywny link */
+#navbar a.active {
+  background: var(--accent-gradient);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(129, 140, 248, 0.3);
+}
+
+/* Przyciski ikon */
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.icon-btn:hover {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+}
+
+/* Adaptacja dla motywu jasnego */
+body.light-mode #navbar {
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode #navbar.scrolled {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.15);
+}
+
+body.light-mode #navbar a:hover {
+  color: var(--text-primary);
+  background-color: #e2e8f0;
+}
+
+body.light-mode #navbar a:hover::before {
+  opacity: 0;
+}
+
+body.light-mode #navbar a.active {
+  background: var(--primary-color);
+}
+
+/* ==========================================================================
+   ZAWARTOŚĆ GŁÓWNA
+   ========================================================================== */
+main {
+  padding: 40px;
+}
+
+/* Sekcje z animacją pojawiania */
+section {
+  padding-top: 30px;
+  margin-top: 40px;
+  opacity: 1;
+  transform: translateY(0);
+  position: relative;
+  animation: fadeIn 0.8s ease-out;
+  animation-fill-mode: both;
+}
+
+/* Animacja wejścia dla sekcji */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/*  klasa dla animacji pojawiania */
+section.will-animate {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity var(--transition-slow), transform var(--transition-slow);
+}
+
+section.is-visible {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* Separator sekcji */
+section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 1px;
+  background: var(--accent-gradient);
+  opacity: 0.5;
+}
+
+section:first-child::before {
+  display: none;
+}
+
+/* ==========================================================================
+   TYPOGRAFIA
+   ========================================================================== */
+/* Nagłówek drugiego poziomu */
+h2 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: relative;
+}
+
+/* Animowane podkreślenie */
+h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  /* Ustaw stałą szerokość zamiast animacji od 0 */
+  height: 3px;
+  background: var(--accent-gradient);
+  border-radius: 2px;
+}
+
+/* Pozostałe nagłówki */
+h3 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 30px;
+  margin-bottom: 20px;
+}
+
+h4 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 25px;
+  margin-bottom: 15px;
+}
+
+/* Paragraf */
+p {
+  margin-bottom: 20px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   LINKI I LISTY
+   ========================================================================== */
+/* Linki z animowanym podkreśleniem */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+a:hover {
+  color: var(--primary-hover);
+}
+
+a:not(.btn):not(#navbar a)::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--accent-gradient);
+  transition: width var(--transition-fast);
+}
+
+a:not(.btn):not(#navbar a):hover::after {
+  width: 100%;
+}
+
+/* Listy z niestandardowymi markerami */
+ul,
+ol {
+  padding-left: 25px;
+  margin-bottom: 20px;
+}
+
+li {
+  margin-bottom: 12px;
+  color: var(--text-secondary);
+  position: relative;
+  padding-left: 10px;
+}
+
+ul li::before {
+  content: '▸';
+  position: absolute;
+  left: -15px;
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+/* ==========================================================================
+   BLOKI KODU
+   ========================================================================== */
+.code-block {
+  position: relative;
+  margin: 25px 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(15, 15, 30, 0.6);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+}
+
+pre {
+  background: transparent;
+  border: none;
+  padding: 20px;
+  overflow-x: auto;
+  margin: 0;
+}
+
+/* Niestandardowy scrollbar dla kodu */
+pre::-webkit-scrollbar {
+  height: 8px;
+}
+
+pre::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+pre::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 4px;
+}
+
+/* Formatowanie kodu */
+code {
+  font-family: var(--font-code);
+  font-size: 0.9em;
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+/* Kod inline */
+:not(pre)>code {
+  background: rgba(129, 140, 248, 0.1);
+  color: #c7d2fe;
+  border: 1px solid rgba(129, 140, 248, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--font-code);
+  font-weight: 500;
+}
+
+/* Przycisk kopiowania */
+.copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--accent-gradient);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85em;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.copy-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ==========================================================================
+   KOMPONENTY UI
+   ========================================================================== */
+/* Przycisk główny */
+.btn {
+  display: inline-block;
+  padding: 14px 30px;
+  background: var(--accent-gradient);
+  color: white;
+  border-radius: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  box-shadow: 0 4px 15px rgba(129, 140, 248, 0.3);
+  margin: 20px 0;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 25px rgba(129, 140, 248, 0.4);
+}
+
+/* ==========================================================================
+   KARTY INFORMACYJNE
+   ========================================================================== */
+.author-info,
+.chapter-intro,
+.important-note,
+.tool-description {
+  margin: 25px 0;
+  padding: 25px;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Karta autora */
+.author-info {
+  background: rgba(129, 140, 248, 0.1);
+  border: 1px solid rgba(129, 140, 248, 0.3);
+  border-left: 4px solid var(--primary-color);
+}
+
+/* Wprowadzenie do rozdziału */
+.chapter-intro {
+  background: rgba(167, 139, 250, 0.05);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  font-style: italic;
+}
+
+/* Ważna notka */
+.important-note {
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-left: 4px solid #fbbf24;
+}
+
+.important-note strong {
+  color: #fbbf24;
+}
+
+/* Opis narzędzia */
+.tool-description {
+  background: rgba(34, 211, 238, 0.05);
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  border-left: 4px solid #22d3ee;
+}
+
+/* ==========================================================================
+   STRUKTURA FOLDERÓW
+   ========================================================================== */
+.folder-structure {
+  background: rgba(15, 15, 30, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 25px;
+  margin: 25px 0;
+}
+
+.folder-structure ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.folder-structure li {
+  padding: 12px 15px;
+  margin-bottom: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.folder-structure li:hover {
+  background: rgba(129, 140, 248, 0.1);
+  border-color: rgba(129, 140, 248, 0.3);
+  transform: translateX(5px);
+}
+
+.folder-structure code {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   DIAGRAM ARCHITEKTURY
+   ========================================================================== */
+.architecture-diagram {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 30px 0;
+  margin: 30px 0;
+}
+
+/* Komponent diagramu */
+.component {
+  background: rgba(129, 140, 248, 0.05);
+  border: 2px solid rgba(129, 140, 248, 0.3);
+  border-radius: 12px;
+  padding: 25px;
+  width: 240px;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all var(--transition-medium);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Efekt hover dla komponentu */
+.component::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: var(--accent-gradient);
+  opacity: 0;
+  transition: opacity var(--transition-medium);
+  transform: rotate(45deg);
+}
+
+.component:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(129, 140, 248, 0.3);
+  border-color: var(--primary-color);
+}
+
+.component:hover::before {
+  opacity: 0.05;
+}
+
+/* Elementy komponentu */
+.component strong {
+  font-size: 1.3em;
+  color: var(--primary-color);
+  margin-bottom: 10px;
+  display: block;
+}
+
+.component span {
+  color: var(--text-secondary);
+  font-size: 0.95em;
+  line-height: 1.5;
+}
+
+.component small {
+  color: var(--text-secondary);
+  font-size: 0.85em;
+  margin-top: 15px;
+  opacity: 0.8;
+}
+
+/* Strzałka połączenia */
+.arrow {
+  font-size: 2rem;
+  color: var(--primary-color);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+/* ==========================================================================
+   TABELE
+   ========================================================================== */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 25px 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  background: rgba(15, 15, 30, 0.4);
+}
+
+table th,
+table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Nagłówek tabeli */
+table th {
+  background: var(--accent-gradient);
+  color: white;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85em;
+  letter-spacing: 0.5px;
+}
+
+table tr:last-child td {
+  border-bottom: none;
+}
+
+table tr:hover {
+  background: rgba(129, 140, 248, 0.05);
+}
+
+/* Kod w tabelach */
+table code {
+  color: var(--primary-color);
+  background: rgba(129, 140, 248, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* ==========================================================================
+   GALERIA I ZRZUTY EKRANU
+   ========================================================================== */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 25px;
+  margin: 30px 0;
+}
+
+.gallery figure {
+  margin: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(15, 15, 30, 0.4);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-medium);
+  box-shadow: var(--shadow-md);
+  position: relative;
+  cursor: zoom-in;
+}
+
+/* Ikona lupy przy hover */
+.gallery figure::after {
+  content: '🔍';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  font-size: 3rem;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 15px;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  pointer-events: none;
+}
+
+.gallery figure:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(129, 140, 248, 0.3);
+  border-color: rgba(129, 140, 248, 0.5);
+}
+
+.gallery figure:hover::after {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.gallery img {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: transform var(--transition-medium);
+}
+
+.gallery figure:hover img {
+  transform: scale(1.1);
+}
+
+.gallery figcaption {
+  padding: 15px;
+  font-size: 0.9em;
+  color: var(--text-secondary);
+  text-align: center;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Pojedyncze zrzuty ekranu */
+.screenshot {
+  max-width: 100%;
+  border-radius: 12px;
+  margin: 20px 0;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-medium);
+  cursor: zoom-in;
+}
+
+.screenshot:hover {
+  transform: scale(1.02);
+  box-shadow: 0 15px 50px rgba(129, 140, 248, 0.3);
+}
+
+/* Placeholder dla brakujących zrzutów */
+.screenshot-placeholder {
+  margin: 30px 0;
+  padding: 60px 40px;
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.1) 0%, rgba(167, 139, 250, 0.1) 100%);
+  border: 2px dashed rgba(129, 140, 248, 0.5);
+  border-radius: 12px;
+  text-align: center;
+  min-height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.screenshot-placeholder::before {
+  content: '📸';
+  position: absolute;
+  font-size: 4rem;
+  opacity: 0.1;
+  animation: float 3s ease-in-out infinite;
+}
+
+.screenshot-placeholder p {
+  color: var(--text-secondary);
+  font-style: italic;
+  font-weight: 500;
+  margin: 0;
+  z-index: 1;
+  position: relative;
+}
+
+/* ==========================================================================
+   LIGHTBOX DLA GALERII
+   ========================================================================== */
+.lightbox {
+  display: none;
+  position: fixed;
+  z-index: 2000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.95);
+  animation: fadeInLightbox 0.3s ease;
+}
+
+.lightbox.active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox-content {
+  position: relative;
+  max-width: 90%;
+  max-height: 90%;
+  animation: zoomIn 0.3s ease;
+}
+
+.lightbox-image {
+  width: 100%;
+  height: auto;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: zoom-in;
+  user-select: none;
+}
+
+.lightbox-image.zoomed {
+  transform: scale(2);
+  cursor: zoom-out;
+}
+
+/* Przycisk zamknięcia */
+.lightbox-close {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  color: white;
+  font-size: 40px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.lightbox-close:hover {
+  transform: rotate(90deg);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Nawigacja lightbox */
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  font-size: 50px;
+  cursor: pointer;
+  user-select: none;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.lightbox-nav:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.lightbox-prev {
+  left: 20px;
+}
+
+.lightbox-next {
+  right: 20px;
+}
+
+/* Opis i licznik */
+.lightbox-caption {
+  position: absolute;
+  bottom: -50px;
+  left: 0;
+  right: 0;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  font-size: 16px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 8px;
+}
+
+.lightbox-counter {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  color: white;
+  font-size: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 5px 15px;
+  border-radius: 20px;
+}
+
+/* Animacje lightbox */
+@keyframes zoomIn {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInLightbox {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* ==========================================================================
+   SEKCJE TECHNICZNE
+   ========================================================================== */
+.tech-subsection,
+.subsection {
+  margin-top: 50px;
+  padding-top: 30px;
+  border-top: 1px solid rgba(129, 140, 248, 0.2);
+  position: relative;
+}
+
+/* Linia akcentu */
+.tech-subsection::before,
+.subsection::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 0;
+  width: 100px;
+  height: 4px;
+  background: var(--accent-gradient);
+  border-radius: 2px;
+}
+
+.tech-subsection:first-child,
+.subsection:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.tech-subsection:first-child::before,
+.subsection:first-child::before {
+  display: none;
+}
+
+/* Nagłówek sekcji technicznej */
+.tech-subsection h3 {
+  font-size: 1.8rem;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 20px;
+}
+
+/* ==========================================================================
+   DIAGRAMY MERMAID
+   ========================================================================== */
+.mermaid-diagram {
+  margin: 30px 0;
+  padding: 30px;
+  background: rgba(15, 15, 30, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.mermaid-diagram pre {
+  background: transparent;
+  padding: 0;
+}
+
+/* ==========================================================================
+   NIESTANDARDOWE PASKI PRZEWIJANIA
+   ========================================================================== */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 6px;
+  border: 2px solid var(--bg-main);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-hover);
+}
+
+/* ==========================================================================
+   ADAPTACJE DLA MOTYWU JASNEGO
+   ========================================================================== */
+/* Struktura folderów w motywie jasnym */
+body.light-mode .folder-structure {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+body.light-mode .folder-structure li {
+  background: white;
+  border: 1px solid var(--border-color);
+}
+
+body.light-mode .folder-structure li:hover {
+  background: #eef2ff;
+  border-color: var(--primary-color);
+}
+
+body.light-mode .folder-structure code {
+  color: var(--primary-hover);
+}
+
+/* Tabele w motywie jasnym */
+body.light-mode table {
+  background: #ffffff;
+}
+
+body.light-mode table th {
+  background: var(--primary-color);
+}
+
+body.light-mode table tr:hover {
+  background: #eef2ff !important;
+}
+
+body.light-mode table tr:hover td,
+body.light-mode table tr:hover th,
+body.light-mode table tr:hover a {
+  color: #0f172a !important;
+}
+
+body.light-mode table tr:hover code {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Bloki kodu w motywie jasnym */
+body.light-mode .code-block {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+body.light-mode .code-block pre,
+body.light-mode .code-block pre code {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+body.light-mode .code-block pre::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+body.light-mode .code-block pre::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border: 2px solid #ffffff;
+}
+
+/* Kod inline w motywie jasnym */
+body.light-mode :not(pre)>code {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+}
+
+/* Kod w nagłówkach - motyw jasny */
+body.light-mode h2 code,
+body.light-mode h3 code {
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-text-fill-color: #0f172a !important;
+  color: #0f172a !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* Upewnienie się, że kod w blokach nie ma dodatkowych styli */
+pre>code,
+.code-block pre>code {
+  display: block;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Wysoki kontrast tekstu w motywie jasnym */
+body.light-mode p,
+body.light-mode li,
+body.light-mode td,
+body.light-mode th,
+body.light-mode .gallery figcaption,
+body.light-mode .component span,
+body.light-mode .component small,
+body.light-mode .screenshot-placeholder p,
+body.light-mode .author-info,
+body.light-mode .chapter-intro,
+body.light-mode .tool-description,
+body.light-mode .important-note,
+body.light-mode .folder-structure li {
+  color: var(--text-primary) !important;
+}
+
+/* ==========================================================================
+   RESPONSYWNOŚĆ
+   ========================================================================== */
+@media (max-width: 768px) {
+  .container {
+    margin: 20px;
+    border-radius: 15px;
+  }
+
+  header {
+    padding: 40px 20px 30px;
+  }
+
+  header h1 {
+    font-size: 2rem;
+  }
+
+  main {
+    padding: 20px;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+  }
+
+  h3 {
+    font-size: 1.4rem;
+  }
+
+  .architecture-diagram {
+    flex-direction: column;
+  }
+
+  .component {
+    width: 100%;
+  }
+
+  .arrow {
+    transform: rotate(90deg);
+  }
+
+  table {
+    font-size: 0.9em;
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table th,
+  table td {
+    padding: 10px 8px;
+    min-width: 100px;
+  }
+
+  #navbar {
+    padding: 10px;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .nav-links {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 5px;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+  }
+
+  .nav-links::-webkit-scrollbar {
+    display: none;
+  }
+
+  #navbar a {
+    padding: 6px 12px;
+    font-size: 0.8em;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .nav-actions {
+    position: static;
+    transform: none;
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Lightbox na urządzeniach mobilnych */
+  .lightbox {
+    padding: 0;
+  }
+
+  .lightbox-content {
+    max-width: 100%;
+    max-height: 100vh;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lightbox-image {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    touch-action: pinch-zoom;
+  }
+
+  .lightbox-nav {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 28px;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2001;
+  }
+
+  .lightbox-prev {
+    left: 10px;
+  }
+
+  .lightbox-next {
+    right: 10px;
+  }
+
+  .lightbox-close {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    font-size: 32px;
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+    z-index: 2001;
+  }
+
+  /* Caption dla zdjęć */
+  .lightbox-caption {
+    position: fixed;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: white;
+    font-size: 14px;
+    padding: 10px 20px;
+    background: rgba(0, 0, 0, 0.5);
+  }
+}
+
+@media (max-width: 480px) {
+  header h1 {
+    font-size: 1.6rem;
+  }
+
+  header .subtitle {
+    font-size: 1rem;
+  }
+
+  .gallery {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   STYLE DO DRUKU
+   ========================================================================== */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+
+  .container {
+    box-shadow: none;
+    border: none;
+  }
+
+  #navbar,
+  .copy-btn,
+  .icon-btn,
+  .lightbox {
+    display: none;
+  }
+
+  a {
+    color: black;
+    text-decoration: underline;
+  }
+}
+
+/* ==========================================================================
+   ANIMACJE DODATKOWE
+   ========================================================================== */
+/* Efekt shimmer dla ładowania */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.loading {
+  background: linear-gradient(90deg, transparent, rgba(129, 140, 248, 0.3), transparent);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ==========================================================================
+   DEPLOYMENT GUIDE - DODATKOWE STYLE
+   ========================================================================== */
+
+/* Info box - niebieski */
+.info-box {
+  background: rgba(59, 130, 246, 0.1);
+  border-left: 4px solid #3b82f6;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  border-radius: 8px;
+}
+
+.info-box h4 {
+  color: #3b82f6;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+/* Warning box - pomarańczowy */
+.warning-box {
+  background: rgba(251, 146, 60, 0.1);
+  border-left: 4px solid #fb923c;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  border-radius: 8px;
+}
+
+.warning-box i {
+  color: #fb923c;
+  margin-right: 0.5rem;
+}
+
+/* Success box - zielony */
+.success-box {
+  background: rgba(34, 197, 94, 0.1);
+  border-left: 4px solid #22c55e;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  border-radius: 8px;
+}
+
+.success-box i {
+  color: #22c55e;
+  margin-right: 0.5rem;
+}
+
+/* Solution box - fioletowy */
+.solution-box {
+  background: rgba(168, 85, 247, 0.1);
+  border-left: 4px solid #a855f7;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  border-radius: 8px;
+}
+
+/* Light mode adjustments for boxes */
+.light-mode .info-box {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.light-mode .warning-box {
+  background: rgba(251, 146, 60, 0.15);
+}
+
+.light-mode .success-box {
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.light-mode .solution-box {
+  background: rgba(168, 85, 247, 0.15);
+}

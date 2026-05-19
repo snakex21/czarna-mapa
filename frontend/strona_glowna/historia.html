@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <script src="/assets/js/api.js"></script>
+    <!-- ==========================================================================
+         METADANE I KONFIGURACJA
+         ========================================================================== -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Historia miejscowości Czarna - 1882 rok, mieszkańcy i ich posiadłości odtworzone z ksiąg katastralnych">
+    <meta name="keywords" content="Czarna, historia, 1882, księgi katastralne, Debicki">
+    <title>Krótki Rys Historyczny - Czarna</title>
+
+    <!-- ==========================================================================
+         STYLE ZEWNĘTRZNE
+         ========================================================================== -->
+    <!-- Font Awesome - ikony -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts - typografia -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
+    
+    <!-- Style aplikacji -->
+    <link rel="stylesheet" href="assets_index/historia_style.css" />
+</head>
+<body>
+    <!-- ==========================================================================
+         TŁO I EFEKTY WIZUALNE
+         ========================================================================== -->
+    <div class="map-background"></div>
+    <div class="overlay-gradient"></div>
+    
+    <!-- ==========================================================================
+         NAWIGACJA GÓRNA
+         ========================================================================== -->
+    <nav class="top-navigation">
+        <div class="nav-container">
+            <a href="index.html" class="nav-back">
+                <i class="fas fa-arrow-left"></i>
+                <span>Strona główna</span>
+            </a>
+            <div class="nav-title">
+                <i class="fas fa-landmark"></i>
+                <span>Historia - Czarna</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ==========================================================================
+         GŁÓWNY KONTENER ARTYKUŁU
+         ========================================================================== -->
+    <div class="article-container">
+        
+        <!-- Nagłówek artykułu z metadanymi -->
+        <header class="article-header">
+            <div class="header-decoration">
+                <i class="fas fa-feather-alt"></i>
+            </div>
+            <h1>Czarna</h1>
+            <h2>Jej mieszkańcy, ich posiadłości odtworzone z zapisów ksiąg katastralnych zaznaczone na mapie z 1882 roku</h2>
+            <div class="header-meta">
+                <span><i class="fas fa-calendar-alt"></i> Rok mapy: 1882</span>
+                <span><i class="fas fa-map-marked-alt"></i> powiat Debicki</span>
+                <span><i class="fas fa-globe"></i> region Malopolska</span>
+            </div>
+        </header>
+
+        <!-- ==========================================================================
+             TREŚĆ ARTYKUŁU
+             ========================================================================== -->
+        <article class="article-content">
+            <!-- Sekcja wprowadzająca -->
+            <div class="section-header">
+                <h3>Krótki rys historyczny</h3>
+                <div class="section-decoration"></div>
+            </div>
+            
+            <!-- Akapit wprowadzający -->
+            <p class="article-lead">
+                <p>Czarna to wies polozona w powiecie debickim, w wojewodztwie podkarpackim. Historia miejscowosci siega czasow sredniowiecza, a jej nazwa pochodzi od ciemnych lasow porastajacych te tereny.</p>
+            </p>
+
+            <!-- Galeria historycznych zdjęć (generowana dynamicznie przez location-data.js) -->
+            <div id="history-photo-gallery" class="image-gallery">
+                <p class="no-photos">Ładowanie zdjęć historycznych...</p>
+                <noscript>
+                    <p class="no-photos">JavaScript jest wyłączony. Galeria zdjęć wymaga JavaScript do działania.</p>
+                </noscript>
+            </div>
+
+            <!-- Główna część historyczna -->
+            <div class="content-section">
+                <p>
+                    <p>W 1882 roku przeprowadzono szczegolowy spis katastralny, ktory stanowi bezcenne zrodlo informacji o strukturze wlasnosci, rozplanowaniu dzialek i mieszkancach wsi.</p>
+                </p>
+                
+                <!-- Wyróżniona informacja statystyczna -->
+                <div class="highlight-box">
+                    <i class="fas fa-info-circle"></i>
+                    <p>
+                        <p>Dzieki zachowanym ksiegom metrykalnym i protokolom katastralnym mozemy dzis odtworzyc pelny obraz spolecznosci Czarnej z konca XIX wieku.</p>
+                    </p>
+                </div>
+            </div>
+        </article>
+
+        <!-- ==========================================================================
+             STOPKA Z NAWIGACJĄ
+             ========================================================================== -->
+        <footer class="article-footer">
+            <div class="footer-navigation">
+                <a href="index.html" class="footer-link">
+                    <i class="fas fa-home"></i>
+                    <span>Strona główna</span>
+                </a>
+                <a href="../mapa/mapa.html" class="footer-link primary">
+                    <i class="fas fa-map"></i>
+                    <span>Zobacz mapę</span>
+                </a>
+                <a href="../docs/index.html" class="footer-link">
+                    <i class="fas fa-book"></i>
+                    <span>Dokumentacja</span>
+                </a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ==========================================================================
+         ELEMENTY INTERFEJSU
+         ========================================================================== -->
+    <!-- Przycisk przewijania do góry -->
+    <button id="scrollToTop" class="scroll-to-top" title="Przewiń do góry">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
+    <!-- ==========================================================================
+         SKRYPTY
+         ========================================================================== -->
+    <script>
+        /**
+         * Obsługa przycisku przewijania do góry strony
+         */
+        const scrollBtn = document.getElementById('scrollToTop');
+
+        // Pokazywanie/ukrywanie przycisku w zależności od pozycji przewijania
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                scrollBtn.classList.add('visible');
+            } else {
+                scrollBtn.classList.remove('visible');
+            }
+        });
+
+        // Płynne przewijanie do góry po kliknięciu
+        scrollBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        /**
+         * Modal do powiększania zdjęć w galerii
+         * Uwaga: event listenery dla .image-wrapper są już dodawane przez location-data.js
+         * Ten kod jest pozostawiony jako fallback, ale nie będzie działał dla dynamicznie generowanych zdjęć
+         */
+    </script>
+
+    <!-- Dane miejscowości (automatycznie generowane przez launcher) -->
+    <!-- Dynamiczny cache busting przez JavaScript -->
+    <script>
+        // Wymuś przeładowanie przez dodanie timestamp do URL
+        const timestamp = new Date().getTime();
+        const configScript = document.createElement('script');
+        configScript.src = `/location_js/location-config.js?t=${timestamp}`;
+        configScript.onload = function() {
+            console.log('✅ location-config.js załadowany');
+            if (window.LOCATION_CONFIG) {
+                console.log('✅ LOCATION_CONFIG:', window.LOCATION_CONFIG);
+                console.log('✅ historyPhotos:', window.LOCATION_CONFIG.historyPhotos);
+            } else {
+                console.error('❌ LOCATION_CONFIG NIE został załadowany!');
+            }
+
+            // Po załadowaniu config, załaduj data
+            const dataScript = document.createElement('script');
+            dataScript.src = `/location_js/location-data.js?t=${timestamp}`;
+            document.body.appendChild(dataScript);
+        };
+        document.body.appendChild(configScript);
+    </script>
+
+    <!-- Sprawdzenie czy skrypty zostały załadowane -->
+    <script>
+        // Poczekaj na załadowanie DOM
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const gallery = document.getElementById('history-photo-gallery');
+                if (!window.LOCATION_CONFIG) {
+                    console.error('❌ LOCATION_CONFIG nie został załadowany!');
+                    console.error('Upewnij się, że otwierasz stronę przez backend server (http://localhost:5000/strona_glowna/historia.html)');
+                    if (gallery) {
+                        gallery.innerHTML = '<p class="no-photos">⚠️ Błąd: Brak konfiguracji miejscowości. Upewnij się, że otwierasz stronę przez backend server (http://localhost:5000/strona_glowna/historia.html)</p>';
+                    }
+                } else if (!window.LOCATION_CONFIG.historyPhotos || window.LOCATION_CONFIG.historyPhotos.length === 0) {
+                    console.warn('⚠️ Brak zdjęć historycznych w konfiguracji');
+                    if (gallery && gallery.innerHTML.includes('Ładowanie')) {
+                        gallery.innerHTML = '<p class="no-photos">Brak zdjęć historycznych dla tej miejscowości.</p>';
+                    }
+                } else {
+                    console.log(`✓ Załadowano ${window.LOCATION_CONFIG.historyPhotos.length} zdjęć historycznych`);
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>

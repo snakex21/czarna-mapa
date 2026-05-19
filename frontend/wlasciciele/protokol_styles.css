@@ -1,0 +1,1562 @@
+/* ==========================================================================
+   Plik: protokol_styles.css
+   Opis: Arkusz stylów dla strony protokołu katastralnego. Zapewnia spójność
+         z aplikacją mapy oraz obsługę drukowania i eksportu do PDF.
+   ========================================================================== */
+
+/* ==========================================================================
+   RESET I ZMIENNE GLOBALNE
+   ========================================================================== */
+:root {
+    /* Kolory główne - spójne z aplikacją mapy */
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --primary-color: #667eea;
+    --primary-dark: #5a67d8;
+    --secondary-color: #764ba2;
+
+    /* Paleta tła */
+    --bg-main: #f4f7f6;
+    --bg-card: white;
+    --bg-hover: #f7fafc;
+
+    /* Paleta tekstu */
+    --text-primary: #2d3748;
+    --text-secondary: #718096;
+    --text-light: #a0aec0;
+    --text-on-primary: white;
+
+    /* Elementy UI */
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.15);
+    --radius: 12px;
+    --radius-sm: 8px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: var(--text-primary);
+    background: var(--bg-main);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* ==========================================================================
+   LAYOUT GŁÓWNY
+   ========================================================================== */
+
+/* Gradient tła - identyczny jak w aplikacji mapy */
+.background-gradient {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--primary-gradient);
+    z-index: -1;
+}
+
+#app-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.95);
+}
+
+/* ==========================================================================
+   NAGŁÓWEK APLIKACJI
+   ========================================================================== */
+.top-header {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.app-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.protocol-badge {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.header-right {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.header-btn {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.header-btn:hover {
+    background: var(--primary-gradient);
+    color: white;
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.header-btn i {
+    font-size: 1rem;
+}
+
+/* ==========================================================================
+   GŁÓWNA ZAWARTOŚĆ
+   ========================================================================== */
+.main-content {
+    flex: 1;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Sekcja tytułowa protokołu */
+.protocol-title-section {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+    text-align: center;
+}
+
+.protocol-main-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+
+.protocol-location {
+    display: block;
+    font-size: 1.25rem;
+    color: var(--primary-color);
+    margin-top: 0.5rem;
+}
+
+.protocol-meta {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 1rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.protocol-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ==========================================================================
+   KARTY ZAWARTOŚCI
+   ========================================================================== */
+.content-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.content-card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.content-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.card-header {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    padding: 1rem 1.5rem;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.card-header i {
+    color: var(--primary-color);
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* ==========================================================================
+   SEKCJA WŁAŚCICIELA
+   ========================================================================== */
+.owner-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 1rem;
+    background: var(--bg-hover);
+    border-radius: var(--radius-sm);
+    margin-bottom: 1rem;
+}
+
+.owner-name-main {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.owner-secondary-info {
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+.owner-details-value {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* ==========================================================================
+   PRZEŁĄCZNIK WIDOKÓW DZIAŁEK
+   ========================================================================== */
+.view-switcher {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin: 2rem 0;
+    padding: 1rem;
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+}
+
+.switch-btn {
+    flex: 1;
+    max-width: 250px;
+    padding: 0.75rem 1.5rem;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.switch-btn:hover {
+    background: var(--bg-hover);
+}
+
+.switch-btn.active {
+    background: var(--primary-gradient);
+    color: white;
+    border-color: transparent;
+}
+
+.switch-btn i {
+    font-size: 1.1rem;
+}
+
+/* ==========================================================================
+   SEKCJA DZIAŁEK
+   ========================================================================== */
+.plots-summary {
+    padding: 1rem;
+    background: var(--bg-hover);
+    border-radius: var(--radius-sm);
+}
+
+.plot-numbers {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.plot-subtype {
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.plot-summary {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.details-toggle-btn {
+    background: transparent;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    transition: background 0.3s ease;
+}
+
+.details-toggle-btn:hover {
+    background: var(--bg-hover);
+}
+
+.plot-details-list {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.plot-category-block {
+    margin-bottom: 1rem;
+}
+
+.plot-category-block h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+/* ==========================================================================
+   PRZYCISKI AKCJI
+   ========================================================================== */
+.action-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Warianty kolorystyczne przycisków */
+.map-btn {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+}
+
+.tree-btn {
+    background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+    color: white;
+}
+
+.map-view-btn {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+}
+
+.protocol-btn {
+    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+    color: var(--text-primary);
+}
+
+.both-btn {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+.map-buttons-container {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   ZAWARTOŚĆ INFORMACYJNA
+   ========================================================================== */
+.info-content {
+    white-space: pre-wrap;
+    line-height: 1.8;
+    color: var(--text-primary);
+    padding: 1rem;
+    background: var(--bg-hover);
+    border-radius: var(--radius-sm);
+}
+
+.info-content a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    border-bottom: 1px dotted var(--primary-color);
+    transition: all 0.3s ease;
+}
+
+.info-content a:hover {
+    color: var(--primary-dark);
+    border-bottom-style: solid;
+}
+
+/* ==========================================================================
+   FORMATOWANIE UŁAMKÓW I LICZB
+   ========================================================================== */
+
+/* Style ułamków w sekcji działek */
+.plots-section .whole-number {
+    display: inline-block;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin: 0 0.2rem;
+    vertical-align: baseline;
+    font-size: 1.1em;
+}
+
+.plots-section .fraction {
+    display: inline-block;
+    position: relative;
+    vertical-align: -0.4em;
+    margin: 0 0.2rem;
+    line-height: 1;
+    font-size: 1.1em;
+    text-align: center;
+}
+
+.plots-section .fraction .numerator,
+.plots-section .fraction .denominator {
+    display: block;
+    padding: 0 0.1em;
+    font-size: 0.6em;
+    line-height: 0.9;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.plots-section .fraction .numerator {
+    border-bottom: 1.5px solid var(--primary-color);
+    padding-bottom: 1px;
+}
+
+/* Style ułamków w treści protokołu */
+.info-content .whole-number,
+.protocol-content-section .whole-number,
+#genealogySection .whole-number,
+#wspolwlasnoscSection .whole-number,
+#powiazaniaTransakcjeSection .whole-number,
+#interpretacjaWnioskiSection .whole-number {
+    display: inline;
+    font-size: inherit;
+    font-weight: normal;
+    color: inherit;
+    margin: 0;
+    vertical-align: baseline;
+}
+
+.info-content .fraction,
+.protocol-content-section .fraction,
+#genealogySection .fraction,
+#wspolwlasnoscSection .fraction,
+#powiazaniaTransakcjeSection .fraction,
+#interpretacjaWnioskiSection .fraction {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 3px;
+    line-height: 1;
+    font-size: 1em;
+    text-align: center;
+    vertical-align: 0.45em;
+}
+
+.info-content .fraction .numerator,
+.info-content .fraction .denominator,
+.protocol-content-section .fraction .numerator,
+.protocol-content-section .fraction .denominator,
+#genealogySection .fraction .numerator,
+#genealogySection .fraction .denominator,
+#wspolwlasnoscSection .fraction .numerator,
+#wspolwlasnoscSection .fraction .denominator,
+#powiazaniaTransakcjeSection .fraction .numerator,
+#powiazaniaTransakcjeSection .fraction .denominator,
+#interpretacjaWnioskiSection .fraction .numerator,
+#interpretacjaWnioskiSection .fraction .denominator {
+    display: block;
+    padding: 0 2px;
+    font-size: 0.8em;
+    line-height: 1.1;
+    font-weight: normal;
+    color: inherit;
+}
+
+.info-content .fraction .numerator,
+.protocol-content-section .fraction .numerator,
+#genealogySection .fraction .numerator,
+#wspolwlasnoscSection .fraction .numerator,
+#powiazaniaTransakcjeSection .fraction .numerator,
+#interpretacjaWnioskiSection .fraction .numerator {
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 1px;
+    transform: translateY(0.02em);
+}
+
+/* Style ułamków w sekcji właściciela */
+.owner-info .whole-number {
+    display: inline-block;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin: 0 0.2rem;
+    vertical-align: baseline;
+    font-size: 1.1em;
+}
+
+.owner-info .fraction {
+    display: inline-block;
+    position: relative;
+    vertical-align: -0.4em;
+    margin: 0 0.2rem;
+    line-height: 1;
+    font-size: 1.1em;
+    text-align: center;
+}
+
+.owner-info .fraction .numerator,
+.owner-info .fraction .denominator {
+    display: block;
+    padding: 0 0.1em;
+    font-size: 0.6em;
+    line-height: 0.9;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.owner-info .fraction .numerator {
+    border-bottom: 1.5px solid var(--primary-color);
+    padding-bottom: 1px;
+}
+
+/* Podświetlenie dla lepszej czytelności */
+@media screen {
+
+    .info-content .fraction,
+    .protocol-content-section .fraction {
+        background: rgba(102, 126, 234, 0.05);
+        padding: 0 3px;
+        border-radius: 2px;
+    }
+
+    /* Efekt hover tylko dla działek i właściciela */
+    .plots-section .fraction:hover,
+    .owner-info .fraction:hover {
+        transform: scale(1.05);
+    }
+}
+
+/* ==========================================================================
+   MODAL SKANÓW PROTOKOŁU
+   ========================================================================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(5px);
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    color: white;
+    font-size: 2.5rem;
+    cursor: pointer;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.modal-close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg);
+}
+
+.modal-image-container {
+    width: 90%;
+    height: 85%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: var(--radius);
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+}
+
+.modal-nav-controls {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.modal-nav-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.modal-nav-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.modal-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.page-counter {
+    color: white;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+/* ==========================================================================
+   DIALOG DRZEWA GENEALOGICZNEGO
+   ========================================================================== */
+.tree-dialog {
+    width: 95vw;
+    height: 92vh;
+    max-width: none;
+    border: none;
+    border-radius: var(--radius);
+    padding: 0;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    margin: auto;
+}
+
+.tree-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+.dialog-header {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dialog-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.dialog-close-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.dialog-close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+.tree-container {
+    width: 100%;
+    height: calc(100% - 50px);
+    background: #fafafa;
+    padding: 0.25rem;
+    /* Wymuś scrollowanie poziome gdy zawartość jest szersza */
+    overflow-x: scroll;
+    overflow-y: auto;
+    /* Wymuś widoczność scrollbara nawet gdy nie jest hover */
+    scrollbar-gutter: stable;
+}
+
+/* Stylizowany pasek przewijania dla drzewa genealogicznego */
+.tree-container::-webkit-scrollbar {
+    width: 14px;
+    height: 18px;
+    /* Większy scrollbar poziomy */
+}
+
+.tree-container::-webkit-scrollbar-track {
+    background: #d0d0d0;
+    border-radius: 9px;
+    margin: 0 10px;
+}
+
+.tree-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 9px;
+    border: 3px solid #d0d0d0;
+    min-width: 60px;
+    /* Minimalny rozmiar suwaka */
+}
+
+.tree-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+    cursor: grab;
+}
+
+.tree-container::-webkit-scrollbar-thumb:active {
+    cursor: grabbing;
+}
+
+.tree-container::-webkit-scrollbar-corner {
+    background: #d0d0d0;
+}
+
+/* Firefox scrollbar */
+.tree-container {
+    scrollbar-width: auto;
+    scrollbar-color: #667eea #d0d0d0;
+}
+
+/* Style dla zawartości drzewa - wymuś minimalną szerokość */
+.tree-scroll-wrapper {
+    min-width: max-content;
+    display: inline-block;
+    padding-bottom: 10px;
+    /* Dodatkowa przestrzeń dla scrollbara */
+}
+
+/* =========== WŁASNY SUWAK POZIOMY =========== */
+.tree-horizontal-scroll-control {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(to top, #f0f0f0 0%, #fafafa 100%);
+    border-top: 2px solid #e0e0e0;
+    z-index: 10;
+}
+
+.scroll-arrow {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.scroll-arrow:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.scroll-arrow:active {
+    transform: scale(0.95);
+}
+
+.horizontal-scroll-slider {
+    flex: 1;
+    max-width: 500px;
+    height: 20px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+/* Track Chrome/Safari */
+.horizontal-scroll-slider::-webkit-slider-runnable-track {
+    height: 12px;
+    background: #d0d0d0;
+    border-radius: 6px;
+    border: 1px solid #bbb;
+}
+
+/* Thumb Chrome/Safari */
+.horizontal-scroll-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    cursor: grab;
+    margin-top: -9px;
+    transition: transform 0.15s ease;
+}
+
+.horizontal-scroll-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+}
+
+.horizontal-scroll-slider::-webkit-slider-thumb:active {
+    cursor: grabbing;
+    transform: scale(1.05);
+}
+
+/* Track Firefox */
+.horizontal-scroll-slider::-moz-range-track {
+    height: 12px;
+    background: #d0d0d0;
+    border-radius: 6px;
+    border: 1px solid #bbb;
+}
+
+/* Thumb Firefox */
+.horizontal-scroll-slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    cursor: grab;
+}
+
+.horizontal-scroll-slider::-moz-range-thumb:active {
+    cursor: grabbing;
+}
+
+/* Style dla elementów drzewa D3.js */
+.person-node {
+    cursor: pointer;
+}
+
+.person-node:hover rect {
+    filter: brightness(1.1);
+    stroke-width: 3px;
+}
+
+.protocol-link text {
+    cursor: pointer;
+}
+
+.protocol-link:hover text {
+    font-weight: bold;
+    fill: var(--primary-dark);
+}
+
+/* ==========================================================================
+   STOPKA APLIKACJI
+   ========================================================================== */
+.app-footer {
+    background: var(--bg-card);
+    border-top: 1px solid var(--border-color);
+    margin-top: auto;
+}
+
+.footer-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+/* ==========================================================================
+   KLASY POMOCNICZE
+   ========================================================================== */
+.hidden {
+    display: none !important;
+}
+
+.view-container.hidden {
+    display: none;
+}
+
+/* ==========================================================================
+   RESPONSYWNOŚĆ
+   ========================================================================== */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .header-left {
+        flex-direction: column;
+    }
+
+    .header-btn span {
+        display: none;
+    }
+
+    .main-content {
+        padding: 1rem;
+    }
+
+    .protocol-main-title {
+        font-size: 1.25rem;
+    }
+
+    .protocol-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .owner-info {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .switch-btn {
+        font-size: 0.85rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .footer-content {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+}
+
+/* ==========================================================================
+   STYLE DO DRUKU I EKSPORTU PDF
+   ========================================================================== */
+@media print {
+
+    /* Konfiguracja strony */
+    @page {
+        size: A4;
+        margin: 15mm;
+    }
+
+    * {
+        color-adjust: exact !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    body {
+        background: white !important;
+        color: #000000 !important;
+        font-size: 11pt !important;
+        line-height: 1.5 !important;
+    }
+
+    /* Ukrywanie elementów interaktywnych */
+    .background-gradient,
+    .top-header,
+    .app-footer,
+    .action-btn,
+    .header-btn,
+    .switch-btn,
+    .details-toggle-btn,
+    .view-switcher,
+    .map-links-section,
+    .tree-btn,
+    .map-btn {
+        display: none !important;
+    }
+
+    /* Główny kontener */
+    #app-wrapper {
+        background: white !important;
+    }
+
+    .main-content {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Tytuł protokołu */
+    .protocol-title-section {
+        background: white !important;
+        border: 2px solid #000 !important;
+        padding: 15px !important;
+        margin-bottom: 20px !important;
+        page-break-after: avoid;
+        box-shadow: none !important;
+    }
+
+    .protocol-main-title {
+        font-size: 16pt !important;
+        color: #000000 !important;
+        font-weight: bold !important;
+        margin-bottom: 10px !important;
+    }
+
+    .protocol-location {
+        color: #000000 !important;
+        font-weight: normal !important;
+    }
+
+    .protocol-meta {
+        color: #333333 !important;
+        font-weight: 500 !important;
+        font-size: 10pt !important;
+    }
+
+    /* Karty zawartości */
+    .content-card {
+        box-shadow: none !important;
+        border: 1.5px solid #000 !important;
+        page-break-inside: avoid;
+        margin-bottom: 15px !important;
+        background: white !important;
+    }
+
+    .card-header {
+        background: #f0f0f0 !important;
+        border-bottom: 2px solid #000 !important;
+        padding: 8px 12px !important;
+    }
+
+    .card-header h3 {
+        color: #000000 !important;
+        font-size: 12pt !important;
+        font-weight: bold !important;
+    }
+
+    .card-header i {
+        display: none !important;
+    }
+
+    .card-body {
+        padding: 12px !important;
+        background: white !important;
+    }
+
+    /* Sekcja właściciela */
+    .owner-info {
+        background: #f8f8f8 !important;
+        border: 1px solid #000 !important;
+        padding: 10px !important;
+        margin-bottom: 10px !important;
+    }
+
+    .owner-name-main {
+        color: #000000 !important;
+        font-size: 14pt !important;
+        font-weight: bold !important;
+    }
+
+    .owner-secondary-info {
+        color: #000000 !important;
+        font-size: 11pt !important;
+    }
+
+    .owner-details-value {
+        color: #000000 !important;
+        font-weight: bold !important;
+    }
+
+    /* Zawartość informacyjna */
+    .info-content {
+        background: white !important;
+        border: 1px solid #666 !important;
+        padding: 10px !important;
+        color: #000000 !important;
+        font-size: 10.5pt !important;
+        line-height: 1.6 !important;
+    }
+
+    /* Działki */
+    .plots-summary {
+        background: white !important;
+        border: 1px solid #666 !important;
+        padding: 10px !important;
+    }
+
+    .plot-numbers {
+        color: #000000 !important;
+        font-size: 11pt !important;
+        font-weight: 600 !important;
+        margin-bottom: 5px !important;
+    }
+
+    .plot-summary {
+        color: #333333 !important;
+        font-size: 10pt !important;
+        font-style: normal !important;
+    }
+
+    .plot-details-list {
+        display: block !important;
+        margin-top: 10px !important;
+        padding-top: 10px !important;
+        border-top: 1px solid #666 !important;
+    }
+
+    .plot-category-block {
+        margin-bottom: 10px !important;
+        page-break-inside: avoid;
+    }
+
+    .plot-category-block h4 {
+        color: #000000 !important;
+        font-size: 10.5pt !important;
+        font-weight: bold !important;
+        margin-bottom: 5px !important;
+    }
+
+    .plot-category-block .plot-numbers {
+        padding-left: 10px !important;
+        color: #000000 !important;
+    }
+
+    /* Formatowanie ułamków w PDF */
+    .fraction {
+        display: inline-block !important;
+        vertical-align: middle !important;
+        margin: 0 2px !important;
+        font-size: 0.9em !important;
+        color: #000000 !important;
+        font-weight: 600 !important;
+    }
+
+    .fraction .numerator,
+    .fraction .denominator {
+        color: #000000 !important;
+        font-weight: 600 !important;
+    }
+
+    .fraction .numerator {
+        border-bottom: 1.5px solid #000 !important;
+    }
+
+    .whole-number {
+        color: #000000 !important;
+        font-weight: bold !important;
+        font-size: 1em !important;
+    }
+
+    /* Linki */
+    a,
+    a:visited {
+        color: #000000 !important;
+        text-decoration: underline !important;
+        font-weight: 500 !important;
+    }
+
+    /* Widoczność wszystkich widoków */
+    .view-container {
+        display: block !important;
+    }
+
+    #view-protokol .content-card {
+        margin-top: 15px !important;
+    }
+
+    /* Nagłówki sekcji */
+    h3 {
+        color: #000000 !important;
+        font-weight: bold !important;
+        page-break-after: avoid;
+    }
+
+    /* Tabele */
+    table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+    }
+
+    th,
+    td {
+        border: 1px solid #000 !important;
+        padding: 5px !important;
+        color: #000000 !important;
+    }
+
+    th {
+        background: #e0e0e0 !important;
+        font-weight: bold !important;
+    }
+
+    /* Zapobieganie łamaniu stron */
+    .content-card,
+    .protocol-title-section,
+    .plot-category-block {
+        page-break-inside: avoid !important;
+    }
+
+    .card-header {
+        page-break-after: avoid !important;
+    }
+
+    /* Stopka na każdej stronie */
+    @bottom-center {
+        content: "Strona " counter(page);
+        font-size: 9pt;
+        color: #666;
+    }
+}
+
+/* Tryb eksportu PDF - wyłącza animacje i przezroczystości */
+.pdf-export,
+.pdf-export * {
+    animation: none !important;
+    transition: none !important;
+    filter: none !important;
+}
+
+.pdf-export #app-wrapper {
+    background: #ffffff !important;
+    opacity: 1 !important;
+}
+
+.pdf-export .background-gradient,
+.pdf-export .top-header,
+.pdf-export .app-footer,
+.pdf-export .view-switcher,
+.pdf-export .map-links-section,
+.pdf-export .action-btn,
+.pdf-export .header-btn,
+.pdf-export .details-toggle-btn {
+    display: none !important;
+}
+
+.pdf-export .content-card,
+.pdf-export .protocol-title-section,
+.pdf-export .owner-info,
+.pdf-export .info-content,
+.pdf-export .plots-summary {
+    opacity: 1 !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* ==========================================================================
+   ANIMACJE
+   ========================================================================== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.content-card {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* ==========================================================================
+   TRYB CIEMNY
+   ========================================================================== */
+.dark-mode {
+    --bg-main: #1a202c;
+    --bg-card: #2d3748;
+    --bg-hover: #4a5568;
+    --text-primary: #e2e8f0;
+    --text-secondary: #a0aec0;
+    --border-color: #4a5568;
+}
+
+.dark-mode .background-gradient {
+    opacity: 0.3;
+}
+
+/* ==========================================================================
+   ULEPSZONE STYLE UŁAMKÓW DLA EKRANU
+   ========================================================================== */
+@media screen {
+    .fraction {
+        transition: transform 0.2s ease;
+    }
+
+    .fraction:hover {
+        transform: scale(1.1);
+    }
+
+    /* Ułamki w ważnych miejscach */
+    .owner-info .whole-number,
+    .owner-info .fraction {
+        color: var(--primary-dark);
+        font-weight: 700;
+    }
+
+    /* Ułamki w treści protokołu */
+    .info-content .fraction {
+        background: rgba(102, 126, 234, 0.05);
+        padding: 0 3px;
+        border-radius: 3px;
+    }
+
+    .info-content .whole-number {
+        background: rgba(102, 126, 234, 0.08);
+        padding: 0 4px;
+        border-radius: 3px;
+    }
+}
+
+/* ==========================================================================
+   STATYSTYKI POWIERZCHNI DZIAŁEK
+   ========================================================================== */
+
+/* Karta podsumowania powierzchni */
+.area-summary-card {
+    animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Hover effect dla kart działek */
+.plot-item-card {
+    transition: all 0.2s ease !important;
+}
+
+.plot-item-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Progress bar animation */
+.area-category-item {
+    animation: slideIn 0.4s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Blok kategorii działek */
+.plot-category-block {
+    animation: fadeIn 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.plot-category-block:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Responsive dla małych ekranów */
+@media (max-width: 768px) {
+    .area-summary-card {
+        padding: 0.75rem !important;
+    }
+
+    .area-summary-card>div:first-child {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem !important;
+    }
+
+    .plot-item-card {
+        font-size: 0.8em !important;
+        padding: 0.3rem 0.5rem !important;
+    }
+
+    .area-category-item {
+        margin-bottom: 0.4rem !important;
+    }
+
+    .plot-category-block {
+        padding: 0.5rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+}
+
+/* Dark mode support */
+body.dark-mode .area-summary-card {
+    background: linear-gradient(135deg, #667eea25 0%, #764ba225 100%) !important;
+    border-color: #667eea50 !important;
+}
+
+body.dark-mode .plot-item-card {
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+body.dark-mode .plot-category-block {
+    filter: brightness(0.9);
+}
+
+/* Optymalizacja dla PDF */
+@media print {
+    .area-summary-card {
+        padding: 0.75rem !important;
+        margin-bottom: 0.75rem !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .plot-category-block {
+        padding: 0.5rem !important;
+        margin-bottom: 0.5rem !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .area-category-item {
+        margin-bottom: 0.3rem !important;
+    }
+
+    .plot-item-card {
+        padding: 0.25rem 0.5rem !important;
+        font-size: 0.85em !important;
+    }
+
+    /* Usuń animacje w PDF */
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+
+    /* Zmniejsz shadow dla oszczędności tuszu */
+    .plot-item-card,
+    .area-summary-card {
+        box-shadow: none !important;
+    }
+}

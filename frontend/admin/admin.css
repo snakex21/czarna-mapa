@@ -1,0 +1,3022 @@
+﻿:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --primary-color: #667eea;
+    --primary-dark: #5a67d8;
+    --secondary-color: #764ba2;
+    --success-color: #48bb78;
+    --danger-color: #f56565;
+    --warning-color: #ed8936;
+    --info-color: #4299e1;
+    --bg-main: #f7fafc;
+    --bg-card: white;
+    --bg-dark: #1a202c;
+    --text-primary: #2d3748;
+    --text-secondary: #718096;
+    --text-light: #a0aec0;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg-main);
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+.background-gradient {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--primary-gradient);
+    opacity: 0.05;
+    z-index: -1;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.login-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-gradient);
+    animation: gradientShift 10s ease infinite;
+}
+
+@keyframes gradientShift {
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+.login-card {
+    background: white;
+    padding: 3rem;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 450px;
+    animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.login-header i {
+    font-size: 3rem;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1rem;
+}
+
+.login-header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.login-header p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    background: var(--bg-main);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.input-group:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.input-icon {
+    padding: 0 1rem;
+    color: var(--text-light);
+}
+
+.input-group input {
+    flex: 1;
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 0;
+    /* Usunięto lewy padding */
+    border: none;
+    background: transparent;
+    font-size: 1rem;
+    outline: none;
+}
+
+.btn-login {
+    width: 100%;
+    padding: 0.875rem;
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* Zmieniono z center na space-between */
+}
+
+.btn-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.25);
+}
+
+.error-message {
+    margin-bottom: 1.5rem;
+    /* Zmieniono z margin-top na margin-bottom */
+    padding: 0.75rem;
+    background: #fed7d7;
+    color: var(--danger-color);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    text-align: center;
+    animation: shake 0.5s;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-10px);
+    }
+
+    75% {
+        transform: translateX(10px);
+    }
+}
+
+.admin-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 260px;
+    background: var(--bg-card);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    transition: var(--transition);
+    box-shadow: var(--shadow-md);
+}
+
+.sidebar.collapsed {
+    width: 70px;
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    background: var(--primary-gradient);
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.sidebar-header i {
+    font-size: 1.5rem;
+}
+
+.sidebar-header h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.sidebar.collapsed .sidebar-header h2 {
+    display: none;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 1rem 0;
+    flex: 1;
+}
+
+.menu-item {
+    padding: 0.875rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    cursor: pointer;
+    transition: var(--transition);
+    color: var(--text-primary);
+    position: relative;
+}
+
+.menu-item i {
+    font-size: 1.125rem;
+    width: 20px;
+    text-align: center;
+}
+
+.menu-item span {
+    white-space: nowrap;
+}
+
+.sidebar.collapsed .menu-item span {
+    display: none;
+}
+
+.menu-item:hover {
+    background: var(--bg-main);
+    color: var(--primary-color);
+}
+
+.menu-item.active {
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, transparent 100%);
+    color: var(--primary-color);
+}
+
+.menu-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--primary-gradient);
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-main);
+    min-width: 0;
+}
+
+.top-bar {
+    background: var(--bg-card);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.sidebar-toggle {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.sidebar-toggle:hover {
+    background: var(--bg-main);
+}
+
+.top-bar-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: var(--text-secondary);
+}
+
+.separator {
+    color: var(--border-color);
+}
+
+.theme-btn {
+    background: var(--bg-main);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    color: var(--text-primary);
+}
+
+.theme-btn:hover {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+.content-area {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.section {
+    display: none;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.section.active {
+    display: block;
+}
+
+/* Specjalny styl dla sekcji genealogii - pełna wysokość */
+#genealogy.section.active {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 140px);
+    min-height: 600px;
+}
+
+#genealogy .section-header {
+    flex-shrink: 0;
+}
+
+#genealogy .genealogy-layout {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.section-header {
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.section-header h1 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.section-header h1 i {
+    color: var(--primary-color);
+}
+
+.section-subtitle {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-top: 0.25rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: var(--shadow-md);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--primary-gradient);
+}
+
+.stat-card.gradient-blue::before {
+    background: linear-gradient(135deg, #667eea, #63b3ed);
+}
+
+.stat-card.gradient-green::before {
+    background: linear-gradient(135deg, #48bb78, #38a169);
+}
+
+.stat-card.gradient-purple::before {
+    background: linear-gradient(135deg, #9f7aea, #ed64a6);
+}
+
+.stat-card.gradient-orange::before {
+    background: linear-gradient(135deg, #ed8936, #f6ad55);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-xl);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+}
+
+.gradient-blue .stat-icon {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(99, 179, 237, 0.1));
+    color: #667eea;
+}
+
+.gradient-green .stat-icon {
+    background: linear-gradient(135deg, rgba(72, 187, 120, 0.1), rgba(56, 161, 105, 0.1));
+    color: #48bb78;
+}
+
+.gradient-purple .stat-icon {
+    background: linear-gradient(135deg, rgba(159, 122, 234, 0.1), rgba(237, 100, 166, 0.1));
+    color: #9f7aea;
+}
+
+.gradient-orange .stat-icon {
+    background: linear-gradient(135deg, rgba(237, 137, 54, 0.1), rgba(246, 173, 85, 0.1));
+    color: #ed8936;
+}
+
+.stat-content h3 {
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--text-light);
+}
+
+.quick-actions {
+    background: white;
+    border-radius: var(--radius);
+    padding: 2rem;
+    box-shadow: var(--shadow-md);
+}
+
+.quick-actions h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quick-actions h2 i {
+    color: var(--warning-color);
+}
+
+.action-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.action-card {
+    background: var(--bg-main);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.action-card i {
+    font-size: 2rem;
+    color: var(--primary-color);
+}
+
+.action-card span {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.action-card:hover {
+    background: var(--primary-gradient);
+    border-color: transparent;
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.action-card:hover i,
+.action-card:hover span {
+    color: white;
+}
+
+.search-bar {
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    transition: var(--transition);
+}
+
+.search-bar:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.search-bar i {
+    color: var(--text-light);
+}
+
+.search-bar input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.filters-bar {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.filters-bar .search-bar {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.filter-select {
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: white;
+    color: var(--text-primary);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.btn-primary,
+.btn-success,
+.btn-danger,
+.btn-warning,
+.btn-cancel {
+    padding: 0.625rem 1.25rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-success {
+    background: var(--success-color);
+    color: white;
+}
+
+.btn-danger {
+    background: var(--danger-color);
+    color: white;
+}
+
+.btn-warning {
+    background: var(--warning-color);
+    color: white;
+}
+
+.btn-cancel {
+    background: var(--text-light);
+    color: white;
+}
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.owner-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-md);
+    transition: var(--transition);
+    position: relative;
+    /* Krok 1: Zmień kartę w kontener flex z orientacją pionową */
+    display: flex;
+    flex-direction: column;
+}
+
+.owner-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-xl);
+}
+
+.owner-card-header {
+    display: flex;
+    justify-content: space-between;
+    /* Używamy align-items: flex-start; aby wyrównać elementy do góry */
+    align-items: flex-start;
+    gap: 0.5rem;
+    /* Dodajemy mały odstęp na wszelki wypadek */
+    margin-bottom: 1rem;
+}
+
+.owner-name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    /* Pozwalamy nazwie rosnąć, ale nie wypychać innych elementów */
+    flex-grow: 1;
+}
+
+.owner-protocol {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    /* Zapobiegamy kurczeniu się plakietki */
+    flex-shrink: 0;
+}
+
+.owner-name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.owner-protocol {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.owner-details {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.owner-actions {
+    display: flex;
+    gap: 0.5rem;
+    /* Krok 2: Wypchnij sekcję z przyciskami na sam dół karty */
+    margin-top: auto;
+    /* Krok 3 (opcjonalny): Dodaj trochę przestrzeni nad przyciskami */
+    padding-top: 1rem;
+}
+
+.owner-actions button {
+    flex: 1;
+    padding: 0.5rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.edit-btn {
+    background: var(--warning-color);
+    color: white;
+}
+
+.delete-btn {
+    background: var(--danger-color);
+    color: white;
+}
+
+.table-wrapper {
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    overflow: auto;
+    /* Włącza paski przewijania (pionowe i poziome) gdy są potrzebne */
+    max-height: 75vh;
+    /* Ogranicza wysokość tabeli, aby nie rozciągała strony */
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table thead {
+    background: var(--bg-main);
+}
+
+.data-table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.data-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.data-table tbody tr {
+    transition: var(--transition);
+}
+
+.data-table tbody tr:hover {
+    background: var(--bg-main);
+}
+
+.data-table input,
+.data-table textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.875rem;
+}
+
+.data-table .actions button {
+    padding: 0.375rem 0.75rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.family-header {
+    background: var(--primary-gradient);
+    color: white;
+    font-weight: 600;
+}
+
+.family-header td {
+    padding: 1rem !important;
+    border: none !important;
+}
+
+.family-header:hover {
+    opacity: 0.9;
+}
+
+.btn-tree {
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    color: white;
+    padding: 0.375rem 0.75rem;
+    border: none;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-tree:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md);
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+    background: white;
+    border-radius: var(--radius);
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease-out;
+}
+
+.modal-fullscreen {
+    max-width: 95vw;
+    max-height: 95vh;
+}
+
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-light);
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.modal-close:hover {
+    background: var(--bg-main);
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.modal-footer {
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    padding: 0.625rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.875rem;
+    transition: var(--transition);
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Style dla edytora małżonków w modalu */
+.spouse-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+.spouse-row select,
+.spouse-row input {
+    margin-bottom: 0;
+    /* Reset domyślnego marginesu wewnątrz grupy */
+}
+
+.spouse-row .btn-remove {
+    background: var(--danger-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-add-spouse {
+    background: var(--info-color);
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    margin-top: 5px;
+}
+
+.parcel-editor {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 1rem;
+    margin: 1.5rem 0;
+    padding: 1.5rem;
+    background: var(--bg-main);
+    border-radius: var(--radius-sm);
+}
+
+.parcel-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.parcel-list label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.parcel-list select {
+    flex: 1;
+    min-height: 200px;
+    padding: 0.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+}
+
+.parcel-buttons {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.parcel-buttons button {
+    padding: 0.5rem 1rem;
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.parcel-buttons button:hover {
+    transform: scale(1.05);
+}
+
+.tree-container {
+    width: 100%;
+    height: 80vh;
+    background: var(--bg-main);
+    border-radius: var(--radius-sm);
+    overflow: auto;
+}
+
+.toast-container {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    z-index: 2000;
+}
+
+.toast {
+    background: white;
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.toast.success {
+    border-left: 4px solid var(--success-color);
+}
+
+.toast.error {
+    border-left: 4px solid var(--danger-color);
+}
+
+.toast.warning {
+    border-left: 4px solid var(--warning-color);
+}
+
+.toast.info {
+    border-left: 4px solid var(--info-color);
+}
+
+/* === TRYB CIEMNY - POPRAWIONY === */
+
+/* Podstawowe zmienne dla dark mode */
+body.dark-mode {
+    --bg-main: #0f172a;
+    --bg-card: #1f2937;
+    --text-primary: #f3f4f6;
+    --text-secondary: #e5e7eb;
+    --text-light: #cbd5e1;
+    --border-color: #374151;
+}
+
+body.dark-mode {
+    background: #0f172a;
+    color: #f3f4f6;
+}
+
+/* Tło gradientowe */
+body.dark-mode .background-gradient {
+    opacity: 0.02;
+}
+
+/* === SIDEBAR === */
+body.dark-mode .sidebar {
+    background: #1f2937;
+    border-right: 1px solid #374151;
+}
+
+body.dark-mode .menu-item {
+    color: #e5e7eb;
+}
+
+body.dark-mode .menu-item:hover {
+    background: #111827;
+    color: #93c5fd;
+}
+
+body.dark-mode .menu-item.active {
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.12) 0%, transparent 100%);
+    color: #a5b4fc;
+}
+
+/* === TOP BAR === */
+body.dark-mode .top-bar {
+    background: #1f2937;
+    border-bottom: 1px solid #374151;
+}
+
+body.dark-mode .top-bar-info {
+    color: #cbd5e1;
+}
+
+body.dark-mode .sidebar-toggle {
+    color: #e5e7eb;
+}
+
+body.dark-mode .sidebar-toggle:hover {
+    background: #374151;
+}
+
+body.dark-mode .theme-btn {
+    background: #111827;
+    color: #e5e7eb;
+}
+
+body.dark-mode .theme-btn:hover {
+    background: var(--primary-gradient);
+    color: #fff;
+}
+
+/* === SEKCJE I NAGŁÓWKI === */
+body.dark-mode .section-header h1 {
+    color: #f3f4f6;
+}
+
+body.dark-mode .section-subtitle {
+    color: #cbd5e1;
+}
+
+/* === QUICK ACTIONS === */
+body.dark-mode .quick-actions {
+    background: #1f2937;
+    color: #f3f4f6;
+}
+
+body.dark-mode .quick-actions h2 {
+    color: #f3f4f6 !important;
+}
+
+body.dark-mode .action-card {
+    background: #111827;
+    border-color: #374151;
+}
+
+body.dark-mode .action-card span {
+    color: #e5e7eb;
+}
+
+body.dark-mode .action-card i {
+    color: #93c5fd;
+}
+
+body.dark-mode .action-card:hover {
+    background: var(--primary-gradient);
+    border-color: transparent;
+}
+
+body.dark-mode .action-card:hover i,
+body.dark-mode .action-card:hover span {
+    color: white;
+}
+
+/* === STAT CARDS === */
+body.dark-mode .stat-card {
+    background: #1f2937;
+    color: #f3f4f6;
+}
+
+body.dark-mode .stat-content h3 {
+    color: #cbd5e1;
+}
+
+body.dark-mode .stat-value {
+    color: #f3f4f6;
+}
+
+body.dark-mode .stat-label {
+    color: #94a3b8;
+}
+
+/* === OWNER CARDS === */
+body.dark-mode .owner-card {
+    background: #1f2937;
+    color: #f3f4f6;
+}
+
+body.dark-mode .owner-name {
+    color: #f3f4f6;
+}
+
+body.dark-mode .owner-details {
+    color: #cbd5e1;
+}
+
+body.dark-mode .owner-protocol {
+    color: #fff;
+}
+
+/* === TABELE === */
+body.dark-mode .table-wrapper {
+    background: #1f2937;
+}
+
+body.dark-mode .data-table {
+    background: #1f2937;
+}
+
+body.dark-mode .data-table thead {
+    background: #111827;
+}
+
+body.dark-mode .data-table th {
+    color: #f3f4f6 !important;
+    background: #111827;
+    border-color: #374151;
+}
+
+body.dark-mode .data-table td {
+    color: #e5e7eb !important;
+    background: #1f2937;
+    border-color: #374151;
+}
+
+body.dark-mode .data-table tbody tr {
+    background: #1f2937;
+}
+
+body.dark-mode .data-table tbody tr:hover {
+    background: #111827;
+}
+
+/* Tekst w komórkach tabeli */
+body.dark-mode .data-table td strong {
+    color: #f3f4f6 !important;
+}
+
+body.dark-mode .data-table td em {
+    color: #cbd5e1 !important;
+}
+
+body.dark-mode .data-table td small {
+    color: #f87171 !important;
+}
+
+/* Nagłówki rodzin */
+body.dark-mode .family-header {
+    background: linear-gradient(135deg, #4c6ef5 0%, #5a3d8a 100%);
+    color: #fff !important;
+}
+
+body.dark-mode .family-header td {
+    color: #fff !important;
+}
+
+/* Wiersze z osobami w genealogii - kontrastowe tło */
+body.dark-mode #genealogyTableBody tr:not(.family-header) {
+    background: #111827;
+}
+
+body.dark-mode #genealogyTableBody tr:not(.family-header):hover {
+    background: #1f2937;
+}
+
+body.dark-mode #genealogyTableBody tr:not(.family-header) td {
+    background: transparent;
+    border-bottom: 1px solid #1f2937;
+}
+
+
+
+/* === INPUTY I FORMULARZE === */
+body.dark-mode .search-bar,
+body.dark-mode .filter-select,
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+    background: #111827;
+    color: #e5e7eb;
+    border-color: #374151;
+}
+
+body.dark-mode .input-wrapper input {
+    background: #111827;
+    color: #e5e7eb;
+}
+
+body.dark-mode .search-bar i,
+body.dark-mode .input-wrapper i {
+    color: #94a3b8;
+}
+
+body.dark-mode ::placeholder {
+    color: #64748b;
+}
+
+/* Inputy w tabelach */
+body.dark-mode .data-table input,
+body.dark-mode .data-table textarea,
+body.dark-mode .data-table select {
+    background: #111827 !important;
+    color: #e5e7eb !important;
+    border-color: #374151 !important;
+}
+
+body.dark-mode .data-table input:focus,
+body.dark-mode .data-table textarea:focus,
+body.dark-mode .data-table select:focus {
+    border-color: #4c6ef5 !important;
+    box-shadow: 0 0 0 3px rgba(76, 110, 245, 0.15) !important;
+}
+
+/* === MODALE === */
+body.dark-mode .modal-content {
+    background: #1f2937;
+    color: #e5e7eb;
+}
+
+body.dark-mode .modal-header {
+    background: #1f2937;
+    color: #e5e7eb;
+    border-bottom: 1px solid #374151;
+}
+
+body.dark-mode .modal-header h2 {
+    color: #f3f4f6;
+}
+
+body.dark-mode .modal-body {
+    background: #1f2937;
+    color: #e5e7eb;
+}
+
+body.dark-mode .modal-footer {
+    background: #1f2937;
+    border-top: 1px solid #374151;
+}
+
+body.dark-mode .modal-close {
+    color: #9ca3af;
+}
+
+body.dark-mode .modal-close:hover {
+    background: #374151;
+    color: #e5e7eb;
+}
+
+/* Formularze w modalach */
+body.dark-mode .form-group label {
+    color: #cbd5e1;
+}
+
+body.dark-mode .form-group input,
+body.dark-mode .form-group textarea,
+body.dark-mode .form-group select {
+    background: #111827;
+    color: #e5e7eb;
+    border-color: #374151;
+}
+
+body.dark-mode .form-group input:focus,
+body.dark-mode .form-group textarea:focus,
+body.dark-mode .form-group select:focus {
+    border-color: #4c6ef5;
+    box-shadow: 0 0 0 3px rgba(76, 110, 245, 0.1);
+}
+
+/* Edytor działek */
+body.dark-mode .parcel-editor {
+    background: #111827;
+}
+
+body.dark-mode .parcel-list select {
+    background: #0f172a;
+    color: #e5e7eb;
+    border-color: #374151;
+}
+
+/* === TREE MODAL === */
+body.dark-mode #treeModal .modal-fullscreen {
+    background: #1f2937 !important;
+}
+
+body.dark-mode #treeModal .tree-container {
+    background: #111827 !important;
+}
+
+body.dark-mode #treeModal .modal-header {
+    background: linear-gradient(135deg, #4c6ef5 0%, #5a3d8a 100%) !important;
+}
+
+/* === TOASTY === */
+body.dark-mode .toast {
+    background: #1f2937;
+    color: #e5e7eb;
+    border-color: #374151;
+}
+
+/* === LOGIN === */
+body.dark-mode .login-wrapper {
+    background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
+}
+
+body.dark-mode .login-card {
+    background: #1f2937;
+    color: #e5e7eb;
+}
+
+body.dark-mode .login-header h1 {
+    color: #f3f4f6;
+}
+
+body.dark-mode .login-header p {
+    color: #cbd5e1;
+}
+
+body.dark-mode .error-message {
+    background: rgba(245, 101, 101, 0.15);
+    color: #fecaca;
+    border: 1px solid #7f1d1d;
+}
+
+/* === LINK DO PROTOKOŁU === */
+body.dark-mode .protocol-link {
+    background: linear-gradient(135deg, #4c6ef5 0%, #5a3d8a 100%);
+    color: white !important;
+}
+
+body.dark-mode .protocol-link:hover {
+    box-shadow: 0 2px 12px rgba(76, 110, 245, 0.4);
+}
+
+body.dark-mode .protocol-none {
+    color: #64748b;
+}
+
+/* === PRZYCISKI === */
+body.dark-mode .btn-tree {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+body.dark-mode .btn-tree:hover {
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* === STATUSY W TABELACH === */
+body.dark-mode .data-table td span[style*="color"] {
+    filter: brightness(1.5);
+}
+
+/* === CARDS GRID === */
+body.dark-mode .cards-grid {
+    color: #f3f4f6;
+}
+
+
+
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        left: -260px;
+        z-index: 999;
+        height: 100vh;
+    }
+
+    .sidebar.active {
+        left: 0;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cards-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .filters-bar {
+        flex-direction: column;
+    }
+}
+
+
+/* === MODAL DLA DRZEWA GENEALOGICZNEGO === */
+/* Zastąp od tej linii do końca pliku */
+
+#treeModal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(0, 0, 0, 0.8) !important;
+    z-index: 99999 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    backdrop-filter: blur(5px);
+}
+
+#treeModal.hidden {
+    display: none !important;
+}
+
+#treeModal .modal-fullscreen {
+    position: relative !important;
+    width: 90vw !important;
+    height: 85vh !important;
+    max-width: 1400px !important;
+    background: white !important;
+    border-radius: 12px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+#treeModal .modal-header {
+    padding: 1rem 1.5rem !important;
+    background: var(--primary-gradient) !important;
+    color: white !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+}
+
+#treeModal .modal-header h2 {
+    margin: 0 !important;
+    color: white !important;
+    font-size: 1.5rem !important;
+}
+
+#treeModal .modal-close {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 2px solid white !important;
+    color: white !important;
+    font-size: 1.5rem !important;
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.3s !important;
+}
+
+#treeModal .modal-close:hover {
+    background: white !important;
+    color: var(--primary-color) !important;
+    transform: rotate(90deg) !important;
+}
+
+#treeModal .tree-container {
+    flex: 1 !important;
+    overflow: auto !important;
+    padding: 2rem !important;
+    background: #f8f9fa !important;
+    position: relative !important;
+}
+
+#treeModal .tree-container::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+#treeModal .tree-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+#treeModal .tree-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+#treeModal .tree-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+body.modal-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+}
+
+@keyframes fadeInModal {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+#treeModal:not(.hidden) .modal-fullscreen {
+    animation: fadeInModal 0.3s ease-out;
+}
+
+
+/* === LINK DO PROTOKOŁU W GENEALOGII === */
+.protocol-link {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background: var(--primary-gradient);
+    color: white !important;
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.protocol-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    filter: brightness(1.1);
+}
+
+/* Dla "brak" protokołu */
+.protocol-none {
+    color: var(--text-light);
+    font-style: italic;
+    font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+    #treeModal .modal-fullscreen {
+        width: 95vw !important;
+        height: 90vh !important;
+        border-radius: 8px !important;
+    }
+
+    #treeModal .modal-header h2 {
+        font-size: 1.2rem !important;
+    }
+
+    #treeModal .tree-container {
+        padding: 1rem !important;
+    }
+}
+
+#treeModal .tree-container svg {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+}
+
+/* === Tryb ciemny (global) === */
+body.dark-theme {
+    background: #0f172a;
+    /* tło strony */
+    color: #e2e8f0;
+    /* domyślny tekst */
+}
+
+/* Nawigacja / top bar / karty / kontenery */
+body.dark-theme .sidebar,
+body.dark-theme .top-bar,
+body.dark-theme .table-wrapper,
+body.dark-theme .owner-card,
+body.dark-theme .quick-actions,
+body.dark-theme .stat-card,
+body.dark-theme .login-card {
+    background: #1f2937;
+    color: #e5e7eb;
+    border-color: #374151;
+}
+
+/* Teksty drugorzędne */
+body.dark-theme .section-subtitle,
+body.dark-theme .owner-details,
+body.dark-theme .stat-label,
+body.dark-theme .top-bar-info,
+body.dark-theme .menu-item {
+    color: #cbd5e1;
+}
+
+/* Sidebar */
+body.dark-theme .sidebar {
+    border-right: 1px solid #374151;
+}
+
+body.dark-theme .menu-item:hover {
+    background: #111827;
+    color: #93c5fd;
+}
+
+body.dark-theme .menu-item.active {
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.12) 0%, transparent 100%);
+    color: #a5b4fc;
+}
+
+/* Top bar */
+body.dark-theme .top-bar {
+    border-bottom: 1px solid #374151;
+}
+
+body.dark-theme .theme-btn {
+    background: #0b1220;
+    color: #e5e7eb;
+}
+
+body.dark-theme .theme-btn:hover {
+    background: var(--primary-gradient);
+    color: #fff;
+}
+
+/* Karty (właściciele, statystyki) */
+body.dark-theme .owner-card,
+body.dark-theme .quick-actions {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-theme .owner-protocol {
+    color: #fff;
+}
+
+/* Pasek wyszukiwania / inputy / selecty / textarea */
+body.dark-theme .search-bar,
+body.dark-theme .filter-select,
+body.dark-theme input,
+body.dark-theme textarea,
+body.dark-theme select,
+body.dark-theme .input-wrapper input {
+    background: #0b1220;
+    color: #e5e7eb;
+    border: 1px solid #374151;
+}
+
+body.dark-theme .search-bar i,
+body.dark-theme .input-wrapper i {
+    color: #94a3b8;
+}
+
+body.dark-theme ::placeholder {
+    color: #94a3b8;
+}
+
+/* Tabele */
+body.dark-theme .data-table thead {
+    background: #0b1220;
+}
+
+body.dark-theme .data-table th,
+body.dark-theme .data-table td {
+    color: #e5e7eb;
+    background: #1f2937;
+    border-color: #374151;
+}
+
+body.dark-theme .data-table tbody tr:hover {
+    background: #111827;
+}
+
+/* Nagłówki rodzin (gradient zostaje, poprawiamy kontrast) */
+body.dark-theme .family-header {
+    color: #fff;
+}
+
+/* Modal */
+body.dark-theme .modal-content {
+    background: #1f2937;
+    color: #e5e7eb;
+    border: 1px solid #374151;
+}
+
+/* Logowanie */
+body.dark-theme .login-wrapper {
+    background: #0f172a;
+}
+
+body.dark-theme .login-card {
+    border: 1px solid #374151;
+}
+
+body.dark-theme .error-message {
+    background: rgba(245, 101, 101, 0.15);
+    color: #fecaca;
+    border: 1px solid #7f1d1d;
+}
+
+/* Delikatny re-tint tła ogólnego, by nie było „płaskie” */
+body.dark-theme .background-gradient {
+    opacity: 0.08;
+}
+
+/* --- Stabilizacja tabel Demografii i Genealogii --- */
+
+/* Ustawienie sztywnych szerokości dla kolumn, aby zapobiec "rwaniu" się układu.
+   Dzięki temu kolumna z nazwiskiem może być długa, a kolumna akcji pozostanie na miejscu. */
+
+
+/* --- Poprawki dla pól edycji w tabeli Demografii --- */
+#demography .data-table textarea {
+    min-height: 40px;
+    /* Zmniejszamy minimalną wysokość */
+    height: 40px;
+    /* Ustawiamy stałą wysokość początkową */
+    line-height: 1.4;
+    /* Poprawia ułożenie tekstu w jednej linii */
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+    resize: none;
+    /* Wyłączamy ręczną zmianę rozmiaru */
+    overflow-y: hidden;
+    /* Ukrywamy pasek przewijania, gdy nie jest potrzebny */
+}
+
+#demography .data-table textarea:focus {
+    height: 120px;
+    /* Pole powiększa się po kliknięciu */
+    resize: vertical;
+    /* Włączamy zmianę rozmiaru w trybie edycji */
+    overflow-y: auto;
+    /* Pokazujemy pasek przewijania w razie potrzeby */
+}
+
+/* === NOWA, ULEPSZONA OBSŁUGA TABEL === */
+
+/* 1. Podstawowe ustawienia dla wszystkich tabel w panelu */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    /* To jest klucz do stabilnego layoutu. Tabela użyje zdefiniowanych szerokości, ignorując treść. */
+    table-layout: fixed;
+}
+
+.data-table th,
+.data-table td {
+    padding: 1rem;
+    text-align: left;
+    vertical-align: middle;
+    /* Lepsze wyrównanie w pionie */
+    border-bottom: 1px solid var(--border-color);
+    /* Zapobiega "wpychaniu" się długich słów i psuciu układu */
+    word-break: break-word;
+}
+
+.data-table th {
+    font-weight: 600;
+    background: var(--bg-main);
+    border-bottom-width: 2px;
+}
+
+/* 2. Style dla komórki z przyciskami akcji */
+.data-table td.actions {
+    text-align: center;
+    /* Wyrównanie do środka */
+    white-space: nowrap;
+    /* Zapobiega łamaniu się przycisków do nowej linii */
+}
+
+/* Dodatkowe wyrównanie dla nagłówka kolumny Akcje */
+.data-table th:last-child {
+    text-align: center;
+}
+
+/* 3. Precyzyjne szerokości kolumn dla tabeli GENEALOGIA */
+#genealogy .data-table {
+    min-width: 900px;
+    /* Minimalna szerokość tabeli, poniżej której pojawi się scrollbar */
+}
+
+#genealogy .data-table th:nth-child(1) {
+    width: 6%;
+}
+
+/* ID */
+#genealogy .data-table th:nth-child(2) {
+    width: 28%;
+}
+
+/* Imię i Nazwisko */
+#genealogy .data-table th:nth-child(3) {
+    width: 12%;
+}
+
+/* Lata życia */
+#genealogy .data-table th:nth-child(4) {
+    width: 15%;
+}
+
+/* Rodzice */
+#genealogy .data-table th:nth-child(5) {
+    width: 15%;
+}
+
+/* Małżonek */
+#genealogy .data-table th:nth-child(6) {
+    width: 11%;
+}
+
+/* Protokół */
+#genealogy .data-table th:nth-child(7) {
+    width: 13%;
+}
+
+/* Akcje */
+
+/* 4. Precyzyjne szerokości kolumn dla tabeli DEMOGRAFIA */
+#demography .data-table {
+    min-width: 800px;
+}
+
+#demography .data-table th:nth-child(1) {
+    width: 8%;
+}
+
+/* Rok */
+#demography .data-table th:nth-child(2) {
+    width: 10%;
+}
+
+/* Populacja */
+#demography .data-table th:nth-child(3) {
+    width: 10%;
+}
+
+/* Katolicy */
+#demalogy .data-table th:nth-child(4) {
+    width: 10%;
+}
+
+/* Żydzi */
+#demalogy .data-table th:nth-child(5) {
+    width: 10%;
+}
+
+/* Inni */
+#demography .data-table th:nth-child(6) {
+    width: 32%;
+}
+
+/* Opis */
+#demography .data-table th:nth-child(7) {
+    width: 20%;
+}
+
+/* Akcje */
+
+
+/* 5. Poprawki dla pól edycji w tabelach */
+.data-table input,
+.data-table textarea,
+.data-table select {
+    width: 100%;
+    padding: 0.625rem;
+    font-size: 0.9rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    box-sizing: border-box;
+    transition: var(--transition);
+}
+
+.data-table input:focus,
+.data-table textarea:focus,
+.data-table select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Specjalne style dla pola opisu w Demografii - koniec z pustym miejscem! */
+#demography .data-table textarea {
+    min-height: 42px;
+    height: 42px;
+    line-height: 1.4;
+    resize: none;
+    overflow: hidden;
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+}
+
+#demography .data-table textarea:focus {
+    height: 120px;
+    resize: vertical;
+    overflow: auto;
+}
+
+/* Style dla autouzupełniania przez przeglądarkę */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px var(--bg-main) inset !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+    caret-color: var(--text-primary);
+    border-radius: var(--radius-sm);
+}
+
+/* To samo dla trybu ciemnego */
+body.dark-mode input:-webkit-autofill,
+body.dark-mode input:-webkit-autofill:hover,
+body.dark-mode input:-webkit-autofill:focus,
+body.dark-mode input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #111827 inset !important;
+    /* Kolor tła inputa w dark mode */
+    -webkit-text-fill-color: #e5e7eb !important;
+    /* Kolor tekstu w dark mode */
+    caret-color: #e5e7eb;
+}
+
+/* =================================================================
+   PRZEPROJEKTOWANA SEKCJA GENEALOGII - LISTA + PANEL SZCZEGÓŁÓW
+   (na wzór genealogia.html)
+   ================================================================= */
+
+/* Główny layout - dwie kolumny */
+.genealogy-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 0;
+    height: 100%;
+    /* Pełna wysokość rodzica */
+    min-height: 500px;
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+}
+
+/* LEWA STRONA - Sidebar z listą osób */
+.genealogy-sidebar {
+    background: #f8fafc;
+    color: #334155;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #e2e8f0;
+    overflow: hidden;
+    min-height: 0;
+    /* KLUCZOWE dla flex overflow */
+}
+
+/* Wyszukiwarka */
+.genealogy-search-box {
+    padding: 1rem;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-bottom: 1px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+.genealogy-search-box i {
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+.genealogy-search-box input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #334155;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.genealogy-search-box input::placeholder {
+    color: #94a3b8;
+}
+
+/* Filtry */
+.genealogy-filters {
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+.filter-btn {
+    padding: 0.4rem 0.75rem;
+    background: transparent;
+    border: 1px solid #cbd5e1;
+    border-radius: 20px;
+    color: #64748b;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-btn:hover {
+    background: #e2e8f0;
+    color: #334155;
+}
+
+.filter-btn.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.family-filter-select {
+    padding: 0.4rem 0.5rem;
+    background: white;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    color: #64748b;
+    font-size: 0.8rem;
+    cursor: pointer;
+    flex: 1;
+    min-width: 120px;
+}
+
+/* Licznik */
+.genealogy-count {
+    padding: 0.5rem 1rem;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+}
+
+.genealogy-count strong {
+    color: #334155;
+}
+
+/* Lista osób - KLUCZOWE: overflow-y: auto! */
+.persons-list {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    /* Ważne dla flex overflow */
+}
+
+/* Scrollbar dla listy */
+.persons-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.persons-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.persons-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.persons-list::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+.person-list-item {
+    padding: 0.875rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+}
+
+.person-list-item:hover {
+    background: #e2e8f0;
+}
+
+.person-list-item.active {
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.15) 0%, transparent 100%);
+    border-left-color: var(--primary-color);
+}
+
+.person-list-item.male {
+    border-left-color: #3b82f6;
+}
+
+.person-list-item.female {
+    border-left-color: #ec4899;
+}
+
+.person-list-item.active.male {
+    border-left-color: #3b82f6;
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, transparent 100%);
+}
+
+.person-list-item.active.female {
+    border-left-color: #ec4899;
+    background: linear-gradient(90deg, rgba(236, 72, 153, 0.15) 0%, transparent 100%);
+}
+
+.person-list-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.person-list-item.male .person-list-icon {
+    background: rgba(59, 130, 246, 0.15);
+    color: #2563eb;
+}
+
+.person-list-item.female .person-list-icon {
+    background: rgba(236, 72, 153, 0.15);
+    color: #db2777;
+}
+
+.person-list-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.person-list-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.person-list-dates {
+    font-size: 0.8rem;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.person-list-arrow {
+    color: #94a3b8;
+    font-size: 0.8rem;
+}
+
+/* PRAWA STRONA - Panel szczegółów */
+.genealogy-details {
+    padding: 1.5rem 1rem;
+    overflow-y: auto;
+    background: var(--bg-main);
+}
+
+/* Kolorowy scrollbar dla panelu szczegółów */
+.genealogy-details::-webkit-scrollbar {
+    width: 10px;
+}
+
+.genealogy-details::-webkit-scrollbar-track {
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 10px;
+}
+
+.genealogy-details::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+.genealogy-details::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #5a6fd6 0%, #6a4190 100%);
+    background-clip: padding-box;
+}
+
+.no-selection-placeholder {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-light);
+    text-align: center;
+}
+
+.no-selection-placeholder i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+}
+
+.no-selection-placeholder h3 {
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+/* Nagłówek profilu osoby */
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.profile-title h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.profile-id {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.profile-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.profile-actions .btn {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.profile-actions .btn-primary {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+.profile-actions .btn-secondary {
+    background: var(--bg-main);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.profile-actions .btn-danger {
+    background: var(--danger-color);
+    color: white;
+}
+
+.profile-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Sekcje w profilu */
+.section-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-light);
+    margin: 1.5rem 0 0.75rem 0;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-title i {
+    color: var(--primary-color);
+}
+
+.section-subtitle {
+    font-size: 0.65rem;
+    color: var(--text-light);
+    margin-bottom: 0.5rem;
+    font-style: italic;
+}
+
+/* Siatka kart relacji - jak w genealogia.html */
+.relations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Karta relacji - jak w genealogia.html */
+.relation-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.relation-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.relation-card.male {
+    border-left: 4px solid #3b82f6;
+}
+
+.relation-card.female {
+    border-left: 4px solid #ec4899;
+}
+
+.relation-card.unknown {
+    border-left: 4px solid var(--text-light);
+    opacity: 0.6;
+}
+
+.relation-role {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-light);
+    margin-bottom: 0.5rem;
+    font-weight: 800;
+}
+
+.relation-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+}
+
+.relation-dates {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+/* Responsywność */
+@media (max-width: 1024px) {
+    .genealogy-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+
+    .genealogy-sidebar {
+        max-height: 400px;
+    }
+
+    .genealogy-details {
+        min-height: 500px;
+    }
+}
+
+@media (max-width: 600px) {
+    .relations-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .profile-actions {
+        align-items: flex-start;
+    }
+}
+
+/* Dark mode support */
+body.dark-mode .genealogy-layout {
+    background: #1f2937;
+}
+
+body.dark-mode .genealogy-sidebar {
+    background: #1e293b;
+    color: #e2e8f0;
+    border-right-color: #334155;
+}
+
+body.dark-mode .genealogy-search-box {
+    background: #0f172a;
+    border-bottom-color: #334155;
+}
+
+body.dark-mode .genealogy-search-box i {
+    color: #64748b;
+}
+
+body.dark-mode .genealogy-search-box input {
+    color: #e2e8f0;
+}
+
+body.dark-mode .genealogy-search-box input::placeholder {
+    color: #64748b;
+}
+
+body.dark-mode .genealogy-filters {
+    border-bottom-color: #334155;
+}
+
+body.dark-mode .filter-btn {
+    border-color: #475569;
+    color: #94a3b8;
+}
+
+body.dark-mode .filter-btn:hover {
+    background: #334155;
+    color: #e2e8f0;
+}
+
+body.dark-mode .family-filter-select {
+    background: #0f172a;
+    border-color: #475569;
+    color: #94a3b8;
+}
+
+body.dark-mode .genealogy-count {
+    background: #0f172a;
+}
+
+body.dark-mode .genealogy-count strong {
+    color: #e2e8f0;
+}
+
+body.dark-mode .persons-list::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+
+body.dark-mode .persons-list::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+body.dark-mode .person-list-item:hover {
+    background: #334155;
+}
+
+body.dark-mode .person-list-item.active {
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.2) 0%, transparent 100%);
+}
+
+body.dark-mode .person-list-item.active.male {
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.2) 0%, transparent 100%);
+}
+
+body.dark-mode .person-list-item.active.female {
+    background: linear-gradient(90deg, rgba(236, 72, 153, 0.2) 0%, transparent 100%);
+}
+
+body.dark-mode .person-list-item.male .person-list-icon {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+body.dark-mode .person-list-item.female .person-list-icon {
+    background: rgba(236, 72, 153, 0.2);
+    color: #f472b6;
+}
+
+body.dark-mode .person-list-name {
+    color: #f1f5f9;
+}
+
+body.dark-mode .person-list-arrow {
+    color: #475569;
+}
+
+body.dark-mode .genealogy-details {
+    background: #111827;
+}
+
+body.dark-mode .relation-card {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+body.dark-mode .relation-card:hover {
+    border-color: #6366f1;
+    background: #111827;
+}
+
+body.dark-mode .relation-name {
+    color: #e5e7eb;
+}
+
+body.dark-mode .profile-title h1 {
+    color: #e5e7eb;
+}
+
+body.dark-mode .profile-header {
+    border-bottom-color: #374151;
+}
+
+/* Larger Geneology Filters */
+#filterHouse {
+    max-width: 100px !important;
+    padding: 10px 12px !important;
+    font-size: 1rem !important;
+}
+
+#sortFilter {
+    padding: 10px 12px !important;
+    font-size: 1rem !important;
+    height: auto !important;
+    cursor: pointer;
+    background-color: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border-radius: 6px;
+    flex: 1;
+}
+
+#sortFilter option {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    padding: 10px;
+}
+
+/* =================================================================
+   AUTOCOMPLETE SUGGESTIONS (Protocol search dropdown)
+   ================================================================= */
+.autocomplete-suggestions {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.autocomplete-suggestions.hidden {
+    display: none;
+}
+
+.autocomplete-suggestion {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.15s ease;
+    font-size: 0.95rem;
+}
+
+.autocomplete-suggestion:last-child {
+    border-bottom: none;
+    border-radius: 0 0 8px 8px;
+}
+
+.autocomplete-suggestion:hover {
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
+}
+
+.autocomplete-suggestion strong {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+/* Dark mode for autocomplete */
+body.dark-mode .autocomplete-suggestions {
+    background: #1f2937;
+    border-color: #374151;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .autocomplete-suggestion {
+    border-bottom-color: #374151;
+}
+
+body.dark-mode .autocomplete-suggestion:hover {
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.2) 0%, transparent 100%);
+}
+
+body.dark-mode .autocomplete-suggestion strong {
+    color: #f1f5f9;
+}
+
+/* =================================================================
+   MINI-TREE VISUALIZATION (genealogy tree in modal)
+   Based on mapa_rodzin.html styles
+   ================================================================= */
+
+/* Make tree modal use full height without double scrollbar */
+#treeModal .modal-content {
+    width: 95vw !important;
+    max-width: 1400px !important;
+    height: 90vh !important;
+    max-height: 90vh !important;
+    display: flex;
+    flex-direction: column;
+}
+
+#treeModal .modal-header {
+    flex-shrink: 0;
+}
+
+#treeModal #treeContainer {
+    flex: 1;
+    overflow: auto;
+    padding: 0;
+}
+
+/* Single scrollable tree wrapper that fills the container */
+.tree-scroll-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    padding: 1.5rem;
+    box-sizing: border-box;
+}
+
+.tree-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding: 1rem;
+    min-width: max-content;
+}
+
+.tree-level {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    position: relative;
+}
+
+.tree-connector-down {
+    width: 2px;
+    height: 30px;
+    background: var(--border);
+    margin: 0 auto;
+}
+
+.tree-pair {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tree-pair-connector {
+    width: 30px;
+    height: 2px;
+    background: #e74c3c;
+    position: relative;
+}
+
+.tree-pair-connector::after {
+    content: '💕';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+}
+
+.tree-branch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.tree-main-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.tree-with-siblings {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+}
+
+.tree-siblings-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0.8;
+    padding-top: 1.5rem;
+}
+
+.tree-siblings-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    max-width: 400px;
+    justify-content: center;
+}
+
+.tree-children {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    position: relative;
+    padding-top: 30px;
+    flex-wrap: wrap;
+}
+
+.tree-children::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 2px;
+    height: 15px;
+    background: var(--border);
+}
+
+.tree-children-connector {
+    position: absolute;
+    top: 15px;
+    height: 2px;
+    background: var(--border);
+}
+
+.tree-child-branch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.tree-child-branch::before {
+    content: '';
+    width: 2px;
+    height: 15px;
+    background: var(--border);
+}
+
+.generation-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-tertiary);
+    margin: 1rem 0 0.5rem;
+    font-weight: 700;
+}
+
+.section-label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-tertiary);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.tree-node {
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    min-width: 140px;
+    max-width: 180px;
+    text-align: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+}
+
+.tree-node:hover {
+    transform: scale(1.05);
+}
+
+/* Node colors */
+.tree-node-male {
+    background: #e3f2fd;
+    border: 2px solid #1976d2;
+}
+
+.tree-node-female {
+    background: #fce4ec;
+    border: 2px solid #c2185b;
+}
+
+.tree-node-root {
+    background: #fff3cd;
+    border: 2px solid #f57f17;
+}
+
+/* Dark mode adjustments for tree */
+body.dark-mode .tree-node-male {
+    background: #1e3a5f;
+    border-color: #42a5f5;
+}
+
+body.dark-mode .tree-node-female {
+    background: #4a1e3a;
+    border-color: #f06292;
+}
+
+body.dark-mode .tree-node-root {
+    background: #4a4000;
+    border-color: #ffca28;
+}
+
+body.dark-mode .tree-node {
+    color: var(--text-primary);
+}
+
+.tree-legend {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-align: center;
+    width: 100%;
+}

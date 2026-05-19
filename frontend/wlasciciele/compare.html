@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <script src="/assets/js/api.js"></script>
+    <!-- ==========================================================================
+         METADANE I KONFIGURACJA
+         ========================================================================== -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Narzędzie do porównywania protokołów katastralnych">
+    <meta name="keywords" content="porównanie protokołów, analiza katastralna, XIX wiek">
+    <title>Porównanie Protokołów</title>
+
+    <!-- Favicon z folderu miejscowości -->
+    <link rel="icon" href="/location_favicon" type="image/x-icon">
+
+    <!-- ==========================================================================
+         ZASOBY ZEWNĘTRZNE
+         ========================================================================== -->
+    <!-- Font Awesome - ikony -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts - typografia -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- ==========================================================================
+         ARKUSZE STYLÓW APLIKACJI
+         ========================================================================== -->
+    <!-- Podstawowe style protokołu -->
+    <link rel="stylesheet" href="protokol_styles.css">
+    <!-- Dedykowane style dla funkcji porównywania -->
+    <link rel="stylesheet" href="compare-style.css">
+
+    <!-- ==========================================================================
+         BIBLIOTEKI JAVASCRIPT
+         ========================================================================== -->
+    <!-- PanZoom - obsługa zoom i przesuwania obrazów -->
+    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+    <!-- html2pdf - generowanie dokumentów PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+</head>
+
+<body>
+    <!-- ==========================================================================
+         WARSTWA TŁA
+         ========================================================================== -->
+    <div class="background-gradient"></div>
+
+    <!-- ==========================================================================
+         GŁÓWNY KONTENER APLIKACJI
+         ========================================================================== -->
+    <div id="app-wrapper">
+
+        <!-- ==========================================================================
+             NAGŁÓWEK APLIKACJI
+             ========================================================================== -->
+        <header class="top-header">
+            <div class="header-content">
+                <!-- Lewa strona nagłówka - tytuł -->
+                <div class="header-left">
+                    <h1 class="app-title">
+                        <i class="fas fa-code-compare"></i>
+                        Porównanie Protokołów
+                    </h1>
+                </div>
+
+                <!-- Prawa strona nagłówka - przyciski akcji -->
+                <div class="header-right">
+                    <!-- Przyciski nawigacji do mapy -->
+                    <a href="#" id="mapLinkReal" class="header-btn map-btn-real hidden">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Stan rzeczywisty</span>
+                    </a>
+                    <a href="#" id="mapLinkProtocol" class="header-btn map-btn-protocol hidden">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Stan wg protokołu</span>
+                    </a>
+                    <a href="#" id="mapLinkBoth" class="header-btn map-btn-both hidden">
+                        <i class="fas fa-layer-group"></i>
+                        <span>Oba stany</span>
+                    </a>
+                    <!-- Przyciski funkcyjne -->
+                    <button id="fullscreenBtn" class="header-btn" title="Pełny ekran">
+                        <i class="fas fa-expand"></i>
+                        <span>Pełny ekran</span>
+                    </button>
+                    <button id="themeToggleBtn" class="header-btn" title="Zmień motyw">
+                        <i class="fas fa-sun"></i>
+                    </button>
+                    <!-- Link powrotu -->
+                    <a href="../mapa/mapa.html" class="header-btn">
+                        <i class="fas fa-map"></i>
+                        <span>Powrót do mapy</span>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- ==========================================================================
+             GŁÓWNA ZAWARTOŚĆ - PORÓWNANIE PROTOKOŁÓW
+             ========================================================================== -->
+        <main class="main-content compare-main">
+            <!-- Kontener dwukolumnowy do porównywania -->
+            <div class="compare-container">
+                <!-- KOLUMNA 1: Pierwszy protokół -->
+                <div class="protocol-column" id="protocol-1">
+                    <!-- Zawartość generowana dynamicznie przez JavaScript -->
+                </div>
+
+                <!-- KOLUMNA 2: Drugi protokół -->
+                <div class="protocol-column" id="protocol-2">
+                    <!-- Zawartość generowana dynamicznie przez JavaScript -->
+                </div>
+            </div>
+        </main>
+
+        <!-- ==========================================================================
+             STOPKA APLIKACJI
+             ========================================================================== -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                <span>Porównanie wygenerowane: <span id="currentDate"></span></span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL: Przeglądarka skanów protokołu
+         ========================================================================== -->
+    <div id="imageModal" class="modal-overlay hidden">
+        <span class="modal-close-btn">&times;</span>
+        <div class="modal-image-container">
+            <img class="modal-image" id="modalImageSrc" alt="Skan protokołu">
+        </div>
+        <!-- Kontrolki nawigacji między skanami -->
+        <div class="modal-nav-controls">
+            <button id="prevImageBtn" class="modal-nav-btn">
+                <i class="fas fa-chevron-left"></i> Poprzedni
+            </button>
+            <span id="pageCounter" class="page-counter">Strona 1 / 1</span>
+            <button id="nextImageBtn" class="modal-nav-btn">
+                Następny <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         DIALOG: Drzewo genealogiczne
+         ========================================================================== -->
+    <dialog id="treeDialog" class="tree-dialog">
+        <div class="dialog-header">
+            <h3><i class="fas fa-sitemap"></i> Drzewo Genealogiczne</h3>
+            <button id="closeTreeBtn" class="dialog-close-btn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="treeContainer" class="tree-container">
+            <!-- Wizualizacja renderowana przez D3.js -->
+        </div>
+    </dialog>
+
+    <!-- ==========================================================================
+         SKRYPT GŁÓWNY
+         ========================================================================== -->
+    <script src="compare.js"></script>
+</body>
+
+</html>

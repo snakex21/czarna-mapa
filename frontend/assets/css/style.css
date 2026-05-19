@@ -1,0 +1,731 @@
+/* =============================================================================
+   STYLE.CSS — Globalny styl aplikacji Mapa Katastralna
+   ============================================================================= */
+
+:root {
+    /* Kolory */
+    --bg-primary: #1a1b2e;
+    --bg-secondary: #232440;
+    --bg-card: #2a2b4a;
+    --bg-hover: #32335a;
+    --text-primary: #e8e9f0;
+    --text-secondary: #a0a1b8;
+    --text-muted: #6b6c80;
+    --accent: #4facfe;
+    --accent-hover: #3d8fd9;
+    --accent-gold: #d4a853;
+    --danger: #ff6b6b;
+    --success: #51cf66;
+    --border: #3a3b58;
+
+    /* Layout */
+    --sidebar-width: 260px;
+    --header-height: 0px; /* Brak górnego headera w SPA */
+
+    /* Typografia */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-display: 'Playfair Display', Georgia, serif;
+
+    /* Cienie */
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
+
+    /* Zaokrąglenia */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+
+    /* Animacje */
+    --transition-fast: 150ms ease;
+    --transition-normal: 250ms ease;
+}
+
+/* Reset */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family: var(--font-sans);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    display: flex;
+    line-height: 1.6;
+}
+
+/* =============================================================================
+   SIDEBAR
+   ============================================================================= */
+#sidebar {
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+}
+
+.sidebar-header {
+    padding: 28px 24px 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+}
+
+.app-logo {
+    font-size: 42px;
+    color: var(--accent-gold);
+    margin-bottom: 8px;
+}
+
+.app-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.app-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* Nawigacja */
+.sidebar-nav {
+    flex: 1;
+    padding: 12px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+}
+
+.nav-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.nav-item.active {
+    background: var(--accent);
+    color: #fff;
+}
+
+.nav-item i {
+    width: 20px;
+    text-align: center;
+    font-size: 15px;
+}
+
+.nav-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 8px 0;
+}
+
+/* Stopka sidebar */
+.sidebar-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.sidebar-footer .author {
+    color: var(--accent-gold);
+    font-weight: 500;
+}
+
+/* =============================================================================
+   GŁÓWNA ZAWARTOŚĆ
+   ============================================================================= */
+#main-content {
+    flex: 1;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
+.view {
+    display: none;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.view.active {
+    display: flex;
+    flex-direction: column;
+}
+
+/* =============================================================================
+   MAPA
+   ============================================================================= */
+#view-mapa {
+    position: relative;
+}
+
+#leaflet-map {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+}
+
+.info-panel {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 320px;
+    max-height: 60vh;
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    padding: 16px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.info-panel h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.owner-card {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+}
+
+.owner-card:last-child {
+    border-bottom: none;
+}
+
+.badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    margin-left: 8px;
+}
+
+/* =============================================================================
+   WIDOKI DANYCH
+   ============================================================================= */
+.view-header {
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-secondary);
+}
+
+.view-header h2 {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.search-bar {
+    width: 300px;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 10px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    transition: border-color var(--transition-fast);
+}
+
+.search-bar input:focus {
+    border-color: var(--accent);
+}
+
+.data-list {
+    padding: 20px 28px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.data-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border: 1px solid transparent;
+}
+
+.data-card:hover {
+    background: var(--bg-hover);
+    border-color: var(--border);
+}
+
+.data-card h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.card-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    flex-wrap: wrap;
+}
+
+.card-desc {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.detail-view {
+    padding: 8px 0;
+}
+
+.detail-view h2 {
+    font-family: var(--font-display);
+    font-size: 24px;
+    margin-bottom: 16px;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.detail-grid div {
+    padding: 12px;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+}
+
+.detail-view section {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.detail-view section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--accent-gold);
+}
+
+.btn-back {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 13px;
+    margin-bottom: 16px;
+    transition: all var(--transition-fast);
+}
+
+.btn-back:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary:hover {
+    background: var(--accent-hover);
+}
+
+/* =============================================================================
+   GENEALOGIA
+   ============================================================================= */
+#genealogy-container {
+    display: flex;
+    flex: 1;
+    height: calc(100vh - 70px);
+}
+
+#genealogy-list-panel {
+    width: 300px;
+    min-width: 300px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#genealogy-results {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.person-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.person-item:hover {
+    background: var(--bg-hover);
+}
+
+.person-gender {
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+}
+
+.person-gender.male { color: #4facfe; }
+.person-gender.female { color: #ff6b9d; }
+
+.person-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.person-info strong {
+    display: block;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.person-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+#genealogy-tree {
+    flex: 1;
+    overflow: auto;
+    background: var(--bg-primary);
+}
+
+#genealogy-detail {
+    width: 280px;
+    min-width: 280px;
+    background: var(--bg-secondary);
+    border-left: 1px solid var(--border);
+    padding: 16px;
+    overflow-y: auto;
+}
+
+#genealogy-detail h3 {
+    font-family: var(--font-display);
+    font-size: 18px;
+    margin-bottom: 12px;
+}
+
+#genealogy-detail h4 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-top: 16px;
+    margin-bottom: 6px;
+}
+
+.relation-link {
+    display: inline-block;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 13px;
+    margin: 2px 4px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: background var(--transition-fast);
+}
+
+.relation-link:hover {
+    background: var(--bg-hover);
+    text-decoration: underline;
+}
+
+/* =============================================================================
+   TABELE
+   ============================================================================= */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.data-table th {
+    text-align: left;
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+}
+
+.data-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.data-table tr:hover {
+    background: var(--bg-hover);
+}
+
+/* =============================================================================
+   UTILITY
+   ============================================================================= */
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.text-muted {
+    color: var(--text-muted);
+    text-align: center;
+    padding: 40px;
+}
+
+/* =============================================================================
+   PROTOKOLY - GALERIA ZDJEC
+   ============================================================================= */
+.protocol-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.photo-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.photo-item {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform var(--transition-fast);
+}
+
+.photo-item:hover {
+    transform: scale(1.02);
+}
+
+.photo-item img {
+    width: 100%;
+    height: 300px;
+    object-fit: contain;
+    background: #000;
+}
+
+.photo-item span {
+    display: block;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+/* Overlay do powiększania zdjęć */
+.photo-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    cursor: pointer;
+}
+
+/* =============================================================================
+   EDYTORY - FORMULARZE
+   ============================================================================= */
+.editor-list {
+    padding: 16px 0;
+}
+
+.editor-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.editor-card-info {
+    flex: 1;
+}
+
+.editor-card-info strong {
+    display: block;
+    font-size: 14px;
+}
+
+.editor-card-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.btn-small {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 12px;
+    transition: all var(--transition-fast);
+}
+
+.btn-small:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.btn-danger:hover {
+    background: var(--danger);
+    color: #fff;
+    border-color: var(--danger);
+}
+
+.editor-form {
+    padding: 8px 0;
+    max-width: 700px;
+}
+
+.editor-form h2 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: var(--font-sans);
+    outline: none;
+    transition: border-color var(--transition-fast);
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: var(--accent);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* =============================================================================
+   SCROLLBAR
+   ============================================================================= */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
