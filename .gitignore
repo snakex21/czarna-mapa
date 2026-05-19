@@ -15,9 +15,6 @@ node_modules/
 Thumbs.db
 .DS_Store
 
-# Large binary assets (added in batches)
-frontend/protokoly/
-
 # IDE
 .vscode/
 .idea/
