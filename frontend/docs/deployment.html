@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <script src="/assets/js/api.js"></script>
+    <!-- ==========================================================================
+         Plik: deployment.html
+         Opis: Przewodnik wdrożeniowy systemu mapy katastralnej - krok po kroku
+         ========================================================================== -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Przewodnik Wdrożeniowy - Mapa Katastralna</title>
+
+    <!-- Zewnętrzne zasoby -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div class="container">
+      <!-- ==========================================================================
+           NAGŁÓWEK
+           ========================================================================== -->
+      <header>
+        <h1>Przewodnik Wdrożeniowy</h1>
+        <p class="subtitle">Instalacja i konfiguracja systemu mapy katastralnej</p>
+      </header>
+
+      <!-- ==========================================================================
+           PASEK NAWIGACJI
+           ========================================================================== -->
+      <nav id="navbar">
+        <div class="nav-links">
+            <a href="index.html"><span>← Powrót do dokumentacji</span></a>
+            <a href="#wymagania"><span>Wymagania</span></a>
+            <a href="#postgresql"><span>PostgreSQL</span></a>
+            <a href="#instalacja"><span>Instalacja</span></a>
+            <a href="#pierwsze-uruchomienie"><span>Pierwsze uruchomienie</span></a>
+            <a href="#problemy"><span>Rozwiązywanie problemów</span></a>
+        </div>
+        <div class="nav-actions">
+            <button class="icon-btn" id="theme-toggle" title="Zmień motyw">
+                <i class="fas fa-sun"></i>
+            </button>
+        </div>
+      </nav>
+
+      <!-- ==========================================================================
+           GŁÓWNA TREŚĆ
+           ========================================================================== -->
+      <main>
+
+        <!-- ==========================================================================
+             WPROWADZENIE
+             ========================================================================== -->
+        <section>
+          <h2>Wstęp</h2>
+          <div class="chapter-intro">
+            <p>
+              Ten przewodnik przeprowadzi Cię przez proces instalacji i konfiguracji
+              systemu mapy katastralnej. Instalacja jest prosta i składa się z 3 głównych kroków:
+            </p>
+            <ol>
+              <li>Instalacja PostgreSQL (jednorazowa, ~10 minut)</li>
+              <li>Pobranie projektu z GitHub (~5 minut)</li>
+              <li>Uruchomienie launchera i konfiguracja (~5 minut)</li>
+            </ol>
+            <p>
+              <strong>Całkowity czas instalacji: 20-30 minut</strong>
+            </p>
+          </div>
+        </section>
+
+        <!-- ==========================================================================
+             WYMAGANIA SYSTEMOWE
+             ========================================================================== -->
+        <section>
+          <h2 id="wymagania">Wymagania Systemowe</h2>
+
+          <h3>Minimalne wymagania sprzętowe</h3>
+          <ul>
+            <li><strong>Procesor:</strong> Intel Core i3 / AMD Ryzen 3 (2 rdzenie)</li>
+            <li><strong>RAM:</strong> 4 GB (zalecane 8 GB)</li>
+            <li><strong>Dysk:</strong> 2 GB wolnego miejsca</li>
+            <li><strong>System operacyjny:</strong> Windows 10/11, Linux (Ubuntu 20.04+), macOS</li>
+          </ul>
+
+          <h3>Wymagane oprogramowanie</h3>
+          <div class="info-box">
+            <h4>1. Python 3.10 lub nowszy</h4>
+            <p><strong>Sprawdź wersję:</strong></p>
+            <pre><code>python --version</code></pre>
+            <p><strong>Pobierz:</strong> <a href="https://www.python.org/downloads/" target="_blank">python.org/downloads</a></p>
+            <p><strong>Instalacja Windows:</strong> Zaznacz "Add Python to PATH" podczas instalacji!</p>
+          </div>
+
+          <div class="info-box">
+            <h4>2. PostgreSQL 14 lub nowszy + PostGIS</h4>
+            <p><strong>Pobierz:</strong> <a href="https://www.postgresql.org/download/" target="_blank">postgresql.org/download</a></p>
+            <p><strong>WAŻNE:</strong> Podczas instalacji zapamiętaj hasło użytkownika <code>postgres</code></p>
+          </div>
+
+          <div class="info-box">
+            <h4>3. Git (opcjonalne)</h4>
+            <p><strong>Pobierz:</strong> <a href="https://git-scm.com/downloads" target="_blank">git-scm.com</a></p>
+            <p>Możesz też pobrać projekt jako ZIP z GitHub</p>
+          </div>
+        </section>
+
+        <!-- ==========================================================================
+             INSTALACJA POSTGRESQL
+             ========================================================================== -->
+        <section>
+          <h2 id="postgresql">Krok 1: Instalacja PostgreSQL</h2>
+
+          <div class="warning-box">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>WAŻNE:</strong> PostgreSQL to serwer bazy danych. Będzie działał w tle nawet po zamknięciu aplikacji.
+            Podczas instalacji musisz ustawić hasło - ZAPAMIĘTAJ JE!
+          </div>
+
+          <h3>Windows</h3>
+          <ol>
+            <li>Pobierz instalator PostgreSQL z <a href="https://www.postgresql.org/download/windows/" target="_blank">postgresql.org</a></li>
+            <li>Uruchom instalator <code>postgresql-XX-windows-x64.exe</code></li>
+            <li>
+              <strong>Podczas instalacji:</strong>
+              <ul>
+                <li>Katalog instalacji: <code>C:\Program Files\PostgreSQL\XX</code> (domyślny)</li>
+                <li>Port: <code>5432</code> (domyślny)</li>
+                <li><strong>HASŁO:</strong> Wpisz i ZAPAMIĘTAJ (np. zapisz w notatniku)</li>
+                <li><strong>Locale:</strong> Polish, Poland lub Default locale</li>
+              </ul>
+            </li>
+            <li>
+              <strong>Stack Builder:</strong> Po instalacji PostgreSQL uruchomi się Stack Builder:
+              <ul>
+                <li>Wybierz swoją instalację PostgreSQL</li>
+                <li>Rozwiń <code>Spatial Extensions</code></li>
+                <li>Zaznacz <code>PostGIS X.X Bundle for PostgreSQL XX</code></li>
+                <li>Kliknij Next i zainstaluj</li>
+              </ul>
+            </li>
+          </ol>
+
+          <div class="success-box">
+            <i class="fas fa-check-circle"></i>
+            <strong>Sprawdź instalację:</strong>
+            <ol>
+              <li>Otwórz Start Menu → PostgreSQL → SQL Shell (psql)</li>
+              <li>Naciśnij Enter 4 razy (użyje domyślnych wartości)</li>
+              <li>Wpisz hasło które ustawiłeś podczas instalacji</li>
+              <li>Jeśli zobaczysz <code>postgres=#</code> - instalacja OK!</li>
+            </ol>
+          </div>
+
+          <h3>Linux (Ubuntu/Debian)</h3>
+          <pre><code># Aktualizuj listę pakietów
+sudo apt update
+
+# Zainstaluj PostgreSQL i PostGIS
+sudo apt install postgresql postgresql-contrib postgis
+
+# Ustaw hasło dla użytkownika postgres
+sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'twoje-haslo';"
+
+# Sprawdź status
+sudo systemctl status postgresql</code></pre>
+
+          <h3>macOS</h3>
+          <p>Najłatwiej przez Homebrew:</p>
+          <pre><code># Zainstaluj PostgreSQL
+brew install postgresql@14
+
+# Zainstaluj PostGIS
+brew install postgis
+
+# Uruchom PostgreSQL
+brew services start postgresql@14
+
+# Ustaw hasło
+psql postgres -c "ALTER USER postgres PASSWORD 'twoje-haslo';"</code></pre>
+        </section>
+
+        <!-- ==========================================================================
+             POBRANIE PROJEKTU
+             ========================================================================== -->
+        <section>
+          <h2 id="instalacja">Krok 2: Pobranie projektu</h2>
+
+          <h3>Opcja A: Git (zalecane)</h3>
+          <pre><code># Przejdź do folderu gdzie chcesz mieć projekt
+cd Desktop
+
+# Sklonuj repozytorium
+git clone https://github.com/twoja-nazwa/Projekt-Czarna.git
+
+# Wejdź do folderu projektu
+cd Projekt-Czarna</code></pre>
+
+          <h3>Opcja B: Pobierz ZIP</h3>
+          <ol>
+            <li>Przejdź do repozytorium na GitHubie</li>
+            <li>Kliknij zielony przycisk <code>Code</code></li>
+            <li>Wybierz <code>Download ZIP</code></li>
+            <li>Rozpakuj archiwum do wybranego folderu</li>
+          </ol>
+
+          <h3>Instalacja zależności Python</h3>
+          <pre><code># Upewnij się że jesteś w folderze projektu
+cd Projekt-Czarna
+
+# Zainstaluj wymagane biblioteki
+pip install -r requirements.txt
+
+# Jeśli pip nie działa, użyj:
+python -m pip install -r requirements.txt</code></pre>
+
+          <div class="info-box">
+            <i class="fas fa-info-circle"></i>
+            <strong>Opcjonalnie:</strong> Możesz utworzyć virtual environment:
+            <pre><code># Utwórz venv
+python -m venv venv
+
+# Aktywuj (Windows)
+venv\Scripts\activate
+
+# Aktywuj (Linux/macOS)
+source venv/bin/activate
+
+# Zainstaluj zależności
+pip install -r requirements.txt</code></pre>
+          </div>
+        </section>
+
+        <!-- ==========================================================================
+             PIERWSZE URUCHOMIENIE
+             ========================================================================== -->
+        <section>
+          <h2 id="pierwsze-uruchomienie">Krok 3: Pierwsze uruchomienie</h2>
+
+          <h3>Uruchomienie Launchera</h3>
+          <pre><code># Upewnij się że jesteś w folderze projektu
+cd Projekt-Czarna
+
+# Uruchom launcher
+python launcher/launcher_app.py</code></pre>
+
+          <div class="success-box">
+            <i class="fas fa-rocket"></i>
+            <strong>Co się wydarzy przy pierwszym uruchomieniu:</strong>
+          </div>
+
+          <h3>1. Okno konfiguracji PostgreSQL</h3>
+          <p>Launcher zapyta o dane połączenia z PostgreSQL:</p>
+          <ul>
+            <li><strong>Host:</strong> <code>localhost</code> (pozostaw domyślnie)</li>
+            <li><strong>Port:</strong> <code>5432</code> (pozostaw domyślnie)</li>
+            <li><strong>Użytkownik:</strong> <code>postgres</code> (pozostaw domyślnie)</li>
+            <li><strong>Hasło:</strong> <strong>Wpisz hasło które ustawiłeś podczas instalacji PostgreSQL</strong></li>
+          </ul>
+
+          <p>Po wpisaniu hasła launcher automatycznie:</p>
+          <ul>
+            <li>Przetestuje połączenie</li>
+            <li>Wyświetli <code>✓ Połączenie Udane!</code></li>
+            <li>Zapisze konfigurację do <code>backend/.postgres.env</code></li>
+          </ul>
+
+          <h3>2. Okno ładowania</h3>
+          <p>Launcher automatycznie:</p>
+          <ul>
+            <li>Utworzy bazę <code>mapa_launcher_db</code> (zarządzanie miejscowościami)</li>
+            <li>Utworzy bazę <code>mapa_czarna_db</code> (dane dla miejscowości Czarna)</li>
+            <li>Utworzy miejscowość "Czarna" jako szablon</li>
+            <li>Zmigruje dane z <code>backup/Czarna/</code></li>
+            <li>Wygeneruje konfigurację</li>
+          </ul>
+
+          <div class="warning-box">
+            <i class="fas fa-clock"></i>
+            <strong>Pierwsze uruchomienie może zająć 1-2 minuty.</strong>
+            To normalne - launcher tworzy bazy danych i importuje dane.
+          </div>
+
+          <h3>3. Główne okno Launchera</h3>
+          <p>Po inicjalizacji zobaczysz główne okno z sekcjami:</p>
+          <ul>
+            <li><strong>📍 Miejscowość:</strong> Aktywna miejscowość (domyślnie: Czarna)</li>
+            <li><strong>⚙️ Operacje Główne:</strong> Uruchomienie serwera, migracja danych</li>
+            <li><strong>🛠️ Narzędzia Deweloperskie:</strong> Edytory danych</li>
+            <li><strong>🌐 Szybki Dostęp:</strong> Linki do aplikacji webowej</li>
+          </ul>
+
+          <h3>4. Uruchomienie serwera</h3>
+          <ol>
+            <li>Kliknij <code>🚀 Uruchom Serwer Backend</code></li>
+            <li>Poczekaj aż zobaczysz w konsoli: <code>✓ Running on http://127.0.0.1:5000</code></li>
+            <li>Kliknij <code>🗺️ Mapa Interaktywna</code> w sekcji Szybki Dostęp</li>
+            <li>Przeglądarka otworzy aplikację webową!</li>
+          </ol>
+
+          <div class="success-box">
+            <i class="fas fa-check-circle"></i>
+            <strong>Gratulacje! System działa.</strong>
+            <p>Możesz teraz przeglądać mapę katastralną, dane właścicieli, statystyki i genealogię.</p>
+          </div>
+        </section>
+
+        <!-- ==========================================================================
+             ROZWIĄZYWANIE PROBLEMÓW
+             ========================================================================== -->
+        <section>
+          <h2 id="problemy">Rozwiązywanie problemów</h2>
+
+          <h3>Problem: "python: command not found"</h3>
+          <div class="solution-box">
+            <strong>Rozwiązanie:</strong>
+            <ul>
+              <li><strong>Windows:</strong> Sprawdź czy Python jest w PATH. Reinstaluj z opcją "Add to PATH"</li>
+              <li><strong>Linux/macOS:</strong> Użyj <code>python3</code> zamiast <code>python</code></li>
+            </ul>
+          </div>
+
+          <h3>Problem: "ModuleNotFoundError: No module named 'flask'"</h3>
+          <div class="solution-box">
+            <strong>Rozwiązanie:</strong>
+            <pre><code>pip install -r requirements.txt</code></pre>
+            <p>Jeśli nie działa:</p>
+            <pre><code>python -m pip install flask psycopg2 werkzeug</code></pre>
+          </div>
+
+          <h3>Problem: "✗ Błąd połączenia z PostgreSQL"</h3>
+          <div class="solution-box">
+            <strong>Sprawdź:</strong>
+            <ol>
+              <li>Czy PostgreSQL jest uruchomiony?
+                <pre><code># Windows - otwórz Usługi i szukaj "postgresql"
+# Linux
+sudo systemctl status postgresql
+
+# macOS
+brew services list</code></pre>
+              </li>
+              <li>Czy hasło jest poprawne? Sprawdź w notatniku gdzie je zapisałeś</li>
+              <li>Czy port 5432 nie jest zajęty?
+                <pre><code># Windows
+netstat -ano | findstr :5432
+
+# Linux/macOS
+lsof -i :5432</code></pre>
+              </li>
+            </ol>
+          </div>
+
+          <h3>Problem: "Port 5000 is already in use"</h3>
+          <div class="solution-box">
+            <strong>Rozwiązanie:</strong>
+            <p>Zmień port w ustawieniach:</p>
+            <ol>
+              <li>W Launcherze kliknij <code>⚙️ Konfiguracja DB</code></li>
+              <li>Edytuj plik <code>.env</code> aktywnej miejscowości</li>
+              <li>Zmień <code>FLASK_PORT=5000</code> na np. <code>FLASK_PORT=5001</code></li>
+              <li>Zapisz i uruchom serwer ponownie</li>
+            </ol>
+          </div>
+
+          <h3>Problem: Launcher się nie uruchamia (Windows)</h3>
+          <div class="solution-box">
+            <strong>Rozwiązanie:</strong>
+            <p>Tkinter może nie być zainstalowany. Reinstaluj Python z opcją "tcl/tk and IDLE"</p>
+          </div>
+
+          <h3>Problem: "Permission denied" przy tworzeniu bazy danych</h3>
+          <div class="solution-box">
+            <strong>Rozwiązanie:</strong>
+            <p>Użytkownik <code>postgres</code> musi mieć uprawnienia SUPERUSER:</p>
+            <pre><code>psql -U postgres -c "ALTER USER postgres WITH SUPERUSER;"</code></pre>
+          </div>
+        </section>
+
+        <!-- ==========================================================================
+             NASTĘPNE KROKI
+             ========================================================================== -->
+        <section>
+          <h2>Następne kroki</h2>
+
+          <div class="info-box">
+            <h3>Poznaj system:</h3>
+            <ul>
+              <li><strong>Mapa Interaktywna:</strong> Przeglądaj działki, rzeki, drogi</li>
+              <li><strong>Baza Właścicieli:</strong> Wyszukuj osoby, przeglądaj genealogię</li>
+              <li><strong>Statystyki:</strong> TOP 50 właścicieli, ranking działek</li>
+              <li><strong>Panel Administracyjny:</strong> Edytuj dane (wymaga hasła)</li>
+            </ul>
+          </div>
+
+          <div class="info-box">
+            <h3>Dodaj własną miejscowość:</h3>
+            <ol>
+              <li>Kliknij <code>⚙️ Zarządzaj Miejscowościami</code> w Launcherze</li>
+              <li>Kliknij <code>➕ Dodaj miejscowość</code></li>
+              <li>Wypełnij formularz (nazwa, opis, szablon)</li>
+              <li>Użyj edytorów aby dodać dane</li>
+            </ol>
+          </div>
+
+          <div class="success-box">
+            <h3>Backup i Restore:</h3>
+            <p>System automatycznie tworzy backupy w formacie ZIP. Możesz:</p>
+            <ul>
+              <li>Eksportować dane miejscowości</li>
+              <li>Przywracać z kopii zapasowej</li>
+              <li>Migrować dane między instalacjami</li>
+            </ul>
+            <p>Kliknij <code>💾 Menedżer Kopii</code> w Launcherze</p>
+          </div>
+        </section>
+
+        <!-- ==========================================================================
+             WDROŻENIE PRODUKCYJNE
+             ========================================================================== -->
+        <section>
+          <h2>Wdrożenie produkcyjne (dla gmin)</h2>
+
+          <div class="warning-box">
+            <i class="fas fa-server"></i>
+            <strong>Dla środowiska produkcyjnego</strong> (serwer dostępny publicznie) zalecane są dodatkowe kroki:
+          </div>
+
+          <h3>1. Serwer dedykowany</h3>
+          <ul>
+            <li>Ubuntu Server 22.04 LTS lub nowszy</li>
+            <li>Minimum 4 GB RAM, 20 GB dysk</li>
+            <li>Stały adres IP lub domena</li>
+          </ul>
+
+          <h3>2. Nginx jako reverse proxy</h3>
+          <pre><code># Zainstaluj Nginx
+sudo apt install nginx
+
+# Konfiguracja (przykład)
+server {
+    listen 80;
+    server_name mapa.gmina-czarna.pl;
+
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}</code></pre>
+
+          <h3>3. SSL (HTTPS)</h3>
+          <pre><code># Zainstaluj Certbot
+sudo apt install certbot python3-certbot-nginx
+
+# Uzyskaj certyfikat SSL
+sudo certbot --nginx -d mapa.gmina-czarna.pl</code></pre>
+
+          <h3>4. Systemd service</h3>
+          <p>Utwórz plik <code>/etc/systemd/system/mapa-katastralna.service</code>:</p>
+          <pre><code>[Unit]
+Description=Mapa Katastralna Backend
+After=network.target postgresql.service
+
+[Service]
+User=www-data
+WorkingDirectory=/var/www/Projekt-Czarna
+Environment="PATH=/var/www/Projekt-Czarna/venv/bin"
+ExecStart=/var/www/Projekt-Czarna/venv/bin/python backend/app.py
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+
+          <pre><code># Włącz i uruchom
+sudo systemctl enable mapa-katastralna
+sudo systemctl start mapa-katastralna</code></pre>
+
+          <h3>5. Zabezpieczenia</h3>
+          <ul>
+            <li><strong>Firewall:</strong> Otwórz tylko porty 80, 443, 22 (SSH)</li>
+            <li><strong>PostgreSQL:</strong> Zmień hasło postgres, użyj silnego hasła</li>
+            <li><strong>Admin Panel:</strong> Włącz autentykację (Ustawienia Administratora)</li>
+            <li><strong>Backup:</strong> Skonfiguruj automatyczne backupy (cron)</li>
+          </ul>
+        </section>
+
+        <!-- ==========================================================================
+             KONTAKT I WSPARCIE
+             ========================================================================== -->
+        <section>
+          <h2>Wsparcie</h2>
+          <p>Jeśli masz pytania lub problemy:</p>
+          <ul>
+            <li><strong>GitHub Issues:</strong> Zgłoś problem w repozytorium</li>
+            <li><strong>Email:</strong> [twój email kontaktowy]</li>
+            <li><strong>Dokumentacja:</strong> <a href="index.html">docs/index.html</a></li>
+          </ul>
+
+          <div class="success-box">
+            <i class="fas fa-heart"></i>
+            <p><strong>Dziękuję za korzystanie z systemu!</strong></p>
+            <p>Jeśli projekt Ci się podoba, zostaw ⭐ na GitHubie.</p>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- ==========================================================================
+           STOPKA
+           ========================================================================== -->
+      <footer>
+        <p>&copy; 2024 Maksymilian Augustyn - Praca Inżynierska</p>
+        <p>Politechnika • Opiekun: dr inż. Adam Pieprzycki</p>
+      </footer>
+
+    </div>
+
+    <!-- ==========================================================================
+         JAVASCRIPT
+         ========================================================================== -->
+    <script>
+      // Dark/Light mode toggle
+      const themeToggle = document.getElementById('theme-toggle');
+      const body = document.body;
+      const icon = themeToggle.querySelector('i');
+
+      themeToggle.addEventListener('click', () => {
+        body.classList.toggle('light-mode');
+        const isLight = body.classList.contains('light-mode');
+        icon.className = isLight ? 'fas fa-moon' : 'fas fa-sun';
+        localStorage.setItem('theme', isLight ? 'light' : 'dark');
+      });
+
+      // Load saved theme
+      if (localStorage.getItem('theme') === 'light') {
+        body.classList.add('light-mode');
+        icon.className = 'fas fa-moon';
+      }
+
+      // Smooth scrolling for anchor links
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+          e.preventDefault();
+          const target = document.querySelector(this.getAttribute('href'));
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      });
+
+      // Highlight current section in navbar
+      window.addEventListener('scroll', () => {
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
+
+        let current = '';
+        sections.forEach(section => {
+          const sectionTop = section.offsetTop;
+          const sectionHeight = section.clientHeight;
+          if (scrollY >= sectionTop - 100) {
+            current = section.querySelector('h2')?.id || '';
+          }
+        });
+
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === `#${current}`) {
+            link.classList.add('active');
+          }
+        });
+      });
+    </script>
+</body>
+</html>

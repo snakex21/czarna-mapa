@@ -1,0 +1,362 @@
+/* ==========================================================================
+   Plik: compare-style.css
+   Opis: Dedykowany arkusz stylów dla strony porównywania protokołów.
+         Rozszerza protokol_styles.css o funkcjonalność równoległego
+         wyświetlania dwóch protokołów katastralnych.
+   ========================================================================== */
+
+/* ==========================================================================
+   GŁÓWNY UKŁAD PORÓWNANIA
+   ========================================================================== */
+.compare-main {
+    padding: 2rem;
+    max-width: 100%;
+}
+
+/* ==========================================================================
+   KONTENER DWUKOLUMNOWY
+   ========================================================================== */
+.compare-container {
+    display: flex;
+    gap: 2rem;
+    max-width: 1800px;
+    margin: 0 auto;
+    align-items: flex-start;
+}
+
+/* ==========================================================================
+   KOLUMNY PROTOKOŁÓW
+   ========================================================================== */
+.protocol-column {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 850px;
+}
+
+/* Karty w kolumnach */
+.protocol-column .content-card {
+    margin-bottom: 0;
+}
+
+/* ==========================================================================
+   NAGŁÓWEK PROTOKOŁU W KOLUMNIE
+   ========================================================================== */
+.protocol-header-card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 2rem 2rem 1.5rem 2rem;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    min-height: 140px;
+}
+
+/* Odznaka numeru protokołu */
+.protocol-number-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: var(--primary-gradient);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    z-index: 10;
+}
+
+/* Tytuł protokołu */
+.protocol-main-title {
+    margin-right: 100px;
+    padding-right: 1rem;
+}
+
+/* Akcje protokołu */
+.protocol-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.protocol-actions .action-btn {
+    flex: 0 1 auto;
+    min-width: 140px;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+}
+
+/* ==========================================================================
+   PRZYCISKI NAWIGACJI DO MAPY (BEZ PODKREŚLEŃ)
+   ========================================================================== */
+
+/* Stan rzeczywisty */
+.header-btn.map-btn-real {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    border: none;
+    text-decoration: none; /* Usunięcie podkreślenia */
+}
+
+.header-btn.map-btn-real:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    text-decoration: none; /* Usunięcie podkreślenia przy hover */
+}
+
+/* Stan wg protokołu */
+.header-btn.map-btn-protocol {
+    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+    color: var(--text-primary);
+    border: none;
+    text-decoration: none; /* Usunięcie podkreślenia */
+}
+
+.header-btn.map-btn-protocol:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    text-decoration: none; /* Usunięcie podkreślenia przy hover */
+}
+
+/* Oba stany */
+.header-btn.map-btn-both {
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    text-decoration: none; /* Usunięcie podkreślenia */
+}
+
+.header-btn.map-btn-both:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    text-decoration: none; /* Usunięcie podkreślenia przy hover */
+}
+
+/* Globalne usunięcie podkreśleń dla wszystkich stanów linków */
+.header-btn.map-btn-real:link,
+.header-btn.map-btn-real:visited,
+.header-btn.map-btn-real:active,
+.header-btn.map-btn-protocol:link,
+.header-btn.map-btn-protocol:visited,
+.header-btn.map-btn-protocol:active,
+.header-btn.map-btn-both:link,
+.header-btn.map-btn-both:visited,
+.header-btn.map-btn-both:active {
+    text-decoration: none;
+}
+
+/* ==========================================================================
+   RESPONSYWNOŚĆ
+   ========================================================================== */
+
+/* Ekrany średnie */
+@media (max-width: 1400px) {
+    .compare-container {
+        max-width: 100%;
+        padding: 0 1rem;
+    }
+    
+    .protocol-column {
+        max-width: none;
+    }
+}
+
+/* Tablety */
+@media (max-width: 1200px) {
+    .compare-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .protocol-column {
+        width: 100%;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    /* Separator między kolumnami */
+    .protocol-column:first-child {
+        position: relative;
+        padding-bottom: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .protocol-column:first-child::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80%;
+        height: 3px;
+        background: var(--primary-gradient);
+        border-radius: 2px;
+    }
+}
+
+/* Telefony */
+@media (max-width: 768px) {
+    .compare-main {
+        padding: 1rem;
+    }
+    
+    .compare-container {
+        gap: 1rem;
+    }
+    
+    .protocol-header-card {
+        padding: 1.5rem 1rem 1rem 1rem;
+        min-height: auto;
+    }
+    
+    .protocol-number-badge {
+        position: static;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+    
+    .protocol-main-title {
+        margin-right: 0;
+        padding-right: 0;
+    }
+    
+    .protocol-actions {
+        flex-direction: column;
+    }
+    
+    .protocol-actions .action-btn {
+        width: 100%;
+    }
+}
+
+/* ==========================================================================
+   STYLE DRUKOWANIA I PDF
+   ========================================================================== */
+@media print {
+    /* Drukowanie pojedynczego protokołu */
+    .printing-single .protocol-column:not(.printing-target) {
+        display: none !important;
+    }
+    
+    .printing-single .protocol-column.printing-target {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Usunięcie odstępów */
+    .compare-container {
+        gap: 0 !important;
+    }
+    
+    /* Podział stron przy drukowaniu obu */
+    .protocol-column {
+        page-break-after: always;
+    }
+    
+    .protocol-column:last-child {
+        page-break-after: auto;
+    }
+}
+
+/* ==========================================================================
+   ANIMACJE WEJŚCIA
+   ========================================================================== */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Animacja lewej kolumny */
+.protocol-column:first-child .content-card,
+.protocol-column:first-child .protocol-header-card {
+    animation: slideInLeft 0.5s ease-out;
+}
+
+/* Animacja prawej kolumny */
+.protocol-column:last-child .content-card,
+.protocol-column:last-child .protocol-header-card {
+    animation: slideInRight 0.5s ease-out;
+}
+
+/* ==========================================================================
+   WSKAŹNIK ŁADOWANIA
+   ========================================================================== */
+.loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    color: var(--primary-color);
+    font-size: 2rem;
+    width: 100%;
+}
+
+.loading-spinner i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   OPTYMALIZACJE CZYTELNOŚCI
+   ========================================================================== */
+
+/* Większe odstępy między kartami */
+.protocol-column {
+    gap: 1.5rem;
+}
+
+/* Zwiększone paddingi w sekcji działek */
+.protocol-column .plots-section .card-body {
+    padding: 1.5rem;
+}
+
+/* Optymalne wykorzystanie przestrzeni */
+.protocol-column .content-card .card-body {
+    padding: 1.5rem;
+}
+
+/* Poprawiona czytelność tekstu */
+.protocol-column .info-content {
+    padding: 1.25rem;
+    line-height: 1.8;
+}
+
+/* Większa czcionka dla nazwy właściciela */
+.protocol-column .owner-name-main {
+    font-size: 1.4rem;
+}
+
+/* Lepsze wyrównanie przełącznika widoków */
+.protocol-column .view-switcher {
+    padding: 1rem 1.5rem;
+    gap: 1rem;
+}
+
+/* Szersze przyciski w przełączniku */
+.protocol-column .switch-btn {
+    flex: 1;
+    max-width: 300px;
+}

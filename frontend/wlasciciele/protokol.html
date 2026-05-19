@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <script src="/assets/js/api.js"></script>
+    <!-- ==========================================================================
+         METADANE I KONFIGURACJA
+         ========================================================================== -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="System wyświetlania protokołów katastralnych z XIX wieku - Gmina Czarna">
+    <meta name="keywords" content="protokół katastralny, księga hipoteczna, Czarna, XIX wiek">
+    <title>Protokół dochodzeń miejscowych</title>
+
+    <!-- Favicon z folderu miejscowości -->
+    <link rel="icon" href="/location_favicon" type="image/x-icon">
+
+    <!-- ==========================================================================
+         ZASOBY ZEWNĘTRZNE
+         ========================================================================== -->
+    <!-- Font Awesome - ikony -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts - typografia -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Arkusz stylów aplikacji -->
+    <link rel="stylesheet" href="protokol_styles.css">
+
+    <!-- ==========================================================================
+         BIBLIOTEKI JAVASCRIPT
+         ========================================================================== -->
+    <!-- PanZoom - obsługa zoom i przesuwania obrazów -->
+    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+    <!-- html2pdf - generowanie PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- D3.js - wizualizacja drzewa genealogicznego -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+    <!-- ==========================================================================
+         WARSTWA TŁA
+         ========================================================================== -->
+    <div class="background-gradient"></div>
+
+    <!-- ==========================================================================
+         GŁÓWNY KONTENER APLIKACJI
+         ========================================================================== -->
+    <div id="app-wrapper">
+
+        <!-- ==========================================================================
+             NAGŁÓWEK APLIKACJI
+             ========================================================================== -->
+        <header class="top-header">
+            <div class="header-content">
+                <!-- Lewa strona nagłówka -->
+                <div class="header-left">
+                    <h1 class="app-title">
+                        <i class="fas fa-file-alt"></i>
+                        Protokół Katastralny
+                    </h1>
+                    <div class="protocol-badge">
+                        L.p. <span id="orderNumber">—</span>
+                    </div>
+                </div>
+
+                <!-- Prawa strona nagłówka - przyciski akcji -->
+                <div class="header-right">
+                    <button id="downloadPdfBtn" class="header-btn" title="Pobierz PDF">
+                        <i class="fas fa-file-pdf"></i>
+                        <span>Pobierz PDF</span>
+                    </button>
+                    <button id="showOriginalBtn" class="header-btn hidden" title="Zobacz skany">
+                        <i class="fas fa-images"></i>
+                        <span>Oryginał</span>
+                    </button>
+                    <button id="fullscreenBtn" class="header-btn" title="Pełny ekran">
+                        <i class="fas fa-expand"></i>
+                        <span>Pełny ekran</span>
+                    </button>
+                    <button id="backToMapBtn" class="header-btn" title="Wróć do mapy">
+                        <i class="fas fa-map"></i>
+                        <span>Mapa</span>
+                    </button>
+                    <button id="themeToggleBtn" class="header-btn" title="Zmień motyw">
+                        <i class="fas fa-sun"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- ==========================================================================
+             GŁÓWNA ZAWARTOŚĆ PROTOKOŁU
+             ========================================================================== -->
+        <main class="main-content">
+
+            <!-- Sekcja tytułowa protokołu -->
+            <div class="protocol-title-section">
+                <h2 class="protocol-main-title">
+                    Protokół dochodzeń miejscowych celem założenia księgi hipotecznej
+                    <span class="protocol-location" id="protocol-location-title">w gminie katastralnej Czarna</span>
+                </h2>
+                <div class="protocol-meta">
+                    <span><i class="fas fa-calendar"></i> <span id="protocolDate">—</span></span>
+                    <span><i class="fas fa-map-marker-alt"></i> <span id="protocolLocation">—</span></span>
+                </div>
+            </div>
+
+            <!-- ==========================================================================
+                 KARTY Z DANYMI PROTOKOŁU
+                 ========================================================================== -->
+            <div class="content-container">
+
+                <!-- KARTA: Dane właściciela -->
+                <div class="content-card owner-card-section">
+                    <div class="card-header">
+                        <h3><i class="fas fa-user"></i> Dane Właściciela</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="owner-info" id="ownerName">
+                            <!-- Dynamicznie generowane przez JavaScript -->
+                        </div>
+                        <button id="showHouseOnMapBtn" class="action-btn map-btn hidden" style="margin-top: 1.5rem;">
+                            <i class="fas fa-home"></i> Pokaż dom na mapie
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KARTA: Genealogia -->
+                <div class="content-card genealogy-section hidden" id="genealogySection">
+                    <div class="card-header">
+                        <h3><i class="fas fa-sitemap"></i> Genealogia</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-content" id="genealogy">
+                            <!-- Dynamicznie generowane przez JavaScript -->
+                        </div>
+                        <button id="showTreeBtn" class="action-btn tree-btn hidden" style="margin-top: 1.5rem;">
+                            <i class="fas fa-project-diagram"></i> Pokaż drzewo genealogiczne
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PRZEŁĄCZNIK: Widoki działek -->
+                <div class="view-switcher hidden">
+                    <button id="btn-view-rzeczywiste" class="switch-btn active" data-view="rzeczywiste">
+                        <i class="fas fa-check-circle"></i> Stan Rzeczywisty
+                    </button>
+                    <button id="btn-view-protokol" class="switch-btn" data-view="protokol">
+                        <i class="fas fa-file-alt"></i> Stan wg Protokołu
+                    </button>
+                </div>
+
+                <!-- WIDOK: Stan rzeczywisty działek -->
+                <div id="view-rzeczywiste" class="view-container">
+                    <div class="content-card plots-section">
+                        <div class="card-header">
+                            <h3><i class="fas fa-layer-group"></i> Działki Rzeczywiste</h3>
+                            <button class="details-toggle-btn" data-target="rzeczywiste-details">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="plots-summary" id="rzeczywistePlots">
+                                <div class="plot-numbers"></div>
+                                <div class="plot-summary"></div>
+                            </div>
+                            <div class="plot-details-list hidden" id="rzeczywiste-details">
+                                <!-- Dynamicznie generowane przez JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- WIDOK: Stan protokołu działek -->
+                <div id="view-protokol" class="view-container hidden">
+                    <div class="content-card plots-section">
+                        <div class="card-header">
+                            <h3><i class="fas fa-layer-group"></i> Działki wg Protokołu</h3>
+                            <button class="details-toggle-btn" data-target="protokol-details">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="plots-summary" id="protokolPlots">
+                                <div class="plot-numbers"></div>
+                                <div class="plot-summary"></div>
+                            </div>
+                            <div class="plot-details-list hidden" id="protokol-details">
+                                <!-- Dynamicznie generowane przez JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KARTA: Linki do mapy -->
+                <div class="content-card map-links-section">
+                    <div class="card-header">
+                        <h3><i class="fas fa-map-marked-alt"></i> Wizualizacja na mapie</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="map-buttons-container">
+                            <a href="#" id="mapLinkReal" class="action-btn map-view-btn hidden">
+                                <i class="fas fa-check-circle"></i> Pokaż stan rzeczywisty
+                            </a>
+                            <a href="#" id="mapLinkProtocol" class="action-btn map-view-btn protocol-btn hidden">
+                                <i class="fas fa-file-alt"></i> Pokaż stan wg protokołu
+                            </a>
+                            <a href="#" id="mapLinkBoth" class="action-btn map-view-btn both-btn hidden">
+                                <i class="fas fa-layer-group"></i> Pokaż oba stany
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KARTA: Treść protokołu -->
+                <div class="content-card protocol-content-section">
+                    <div class="card-header">
+                        <h3><i class="fas fa-scroll"></i> Treść protokołu</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-content" id="ownershipHistory">
+                            <!-- Dynamicznie generowane przez JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================================================
+                     SEKCJE OPCJONALNE (wyświetlane warunkowo)
+                     ========================================================================== -->
+
+                <!-- KARTA: Współwłasność -->
+                <div class="content-card hidden" id="wspolwlasnoscSection">
+                    <div class="card-header">
+                        <h3><i class="fas fa-users"></i> Współwłasność / Służebność</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-content" id="wspolwlasnosc">
+                            <!-- Dynamicznie generowane przez JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KARTA: Powiązania i transakcje -->
+                <div class="content-card hidden" id="powiazaniaTransakcjeSection">
+                    <div class="card-header">
+                        <h3><i class="fas fa-exchange-alt"></i> Powiązania i transakcje</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-content" id="powiazaniaTransakcje">
+                            <!-- Dynamicznie generowane przez JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KARTA: Interpretacja i wnioski -->
+                <div class="content-card hidden" id="interpretacjaWnioskiSection">
+                    <div class="card-header">
+                        <h3><i class="fas fa-lightbulb"></i> Interpretacja i wnioski</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-content" id="interpretacjaWnioski">
+                            <!-- Dynamicznie generowane przez JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- ==========================================================================
+             STOPKA APLIKACJI
+             ========================================================================== -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                <span>Protokół wygenerowany: <span id="currentDate"></span></span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL: Przeglądarka skanów protokołu
+         ========================================================================== -->
+    <div id="imageModal" class="modal-overlay hidden">
+        <span class="modal-close-btn">&times;</span>
+        <div class="modal-image-container">
+            <img class="modal-image" id="modalImageSrc" alt="Skan protokołu">
+        </div>
+        <!-- Kontrolki nawigacji -->
+        <div class="modal-nav-controls">
+            <button id="prevImageBtn" class="modal-nav-btn">
+                <i class="fas fa-chevron-left"></i> Poprzedni
+            </button>
+            <span id="pageCounter" class="page-counter">Strona 1 / 1</span>
+            <button id="nextImageBtn" class="modal-nav-btn">
+                Następny <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         DIALOG: Drzewo genealogiczne
+         ========================================================================== -->
+    <dialog id="treeDialog" class="tree-dialog">
+        <div class="dialog-header">
+            <h3><i class="fas fa-sitemap"></i> Drzewo Genealogiczne</h3>
+            <button id="closeTreeBtn" class="dialog-close-btn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="treeContainer" class="tree-container">
+            <!-- Wizualizacja renderowana przez D3.js -->
+        </div>
+    </dialog>
+
+    <!-- ==========================================================================
+         SKRYPT GŁÓWNY
+         ========================================================================== -->
+    <script src="protokol.js"></script>
+</body>
+
+</html>

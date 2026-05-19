@@ -1,0 +1,669 @@
+/* ==========================================================================
+   Plik: historia_style.css
+   Opis: Arkusz stylów dla podstrony historycznej - spójny z główną stroną
+   ========================================================================== */
+
+/* ==========================================================================
+   1. ZMIENNE I RESET
+   ========================================================================== */
+:root {
+  /* Paleta kolorów */
+  --primary-color: #667eea;
+  --primary-dark: #5a67d8;
+  --accent-color: #d4ac7c;
+  --accent-light: #e0b88f;
+  
+  /* Tła i nakładki */
+  --bg-overlay: rgba(30, 25, 20, 0.9);
+  --bg-card: rgba(255, 255, 255, 0.98);
+  --bg-dark: #1a1814;
+  
+  /* Kolory tekstu */
+  --text-primary: #2d3748;
+  --text-secondary: #4a5568;
+  --text-light: #718096;
+  --text-cream: #f0e9e0;
+  
+  /* Cienie */
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,0.15);
+  --shadow-xl: 0 20px 40px rgba(0,0,0,0.2);
+  
+  /* Parametry UI */
+  --radius: 12px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Typografia */
+  --font-heading: 'Playfair Display', 'Lora', serif;
+  --font-body: 'Inter', 'Roboto', sans-serif;
+  --font-serif: 'Lora', serif;
+}
+
+/* Reset podstawowy */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  line-height: 1.7;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* ==========================================================================
+   2. TŁO Z MAPĄ I NAKŁADKI
+   ========================================================================== */
+.map-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('../../mapa/mapa.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  filter: sepia(40%) brightness(0.6) blur(2px);
+  z-index: -2;
+}
+
+.overlay-gradient {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(30, 25, 20, 0.97) 0%,
+    rgba(30, 25, 20, 0.92) 60%,
+    rgba(102, 126, 234, 0.1) 100%
+  );
+  z-index: -1;
+}
+
+/* ==========================================================================
+   3. NAWIGACJA GÓRNA
+   ========================================================================== */
+.top-navigation {
+  position: sticky;
+  top: 0;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem 0;
+  z-index: 100;
+  animation: slideDown 0.6s ease-out;
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-back {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-cream);
+  text-decoration: none;
+  font-weight: 500;
+  transition: var(--transition);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+}
+
+.nav-back:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(-3px);
+}
+
+.nav-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   4. KONTENER ARTYKUŁU
+   ========================================================================== */
+.article-container {
+  max-width: 900px;
+  margin: 3rem auto;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+/* ==========================================================================
+   5. NAGŁÓWEK ARTYKUŁU
+   ========================================================================== */
+.article-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: white;
+  padding: 3rem 3rem 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animowany element dekoracyjny w tle */
+.article-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  animation: rotate 30s linear infinite;
+}
+
+.header-decoration {
+  font-size: 2rem;
+  color: var(--accent-color);
+  margin-bottom: 1rem;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+.article-header h1 {
+  font-family: var(--font-heading);
+  font-size: 3.5rem;
+  font-weight: 900;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+  position: relative;
+}
+
+.article-header h2 {
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  font-style: italic;
+  font-weight: 400;
+  opacity: 0.95;
+  max-width: 700px;
+  margin: 0 auto 1.5rem;
+  line-height: 1.6;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.header-meta {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  font-size: 0.95rem;
+  opacity: 0.9;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255,255,255,0.2);
+}
+
+.header-meta span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ==========================================================================
+   6. TREŚĆ ARTYKUŁU
+   ========================================================================== */
+.article-content {
+  padding: 3rem;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.section-header h3 {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.section-decoration {
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+  margin: 0 auto;
+}
+
+/* Akapit wprowadzający */
+.article-lead {
+  font-size: 1.15rem;
+  line-height: 1.8;
+  text-align: justify;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(102,126,234,0.03) 0%, rgba(212,172,124,0.03) 100%);
+  border-left: 4px solid var(--accent-color);
+  border-radius: var(--radius);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.content-section p {
+  font-size: 1.05rem;
+  text-align: justify;
+  margin-bottom: 1.5rem;
+  line-height: 1.8;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* ==========================================================================
+   7. GALERIA OBRAZÓW
+   ========================================================================== */
+.image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin: 3rem 0;
+  min-height: 100px;
+}
+
+.no-photos {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  background: rgba(102,126,234,0.05);
+  border-radius: var(--radius);
+  border: 2px dashed var(--border-color);
+}
+
+.gallery-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+}
+
+.gallery-item:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.image-wrapper {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  background: #f8f8f8;
+}
+
+.image-wrapper img {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: transform 0.5s ease;
+}
+
+.image-wrapper:hover img {
+  transform: scale(1.05);
+}
+
+/* Nakładka z ikoną powiększenia */
+.image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.image-wrapper:hover .image-overlay {
+  opacity: 1;
+}
+
+.image-overlay i {
+  color: white;
+  font-size: 2rem;
+}
+
+.gallery-item figcaption {
+  padding: 1rem;
+  background: white;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.gallery-item figcaption i {
+  color: var(--primary-color);
+  margin-right: 0.5rem;
+}
+
+/* ==========================================================================
+   8. BOX WYRÓŻNIONY
+   ========================================================================== */
+.highlight-box {
+  background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-light) 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: var(--radius);
+  margin: 2rem 0;
+  position: relative;
+  box-shadow: var(--shadow-md);
+}
+
+.highlight-box i {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  font-size: 1.5rem;
+  opacity: 0.9;
+}
+
+.highlight-box p {
+  margin: 0;
+  padding-left: 2.5rem;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  text-align: left;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* ==========================================================================
+   9. STOPKA ARTYKUŁU
+   ========================================================================== */
+.article-footer {
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  padding: 2rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.footer-navigation {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: white;
+  color: var(--text-primary);
+  text-decoration: none;
+  border-radius: var(--radius);
+  font-weight: 500;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.footer-link:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Przycisk główny */
+.footer-link.primary {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: white;
+}
+
+.footer-link.primary:hover {
+  box-shadow: 0 8px 20px rgba(102,126,234,0.3);
+}
+
+/* ==========================================================================
+   10. MODAL OBRAZÓW
+   ========================================================================== */
+.image-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  max-width: 90%;
+  max-height: 90%;
+  position: relative;
+}
+
+.modal-content img {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  border-radius: var(--radius);
+}
+
+.modal-content p {
+  color: white;
+  text-align: center;
+  margin-top: 1rem;
+  font-style: italic;
+}
+
+.modal-close {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+.modal-close:hover {
+  background: rgba(255,255,255,0.2);
+  transform: rotate(90deg);
+}
+
+/* ==========================================================================
+   11. PRZYCISK PRZEWIJANIA
+   ========================================================================== */
+.scroll-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  visibility: hidden;
+  transition: var(--transition);
+  z-index: 99;
+}
+
+.scroll-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.scroll-to-top:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-xl);
+}
+
+/* ==========================================================================
+   12. ANIMACJE
+   ========================================================================== */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* ==========================================================================
+   13. RESPONSYWNOŚĆ
+   ========================================================================== */
+/* Tablety */
+@media (max-width: 768px) {
+  .article-container {
+    margin: 1rem;
+    border-radius: var(--radius);
+  }
+  
+  .article-header {
+    padding: 2rem 1.5rem;
+  }
+  
+  .article-header h1 {
+    font-size: 2.5rem;
+  }
+  
+  .article-header h2 {
+    font-size: 1.1rem;
+  }
+  
+  .article-content {
+    padding: 1.5rem;
+  }
+  
+  .header-meta {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .image-gallery {
+    grid-template-columns: 1fr;
+  }
+  
+  .footer-navigation {
+    flex-direction: column;
+  }
+  
+  .footer-link {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Telefony */
+@media (max-width: 480px) {
+  .nav-container {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .article-header h1 {
+    font-size: 2rem;
+  }
+  
+  .section-header h3 {
+    font-size: 1.5rem;
+  }
+}
+
+/* ==========================================================================
+   14. STYLE DLA DRUKU
+   ========================================================================== */
+@media print {
+  .map-background,
+  .overlay-gradient,
+  .top-navigation,
+  .scroll-to-top,
+  .image-overlay {
+    display: none;
+  }
+  
+  body {
+    background: white;
+  }
+  
+  .article-container {
+    box-shadow: none;
+    margin: 0;
+  }
+  
+  .article-header {
+    background: none;
+    color: black;
+    border-bottom: 2px solid black;
+  }
+  
+  .footer-link {
+    display: none;
+  }
+}

@@ -1,0 +1,639 @@
+/* ==========================================================================
+   Plik: style_index.css
+   Opis: Główny arkusz stylów dla strony startowej aplikacji
+   ========================================================================== */
+
+/* ==========================================================================
+   1. ZMIENNE CSS I KONFIGURACJA
+   ========================================================================== */
+:root {
+    /* Paleta kolorów */
+    --primary-color: #667eea;
+    --primary-dark: #5a67d8;
+    --primary-light: #7c8ff0;
+    --accent-color: #d4ac7c;
+    
+    /* Tła i powierzchnie */
+    --bg-overlay: rgba(30, 25, 20, 0.85);
+    --bg-card: rgba(255, 255, 255, 0.98);
+    --bg-card-hover: rgba(255, 255, 255, 1);
+    --bg-dark: #1a1814;
+    --bg-hover: #f7fafc;
+    
+    /* Kolory tekstu */
+    --text-primary: #2d3748;
+    --text-secondary: #4a5568;
+    --text-light: #718096;
+    --text-white: #ffffff;
+    --text-cream: #f0e9e0;
+    
+    /* Obramowania */
+    --border-color: #e2e8f0;
+    
+    /* Cienie */
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+    --shadow-xl: 0 20px 25px rgba(0,0,0,0.15);
+    
+    /* Parametry UI */
+    --radius: 12px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Typografia */
+    --font-heading: 'Playfair Display', serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ==========================================================================
+   2. RESET I PODSTAWY
+   ========================================================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* ==========================================================================
+   3. TŁO Z MAPĄ I NAKŁADKI
+   ========================================================================== */
+.map-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('../../mapa/mapa.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    filter: sepia(30%) brightness(0.7);
+    z-index: -2;
+}
+
+.overlay-gradient {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        135deg,
+        rgba(30, 25, 20, 0.95) 0%,
+        rgba(30, 25, 20, 0.85) 50%,
+        rgba(102, 126, 234, 0.15) 100%
+    );
+    z-index: -1;
+}
+
+/* ==========================================================================
+   4. KONTENER GŁÓWNY
+   ========================================================================== */
+.page-wrapper {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ==========================================================================
+   5. NAGŁÓWEK GÓRNY
+   ========================================================================== */
+.top-header {
+    padding: 1.5rem 0;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-cream);
+    font-weight: 500;
+}
+
+.header-badge i {
+    font-size: 1.2rem;
+    color: var(--accent-color);
+}
+
+.header-info {
+    color: var(--text-cream);
+    opacity: 0.8;
+    font-size: 0.95rem;
+}
+
+/* ==========================================================================
+   6. SEKCJA HERO
+   ========================================================================== */
+.hero-section {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    min-height: 70vh;
+}
+
+.hero-container {
+    max-width: 1000px;
+    width: 100%;
+}
+
+/* ==========================================================================
+   7. TYTUŁ GŁÓWNY
+   ========================================================================== */
+.title-wrapper {
+    text-align: center;
+    margin-bottom: 2rem;
+    animation: fadeInDown 0.8s ease-out;
+}
+
+.main-title {
+    font-family: var(--font-heading);
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 900;
+    color: var(--text-cream);
+    text-shadow: 2px 4px 8px rgba(0,0,0,0.3);
+    line-height: 1.1;
+}
+
+.subtitle {
+    display: block;
+    font-size: 0.6em;
+    font-weight: 700;
+    margin-top: 0.5rem;
+    color: var(--accent-color);
+    text-shadow: 2px 2px 6px rgba(0,0,0,0.4);
+}
+
+/* ==========================================================================
+   8. OPIS GŁÓWNY
+   ========================================================================== */
+.description-wrapper {
+    text-align: center;
+    margin-bottom: 3rem;
+    animation: fadeIn 1s ease-out 0.3s backwards;
+}
+
+.main-description {
+    font-size: 1.25rem;
+    color: var(--text-cream);
+    max-width: 700px;
+    margin: 0 auto;
+    opacity: 0.95;
+    line-height: 1.8;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+/* ==========================================================================
+   9. PRZYCISK GŁÓWNY CTA
+   ========================================================================== */
+.action-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 4rem;
+    animation: fadeInUp 1s ease-out 0.5s backwards;
+}
+
+.primary-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem 2.5rem;
+    background: linear-gradient(135deg, var(--accent-color) 0%, #e0b88f 100%);
+    color: var(--bg-dark);
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 50px;
+    box-shadow: 0 10px 30px rgba(212, 172, 124, 0.3);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Efekt świetlny na przycisku */
+.primary-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.6s ease;
+}
+
+.primary-button:hover::before {
+    left: 100%;
+}
+
+.primary-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 40px rgba(212, 172, 124, 0.4);
+}
+
+.button-icon,
+.button-arrow {
+    display: flex;
+    align-items: center;
+}
+
+.button-arrow {
+    transition: transform 0.3s ease;
+}
+
+.primary-button:hover .button-arrow {
+    transform: translateX(5px);
+}
+
+/* ==========================================================================
+   10. KARTY FUNKCJONALNOŚCI
+   ========================================================================== */
+.features-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.feature-item {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: var(--transition);
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.feature-item.visible {
+    opacity: 1;
+    transform: translateY(0);
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.feature-item:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.feature-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.feature-icon i {
+    color: white;
+    font-size: 1.25rem;
+}
+
+.feature-content h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-cream);
+    margin-bottom: 0.25rem;
+}
+
+.feature-content p {
+    font-size: 0.85rem;
+    color: rgba(240, 233, 224, 0.7);
+}
+
+/* ==========================================================================
+   11. SEKCJA DOKUMENTÓW
+   ========================================================================== */
+.documents-section {
+    background: var(--bg-card);
+    padding: 4rem 0;
+    margin-top: auto;
+}
+
+.section-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 3rem;
+    color: var(--text-primary);
+}
+
+.documents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Karty dokumentów */
+.doc-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 2rem;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: var(--transition);
+    position: relative;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.doc-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.doc-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--primary-light);
+}
+
+/* Karta główna wyróżniona */
+.doc-card.main-card {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    grid-column: span 2;
+}
+
+.doc-card.main-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+}
+
+.doc-icon {
+    width: 56px;
+    height: 56px;
+    background: var(--bg-hover);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.main-card .doc-icon {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.doc-icon i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.main-card .doc-icon i {
+    color: white;
+}
+
+.doc-card h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.doc-card p {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.main-card p {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.doc-arrow {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    color: var(--primary-color);
+    transition: transform 0.3s ease;
+}
+
+.main-card .doc-arrow {
+    color: white;
+}
+
+.doc-card:hover .doc-arrow {
+    transform: translateX(5px);
+}
+
+/* ==========================================================================
+   12. STOPKA
+   ========================================================================== */
+.page-footer {
+    background: var(--bg-dark);
+    color: var(--text-cream);
+    padding: 2rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    text-align: center;
+}
+
+.footer-credits {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.credit-item {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.credit-label {
+    opacity: 0.7;
+}
+
+.credit-name {
+    font-weight: 600;
+    color: var(--accent-color);
+}
+
+.credit-divider {
+    color: var(--accent-color);
+    opacity: 0.5;
+}
+
+.footer-copyright {
+    font-size: 0.9rem;
+    opacity: 0.6;
+}
+
+/* ==========================================================================
+   13. ANIMACJE
+   ========================================================================== */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================================================
+   14. RESPONSYWNOŚĆ
+   ========================================================================== */
+/* Tablety */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 2rem 1rem;
+        min-height: auto;
+    }
+    
+    .main-title {
+        font-size: 2rem;
+    }
+    
+    .main-description {
+        font-size: 1rem;
+    }
+    
+    .features-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .feature-item {
+        padding: 1rem;
+    }
+    
+    .documents-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .doc-card.main-card {
+        grid-column: span 1;
+    }
+    
+    .footer-credits {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .credit-divider {
+        display: none;
+    }
+}
+
+/* Telefony */
+@media (max-width: 480px) {
+    .header-container {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+    
+    .primary-button {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+    }
+}
+
+/* ==========================================================================
+   15. PREFERENCJE SYSTEMOWE
+   ========================================================================== */
+/* Wsparcie dla ciemnego motywu */
+@media (prefers-color-scheme: dark) {
+    .documents-section {
+        background: rgba(26, 32, 44, 0.95);
+    }
+    
+    .doc-card {
+        background: rgba(45, 55, 72, 0.95);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .doc-card h3,
+    .doc-card p {
+        color: var(--text-cream);
+    }
+    
+    .section-title {
+        color: var(--text-cream);
+    }
+}
+
+/* ==========================================================================
+   16. STYLE DLA DRUKU
+   ========================================================================== */
+@media print {
+    .map-background,
+    .overlay-gradient {
+        display: none;
+    }
+    
+    body {
+        background: white;
+        color: black;
+    }
+}

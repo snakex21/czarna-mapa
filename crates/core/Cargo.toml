@@ -1,0 +1,22 @@
+[package]
+name = "czarna-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Logika biznesowa i dostęp do bazy danych dla Mapy Katastralnej Czarna"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+rusqlite = { workspace = true }
+geo = { workspace = true }
+geojson = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+chrono = { workspace = true }
+log = { workspace = true }
+
+[lib]
+name = "czarna_core"
+path = "src/lib.rs"

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <script src="/assets/js/api.js"></script>
+    <!-- ==========================================================================
+         METADANE I KONFIGURACJA
+         ========================================================================== -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Interaktywna mapa katastralna miejscowości Czarna z XIX wieku - przeglądaj historyczne działki, poznaj dawnych właścicieli">
+    <meta name="keywords" content="mapa katastralna, Czarna, XIX wiek, genealogia, historia, księgi gruntowe">
+    <title>Interaktywna Mapa Katastralna - Czarna z XIX wieku</title>
+
+    <!-- Favicon z folderu miejscowości -->
+    <link rel="icon" href="/location_favicon" type="image/x-icon">
+
+    <!-- ==========================================================================
+         STYLE ZEWNĘTRZNE
+         ========================================================================== -->
+    <!-- Font Awesome - ikony -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts - typografia -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+
+    <!-- Style aplikacji -->
+    <link rel="stylesheet" href="assets_index/style_index.css">
+</head>
+<body>
+    <!-- ==========================================================================
+         TŁO I EFEKTY WIZUALNE
+         ========================================================================== -->
+    <div class="map-background"></div>
+    <div class="overlay-gradient"></div>
+
+    <!-- ==========================================================================
+         GŁÓWNY KONTENER STRONY
+         ========================================================================== -->
+    <div class="page-wrapper">
+
+        <!-- ==========================================================================
+             NAGŁÓWEK
+             ========================================================================== -->
+        <header class="top-header">
+            <div class="header-container">
+                <div class="header-badge">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Czarna</span>
+                </div>
+                <div class="header-info">
+                    <span>Debicki • Malopolska</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- ==========================================================================
+             SEKCJA HERO
+             ========================================================================== -->
+        <main class="hero-section">
+            <div class="hero-container">
+
+                <!-- Tytuł główny z podtytułem -->
+                <div class="title-wrapper">
+                    <h1 class="main-title">
+                        Interaktywna Mapa Katastralna
+                        <span class="subtitle">Czarna z 1882 roku</span>
+                    </h1>
+                </div>
+
+                <!-- Opis projektu -->
+                <div class="description-wrapper">
+                    <p class="main-description">
+                        Odkryj historie zapisana w ziemi. Przegladaj historyczne dzialki katastralne, poznaj dawnych wlascicieli i zglebiaj genealogiczne powiazania mieszkancow z 1882 roku.
+                    </p>
+                </div>
+
+                <!-- Główny przycisk akcji -->
+                <div class="action-container">
+                    <a href="../mapa/mapa.html" class="primary-button">
+                        <span class="button-icon"><i class="fas fa-map-marked-alt"></i></span>
+                        <span class="button-text">Otwórz Mapę</span>
+                        <span class="button-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </a>
+                </div>
+
+                <!-- Karty funkcjonalności -->
+                <div class="features-container">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>Wyszukiwanie</h3>
+                            <p>Znajdź działki i właścicieli</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>Protokoły</h3>
+                            <p>Oryginalne dokumenty</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-sitemap"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>Genealogia</h3>
+                            <p>Drzewa rodzinne</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>Historia</h3>
+                            <p>Dzieje miejscowości</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ==========================================================================
+             SEKCJA DOKUMENTÓW I MATERIAŁÓW
+             ========================================================================== -->
+        <section class="documents-section">
+            <div class="section-container">
+                <h2 class="section-title">Materiały i Dokumentacja</h2>
+
+                <div class="documents-grid">
+                    <!-- Karta główna - mapa interaktywna -->
+                    <a href="../mapa/mapa.html" class="doc-card main-card">
+                        <div class="doc-icon">
+                            <i class="fas fa-map"></i>
+                        </div>
+                        <h3>Mapa Interaktywna</h3>
+                        <p>Główna aplikacja z mapą katastralną</p>
+                        <span class="doc-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </a>
+
+                    <!-- Karta historii -->
+                    <a href="historia.html" class="doc-card">
+                        <div class="doc-icon">
+                            <i class="fas fa-landmark"></i>
+                        </div>
+                        <h3>Historia miejscowości</h3>
+                        <p>Krótki rys historyczny Czarna</p>
+                    </a>
+
+                    <!-- Karta dokumentacji technicznej -->
+                    <a href="../docs/index.html" class="doc-card">
+                        <div class="doc-icon">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <h3>Dokumentacja</h3>
+                        <p>Przewodnik techniczny</p>
+                    </a>
+
+                    <!-- Karta grafu powiązań -->
+                    <a href="../graf/graf.html" class="doc-card">
+                        <div class="doc-icon">
+                            <i class="fas fa-project-diagram"></i>
+                        </div>
+                        <h3>Graf Powiązań</h3>
+                        <p>Wizualizacja relacji</p>
+                    </a>
+
+                    <!-- Karta genealogii -->
+                    <a href="../genealogia/genealogia.html" class="doc-card">
+                        <div class="doc-icon">
+                            <i class="fas fa-tree"></i>
+                        </div>
+                        <h3>Drzewo Genealogiczne</h3>
+                        <p>Powiązania rodzinne</p>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================================================
+             STOPKA
+             ========================================================================== -->
+        <footer class="page-footer">
+            <div class="footer-container">
+                <div class="footer-credits">
+                    <div class="credit-item">
+                        <span class="credit-label">Mapa historyczna miejscowości:</span>
+                        <span class="credit-name">Czarna</span>
+                    </div>
+                    <div class="credit-divider">•</div>
+                    <div class="credit-item">
+                        <span class="credit-name">powiat Debicki</span>
+                    </div>
+                    <div class="credit-divider">•</div>
+                    <div class="credit-item">
+                        <span class="credit-name">region Malopolska</span>
+                    </div>
+                </div>
+                <div class="footer-copyright">
+                    © 2025 Interaktywna Mapa Katastralna. Projekt genealogiczno-historyczny.
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ==========================================================================
+         SKRYPTY
+         ========================================================================== -->
+    <script>
+        /**
+         * Animacja płynnego pojawiania się elementów podczas przewijania
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            const elements = document.querySelectorAll('.feature-item, .doc-card');
+
+            // Obserwator sprawdzający widoczność elementów
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry, index) => {
+                    if (entry.isIntersecting) {
+                        // Opóźnione dodawanie klasy dla efektu kaskadowego
+                        setTimeout(() => {
+                            entry.target.classList.add('visible');
+                        }, index * 100);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            // Rozpoczęcie obserwacji wszystkich elementów
+            elements.forEach(el => observer.observe(el));
+        });
+    </script>
+
+    <!-- Dane miejscowości (automatycznie generowane przez launcher) -->
+    <script src="/location_js/location-config.js"></script>
+    <script src="/location_js/location-data.js"></script>
+</body>
+</html>
