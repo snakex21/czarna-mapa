@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    Plik: protokol_styles.css
    Opis: Arkusz stylów dla strony protokołu katastralnego. Zapewnia spójność
          z aplikacją mapy oraz obsługę drukowania i eksportu do PDF.
@@ -67,7 +67,7 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background: rgba(255, 255, 255, 0.95);
+    background: var(--bg-card);
 }
 
 /* ==========================================================================
@@ -776,7 +776,7 @@ body {
 .tree-container {
     width: 100%;
     height: calc(100% - 50px);
-    background: #fafafa;
+    background: var(--bg-hover);
     padding: 0.25rem;
     /* Wymuś scrollowanie poziome gdy zawartość jest szersza */
     overflow-x: scroll;
@@ -1380,6 +1380,36 @@ body {
     opacity: 0.3;
 }
 
+.dark-mode .card-header {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.12) 0%, rgba(118, 75, 162, 0.12) 100%);
+}
+
+.dark-mode .tree-container {
+    background: #1a202c;
+}
+
+.dark-mode .tree-dialog {
+    background: #2d3748;
+    border-color: #4a5568;
+}
+
+.dark-mode .dialog-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.dark-mode .plot-numbers,
+.dark-mode .plot-summary {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.dark-mode .protocol-meta {
+    color: var(--text-secondary);
+}
+
+.dark-mode .info-content {
+    color: var(--text-primary);
+}
+
 /* ==========================================================================
    ULEPSZONE STYLE UŁAMKÓW DLA EKRANU
    ========================================================================== */
@@ -1560,3 +1590,4 @@ body.dark-mode .plot-category-block {
         box-shadow: none !important;
     }
 }
+html.dark-mode,body.dark-mode{background:#0f172a}

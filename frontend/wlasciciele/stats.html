@@ -1,8 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pl">
 
 <head>
-    <script src="/assets/js/api.js"></script>
+        <!-- Natychmiastowe ustawienie motywu – zapobiega białemu mignięciu -->
+    <script>
+        (function() {
+            var t = localStorage.getItem('mapTheme');
+            if (t === 'dark') document.documentElement.classList.add('dark-mode');
+        })();
+    </script>
+<script src="/assets/js/api.js"></script>
     <!-- ==========================================================================
          METADANE I KONFIGURACJA
          ========================================================================== -->
@@ -287,7 +294,7 @@
                         <i class="fas fa-map"></i>
                         <span>Mapa</span>
                     </a>
-                    <a href="../strona_glowna/index.html" class="nav-pill">
+                    <a href="../index.html" class="nav-pill">
                         <i class="fas fa-home"></i>
                         <span>Start</span>
                     </a>

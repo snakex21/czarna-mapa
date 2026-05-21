@@ -75,7 +75,7 @@ const ProtokolyView = {
 
         if (p.zdjecia_count > 0) {
             try {
-                const zdjecia = await API.protokoly.ladujZdjecia(p.nazwa);
+                const zdjecia = await API.protokoly.ladujZdjecia(p.klucz || p.nazwa);
                 this.renderZdjecia(zdjecia);
             } catch (e) {
                 document.getElementById('zdjecia-container').innerHTML =

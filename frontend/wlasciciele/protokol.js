@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Ustawienie aktualnej daty
         const currentDateEl = document.getElementById('currentDate');
         if (currentDateEl) {
-            currentDateEl.textContent = new Date().toLocaleDateString('pl-PL');
+            currentDateEl.textContent = new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
         }
 
         // Inicjalizacja komponentów
@@ -106,6 +106,22 @@ document.addEventListener('DOMContentLoaded', () => {
      * Wyszukuje skany protokołu w katalogu serwera
      */
     const findProtocolImages = async () => {
+        // Nowy backend Go potrafi bezpośrednio zwrócić listę skanów z katalogu
+        // protokołu. To jest pewniejsze niż zgadywanie 1.jpg, 2.jpg itd., bo
+        // działa także dla .jpeg/.png i dla ścieżki data/protokoly/protokoly.
+        if (window.API?.protokoly?.listaZdjec) {
+            try {
+                const files = await API.protokoly.listaZdjec(ownerKey);
+                if (files && files.length > 0) {
+                    const urls = files.map(f => `/protokoly/${encodeURIComponent(ownerKey)}/${encodeURIComponent(f.nazwa)}`);
+                    finishImageSearch(urls);
+                    return;
+                }
+            } catch (e) {
+                console.warn('Nie udało się pobrać listy skanów przez API, próbuję stary sposób.', e);
+            }
+        }
+
         const basePath = `/protokoly/${ownerKey.replace(/ /g, '_')}/`;
         const found = [];
         let i = 1;
@@ -196,7 +212,10 @@ document.addEventListener('DOMContentLoaded', () => {
             fillField(genealogyEl, data.genealogia);
             document.getElementById('genealogySection').classList.remove('hidden');
 
-            if (data.ma_drzewo_genealogiczne) {
+            // W części protokołów istnieje tylko opisowa genealogia (bez pełnych
+            // rekordów w tabeli osoby_genealogia). Przycisk pokazujemy wtedy też
+            // i renderujemy uproszczone drzewo z tekstu sekcji.
+            if (data.ma_drzewo_genealogiczne || data.genealogia) {
                 showTreeBtn.classList.remove('hidden');
             }
         }
@@ -229,13 +248,20 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const haveDifferences = !arePlotListsEqual(protokolPlots, rzeczywistePlots);
-        havePlotDifferences = haveDifferences;
+        const hasAnyState = protokolPlots.length > 0 || rzeczywistePlots.length > 0;
+        // Pokazujemy dwa stany zawsze, gdy istnieją dane działek. Nawet jeśli
+        // listy są identyczne, użytkownik ma osobny widok „Stan Rzeczywisty”
+        // i osobny „Stan wg Protokołu”.
+        havePlotDifferences = hasAnyState;
 
-        if (haveDifferences) {
-            // Wyświetlenie przełącznika i obu widoków
+        if (hasAnyState) {
             document.querySelector('.view-switcher').classList.remove('hidden');
             updatePlotSection('rzeczywistePlots', rzeczywistePlots);
             updatePlotSection('protokolPlots', protokolPlots);
+            document.getElementById('view-rzeczywiste').classList.remove('hidden');
+            document.getElementById('view-protokol').classList.add('hidden');
+            document.getElementById('btn-view-rzeczywiste')?.classList.add('active');
+            document.getElementById('btn-view-protokol')?.classList.remove('active');
         } else {
             // Wyświetlenie pojedynczego widoku
             document.querySelector('.view-switcher').classList.add('hidden');
@@ -247,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Konfiguracja linków do mapy
-        setupMapLinks(rzeczywistePlots, protokolPlots, haveDifferences);
+        setupMapLinks(rzeczywistePlots, protokolPlots, hasAnyState || haveDifferences);
     };
 
     /**
@@ -307,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     const updatePlotSection = (containerId, plots) => {
         const container = document.getElementById(containerId);
-        if (!container || !plots || plots.length === 0) return;
+        if (!container) return;
 
         const numbersDiv = container.querySelector('.plot-numbers');
         const summaryDiv = container.querySelector('.plot-summary');
@@ -316,7 +342,14 @@ document.addEventListener('DOMContentLoaded', () => {
         );
 
         // Filtrowanie działek - ukrywamy budynki w widoku protokołu właściciela
-        const filteredPlots = plots.filter(p => p.kategoria !== 'budynek' && p.kategoria !== 'dom');
+        const filteredPlots = (plots || []).filter(p => p.kategoria !== 'budynek' && p.kategoria !== 'dom');
+
+        if (filteredPlots.length === 0) {
+            numbersDiv.innerHTML = '<span style="color: var(--text-secondary); font-style: italic;">Brak działek w tym widoku.</span>';
+            summaryDiv.innerHTML = '';
+            if (detailsDiv) detailsDiv.innerHTML = '';
+            return;
+        }
 
         // Lista numerów działek - PROSTY FORMAT
         numbersDiv.innerHTML = filteredPlots.map(p => generateFractionHTML(p.nazwa_lub_numer)).join(', ');
@@ -510,8 +543,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!ownerData || !ownerData.dom_obiekt_id) return;
 
             const mapUrl = '../mapa/mapa.html';
-            // Pokazujemy TYLKO dom, bez działek, i zoomujemy na nim
-            window.location.href = `${mapUrl}?highlightByIds=${ownerData.dom_obiekt_id}&zoomToFit=true`;
+            const houseNum = ownerData.dom_numer || ownerData.numer_domu || '';
+            const ownerName = ownerData.nazwa_wlasciciela || '';
+            const params = new URLSearchParams();
+            params.set('highlightByIds', ownerData.dom_obiekt_id);
+            if (houseNum) params.set('findHouseNumber', houseNum);
+            if (ownerName) params.set('ownerName', ownerName);
+            params.set('zoomToFit', 'true');
+            window.location.href = `${mapUrl}?${params.toString()}`;
         });
 
         // Przełącznik widoków działek
@@ -664,10 +703,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`/api/genealogia/${ownerKey}`);
             const treeData = await response.json();
 
-            drawGenealogyTree(treeData);
+            if (treeData?.persons && treeData.persons.length > 0 && treeData.rootId) {
+                drawGenealogyTree(treeData);
+            } else {
+                drawGenealogyTextTree();
+            }
         } catch (error) {
             console.error('Błąd ładowania drzewa:', error);
-            alert('Nie udało się załadować drzewa genealogicznego');
+            drawGenealogyTextTree();
         } finally {
             showTreeBtn.disabled = false;
             showTreeBtn.innerHTML = '<i class="fas fa-project-diagram"></i> Pokaż drzewo genealogiczne';
@@ -675,11 +718,60 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
+     * Awaryjny widok drzewa dla protokołów, które mają tylko opis genealogii.
+     */
+    const drawGenealogyTextTree = () => {
+        const raw = ownerData?.genealogia || '';
+        const text = raw
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<[^>]+>/g, '')
+            .replace(/\\r\\n|\\n|\\r/g, '\n')
+            .replace(/&nbsp;/g, ' ')
+            .trim();
+
+        if (!text) {
+            alert('Brak danych genealogicznych do wyświetlenia');
+            return;
+        }
+
+        const lines = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
+        const esc = (s) => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+        const items = lines.map((line, index) => {
+            const parts = line.split(':');
+            const label = parts.length > 1 ? parts.shift().trim() : (index === 0 ? 'Osoba / informacja' : 'Powiązanie');
+            const value = parts.length ? parts.join(':').trim() : line;
+            return `
+                <div style="display:flex;align-items:center;gap:14px;margin:10px 0;">
+                    <div style="width:12px;height:12px;border-radius:50%;background:${index === 0 ? '#f59e0b' : '#3b82f6'};box-shadow:0 0 0 4px rgba(59,130,246,.12);"></div>
+                    <div class="tree-node" style="background:#fff;border:2px solid ${index === 0 ? '#f59e0b' : '#93c5fd'};border-radius:12px;padding:12px 16px;min-width:260px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+                        <div style="font-size:.7rem;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:4px;">${esc(label)}</div>
+                        <div style="font-weight:700;color:#1f2937;line-height:1.45;">${esc(value)}</div>
+                    </div>
+                </div>`;
+        }).join('<div style="width:2px;height:18px;background:#cbd5e1;margin-left:5px;"></div>');
+
+        treeContainer.innerHTML = `
+            <div style="padding:24px;max-width:900px;margin:0 auto;">
+                <div style="text-align:center;margin-bottom:18px;color:#475569;">
+                    <strong>Uproszczone drzewo z opisu genealogii</strong><br>
+                    <span style="font-size:.85rem;">Ten protokół nie ma pełnych powiązań osobowych w bazie, więc pokazuję strukturę z pola „Genealogia”.</span>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-start;width:max-content;max-width:100%;margin:0 auto;">
+                    ${items}
+                </div>
+            </div>`;
+
+        const dialogTitle = treeDialog.querySelector('.dialog-header h3');
+        if (dialogTitle) dialogTitle.innerHTML = '<i class="fas fa-sitemap"></i> Genealogia z protokołu';
+        treeDialog.showModal();
+    };
+
+    /**
      * Renderuje rodzinę w formie kart (jak w genealogia.html)
      */
     const drawGenealogyTree = (treeData) => {
         if (!treeData.persons || treeData.persons.length === 0) {
-            alert('Brak danych genealogicznych do wyświetlenia');
+            drawGenealogyTextTree();
             return;
         }
 
@@ -704,7 +796,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Znajdź osobę główną (root)
         const rootPerson = personMap.get(treeData.rootId);
         if (!rootPerson) {
-            alert('Nie znaleziono osoby głównej');
+            drawGenealogyTextTree();
             return;
         }
 
@@ -1223,13 +1315,39 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
-     * Formatuje datę do polskiego formatu
+     * Formatuje datę do postaci DD.MM.RRRR (zgodnie z zapisem katastralnym).
+     * Przyjmuje polski tekst (np. "10 lutego 1882 rok") lub ISO string.
      */
     const formatDate = (dateString) => {
         if (!dateString) return '—';
+
+        const months = {
+            'stycznia': '01', 'lutego': '02', 'marca': '03', 'kwietnia': '04',
+            'maja': '05', 'czerwca': '06', 'lipca': '07', 'sierpnia': '08',
+            'września': '09', 'października': '10', 'listopada': '11', 'grudnia': '12',
+            'styczeń': '01', 'luty': '02', 'marzec': '03', 'kwiecień': '04',
+            'maj': '05', 'czerwiec': '06', 'lipiec': '07', 'sierpień': '08',
+            'wrzesień': '09', 'październik': '10', 'listopad': '11', 'grudzień': '12'
+        };
+
+        // Próba parsowania polskiego tekstu daty: "10 lutego 1882 rok"
+        const plMatch = dateString.match(/^(\d{1,2})\s+([a-ząęćłńóśźż]+)\s+(\d{4})/i);
+        if (plMatch) {
+            const day = plMatch[1].padStart(2, '0');
+            const month = months[plMatch[2].toLowerCase()];
+            const year = plMatch[3];
+            if (month) return `${day}.${month}.${year}`;
+        }
+
+        // Próba parsowania ISO: "1882-02-10"
         const d = new Date(dateString);
-        if (isNaN(d.getTime())) return dateString; // polski tekst daty
-        return d.toLocaleDateString('pl-PL');
+        if (!isNaN(d.getTime())) {
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            return `${day}.${month}.${d.getFullYear()}`;
+        }
+
+        return dateString;
     };
 
     /**

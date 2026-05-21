@@ -26,7 +26,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
 
     <!-- Style aplikacji -->
-    <link rel="stylesheet" href="assets_index/style_index.css">
+    <link rel="stylesheet" href="/strona_glowna/assets_index/style_index.css">
 </head>
 <body>
     <!-- ==========================================================================
@@ -47,10 +47,13 @@
             <div class="header-container">
                 <div class="header-badge">
                     <i class="fas fa-map-marked-alt"></i>
-                    <span>Czarna</span>
+                    <span id="std-location-name">Czarna</span>
                 </div>
                 <div class="header-info">
-                    <span>Debicki • Malopolska</span>
+                    <span id="std-location-region">Dębicki • Podkarpackie</span>
+                    <a href="/miejscowosci.html" style="margin-left:12px;color:white;text-decoration:none;border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:6px 10px;background:rgba(255,255,255,.12);font-weight:700;font-size:.85rem;">
+                        <i class="fas fa-map-location-dot"></i> Zmień / Zarządzaj
+                    </a>
                 </div>
             </div>
         </header>
@@ -65,20 +68,20 @@
                 <div class="title-wrapper">
                     <h1 class="main-title">
                         Interaktywna Mapa Katastralna
-                        <span class="subtitle">Czarna z 1882 roku</span>
+                        <span class="subtitle" id="std-location-subtitle">Czarna z 1882 roku</span>
                     </h1>
                 </div>
 
                 <!-- Opis projektu -->
                 <div class="description-wrapper">
-                    <p class="main-description">
+                    <p class="main-description" id="main-desc">
                         Odkryj historie zapisana w ziemi. Przegladaj historyczne dzialki katastralne, poznaj dawnych wlascicieli i zglebiaj genealogiczne powiazania mieszkancow z 1882 roku.
                     </p>
                 </div>
 
                 <!-- Główny przycisk akcji -->
                 <div class="action-container">
-                    <a href="../mapa/mapa.html" class="primary-button">
+                    <a href="/mapa/mapa.html" class="primary-button">
                         <span class="button-icon"><i class="fas fa-map-marked-alt"></i></span>
                         <span class="button-text">Otwórz Mapę</span>
                         <span class="button-arrow"><i class="fas fa-arrow-right"></i></span>
@@ -131,57 +134,80 @@
         </main>
 
         <!-- ==========================================================================
-             SEKCJA DOKUMENTÓW I MATERIAŁÓW
+             SEKCJA: HISTORIA MIEJSCOWOŚCI
              ========================================================================== -->
         <section class="documents-section">
             <div class="section-container">
-                <h2 class="section-title">Materiały i Dokumentacja</h2>
-
-                <div class="documents-grid">
-                    <!-- Karta główna - mapa interaktywna -->
-                    <a href="../mapa/mapa.html" class="doc-card main-card">
-                        <div class="doc-icon">
-                            <i class="fas fa-map"></i>
-                        </div>
-                        <h3>Mapa Interaktywna</h3>
-                        <p>Główna aplikacja z mapą katastralną</p>
-                        <span class="doc-arrow"><i class="fas fa-arrow-right"></i></span>
-                    </a>
-
-                    <!-- Karta historii -->
-                    <a href="historia.html" class="doc-card">
+                <h2 class="section-title">Historia miejscowości</h2>
+                <div class="documents-grid documents-grid--centered">
+                    <a href="/strona_glowna/historia.html" class="doc-card main-card">
                         <div class="doc-icon">
                             <i class="fas fa-landmark"></i>
                         </div>
-                        <h3>Historia miejscowości</h3>
-                        <p>Krótki rys historyczny Czarna</p>
+                        <h3 id="tile-history-name">Historia miejscowości</h3>
+                        <p id="tile-history-desc">Krótki rys historyczny</p>
+                        <span class="doc-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================================================
+             SEKCJA: EDYTORY
+             ========================================================================== -->
+        <section class="documents-section">
+            <div class="section-container">
+                <h2 class="section-title">Edytory</h2>
+                <div class="documents-grid">
+                    <a href="/wlasciciele/edytuj.html" class="doc-card">
+                        <div class="doc-icon">
+                            <i class="fas fa-user-edit"></i>
+                        </div>
+                        <h3>Edytor Właścicieli</h3>
+                        <p>Dodawaj i edytuj protokoły oraz właścicieli</p>
                     </a>
 
-                    <!-- Karta dokumentacji technicznej -->
-                    <a href="../docs/index.html" class="doc-card">
+                    <a href="/edytor_dzialek.html" class="doc-card">
+                        <div class="doc-icon">
+                            <i class="fas fa-draw-polygon"></i>
+                        </div>
+                        <h3>Edytor Działek</h3>
+                        <p>Rysuj i aktualizuj obiekty na mapie</p>
+                    </a>
+
+                    <a href="/genealogia_edytor.html" class="doc-card">
+                        <div class="doc-icon">
+                            <i class="fas fa-sitemap"></i>
+                        </div>
+                        <h3>Edytor Genealogii</h3>
+                        <p>Zarządzaj osobami i relacjami rodzinnymi</p>
+                    </a>
+
+                    <a href="/demografia_edytor.html" class="doc-card">
+                        <div class="doc-icon">
+                            <i class="fas fa-users-cog"></i>
+                        </div>
+                        <h3>Edytor Demografii</h3>
+                        <p>Edytuj dane ludności według lat</p>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================================================
+             SEKCJA: DOKUMENTACJA
+             ========================================================================== -->
+        <section class="documents-section">
+            <div class="section-container">
+                <h2 class="section-title">Dokumentacja</h2>
+                <div class="documents-grid documents-grid--centered">
+                    <a href="/docs/index.html" class="doc-card main-card">
                         <div class="doc-icon">
                             <i class="fas fa-book"></i>
                         </div>
-                        <h3>Dokumentacja</h3>
-                        <p>Przewodnik techniczny</p>
-                    </a>
-
-                    <!-- Karta grafu powiązań -->
-                    <a href="../graf/graf.html" class="doc-card">
-                        <div class="doc-icon">
-                            <i class="fas fa-project-diagram"></i>
-                        </div>
-                        <h3>Graf Powiązań</h3>
-                        <p>Wizualizacja relacji</p>
-                    </a>
-
-                    <!-- Karta genealogii -->
-                    <a href="../genealogia/genealogia.html" class="doc-card">
-                        <div class="doc-icon">
-                            <i class="fas fa-tree"></i>
-                        </div>
-                        <h3>Drzewo Genealogiczne</h3>
-                        <p>Powiązania rodzinne</p>
+                        <h3>Dokumentacja techniczna</h3>
+                        <p>Przewodnik po projekcie i architekturze</p>
+                        <span class="doc-arrow"><i class="fas fa-arrow-right"></i></span>
                     </a>
                 </div>
             </div>
@@ -195,15 +221,15 @@
                 <div class="footer-credits">
                     <div class="credit-item">
                         <span class="credit-label">Mapa historyczna miejscowości:</span>
-                        <span class="credit-name">Czarna</span>
+                        <span class="credit-name" id="std-footer-name">Czarna</span>
                     </div>
                     <div class="credit-divider">•</div>
                     <div class="credit-item">
-                        <span class="credit-name">powiat Debicki</span>
+                        <span class="credit-name" id="std-footer-powiat">powiat Dębicki</span>
                     </div>
                     <div class="credit-divider">•</div>
                     <div class="credit-item">
-                        <span class="credit-name">region Malopolska</span>
+                        <span class="credit-name" id="std-footer-region">region Podkarpackie</span>
                     </div>
                 </div>
                 <div class="footer-copyright">
@@ -221,6 +247,29 @@
          * Animacja płynnego pojawiania się elementów podczas przewijania
          */
         document.addEventListener('DOMContentLoaded', function() {
+            if (window.API?.miejscowosci) {
+                API.miejscowosci.aktywna().then(loc => {
+                    if (!loc) return;
+                    const name = loc.name || 'Miejscowość';
+                    const full = loc.full_name || name;
+                    const powiat = loc.powiat || 'Powiat';
+                    const region = loc.region || 'Region';
+                    const year = loc.year || '1882';
+                    document.title = `Interaktywna Mapa Katastralna - ${name} z ${year} roku`;
+                    const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+                    set('std-location-name', name);
+                    set('std-location-region', `${powiat} • ${region}`);
+                    set('std-location-subtitle', `${full} z ${year} roku`);
+                    set('tile-history-name', `Historia ${name}`);
+                    set('tile-history-desc', `Krótki rys historyczny ${name}`);
+                    const desc = document.getElementById('main-desc');
+                    if (desc) desc.textContent = loc.homepage_description || '';
+                    set('std-footer-name', name);
+                    set('std-footer-powiat', `powiat ${powiat}`);
+                    set('std-footer-region', `region ${region}`);
+                }).catch(console.warn);
+            }
+
             const elements = document.querySelectorAll('.feature-item, .doc-card');
 
             // Obserwator sprawdzający widoczność elementów

@@ -1,4 +1,9 @@
-# Rust
+# Go
+*.exe
+*.test
+*.out
+
+# Rust (stare, zostawiamy aż nie wyczyścimy)
 target/
 
 # Node
@@ -7,6 +12,7 @@ node_modules/
 # Temp database files
 *.db-shm
 *.db-wal
+*.db-journal
 
 # Environment
 .env
@@ -18,3 +24,6 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Go build cache
+vendor/

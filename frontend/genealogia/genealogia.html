@@ -1,8 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pl">
 
 <head>
-    <script src="/assets/js/api.js"></script>
+        <!-- Natychmiastowe ustawienie motywu – zapobiega białemu mignięciu -->
+    <script>
+        (function() {
+            var t = localStorage.getItem('mapTheme');
+            if (t === 'dark') document.documentElement.classList.add('dark-mode');
+        })();
+    </script>
+<script src="/assets/js/api.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Indeks Osób - Genealogia</title>
@@ -647,7 +654,7 @@
     <!-- Header -->
     <header class="main-header">
         <div class="header-content">
-            <a href="../strona_glowna/index.html" class="brand">
+            <a href="../index.html" class="brand">
                 <div class="logo-animated">
                     <i class="fas fa-tree"></i>
                 </div>
@@ -660,7 +667,7 @@
                     <i class="fas fa-map"></i>
                     <span>Mapa</span>
                 </a>
-                <a href="../strona_glowna/index.html" class="nav-pill">
+                <a href="../index.html" class="nav-pill">
                     <i class="fas fa-home"></i>
                     <span>Start</span>
                 </a>
@@ -953,6 +960,32 @@
             }
         }
 
+        function htmlEscape(value) {
+            return String(value ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+        }
+
+        function printFamilyCard(id) {
+            const person = personMap.get(id);
+            if (!person) return alert('Nie znaleziono osoby.');
+            const father = personMap.get(person.fatherId || person.father_id || person.parents?.[0]);
+            const mother = personMap.get(person.motherId || person.mother_id || person.parents?.[1]);
+            const spouses = (person.spouseIds || person.spouses || []).map(pid => personMap.get(pid)).filter(Boolean);
+            const children = (childrenMap.get(person.id) || []).map(cid => personMap.get(cid)).filter(Boolean);
+            const row = (label, value) => value ? `<tr><th>${label}</th><td>${htmlEscape(value)}</td></tr>` : '';
+            const list = arr => arr.length ? `<ul>${arr.map(p => `<li>${htmlEscape(p.name)}${p.houseNumber ? ` — dom ${htmlEscape(p.houseNumber)}` : ''}</li>`).join('')}</ul>` : '<p>Brak danych</p>';
+            const w = window.open('', '_blank');
+            if (!w) return alert('Przeglądarka zablokowała okno wydruku.');
+            w.document.write(`<!doctype html><html lang="pl"><head>    <!-- Natychmiastowe ustawienie motywu – zapobiega białemu mignięciu -->
+    <script>
+        (function() {
+            var t = localStorage.getItem('mapTheme');
+            if (t === 'dark') document.documentElement.classList.add('dark-mode');
+        })();
+    </script>
+<meta charset="utf-8"><title>Karta rodziny - ${htmlEscape(person.name)}</title><style>body{font-family:Arial,sans-serif;color:#111;margin:32px;line-height:1.45}h1{margin:0 0 4px;font-size:28px}h2{margin-top:24px;border-bottom:1px solid #ddd;padding-bottom:6px;font-size:18px}.meta{color:#555;margin-bottom:20px}table{border-collapse:collapse;width:100%;margin-top:12px}th,td{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}th{width:180px;background:#f5f5f5}ul{margin-top:8px}.print-note{margin-top:24px;color:#666;font-size:12px}@media print{button{display:none}body{margin:18mm}}</style></head><body><button onclick="window.print()" style="float:right;padding:8px 12px">Drukuj / zapisz PDF</button><h1>${htmlEscape(person.name)}</h1><div class="meta">Karta rodziny • ID ${htmlEscape(person.id)} • ${person.gender === 'M' ? 'Mężczyzna' : person.gender === 'K' ? 'Kobieta' : htmlEscape(person.gender || '')}</div><h2>Dane podstawowe</h2><table>${row('Numer domu', person.houseNumber)}${row('Rok urodzenia', person.birthYear || person.birthDate?.year)}${row('Rok śmierci', person.deathYear || person.deathDate?.year)}${row('Protokół', person.protocolKey)}${row('Uwagi', person.notes)}</table><h2>Rodzice</h2><table>${row('Ojciec', father?.name)}${row('Matka', mother?.name)}</table><h2>Małżonkowie</h2>${list(spouses)}<h2>Dzieci</h2>${list(children)}<div class="print-note">Wygenerowano lokalnie w aplikacji Mapa Katastralna Czarna.</div><script>setTimeout(()=>window.print(),300)<\/script></body></html>`);
+            w.document.close();
+        }
+
         function showProfile(id) {
             const person = personMap.get(id);
             if (!person) return;
@@ -1068,6 +1101,7 @@
             const cousins = Array.from(cousinsSet).map(cid => ({ role: getCousinRole(personMap.get(cid)), ...personMap.get(cid) })).filter(p => p.id);
 
             const houseNumFromField = person.houseNumber || houseNum;
+            const protocolKey = person.protocolKey || person.protokolKey;
 
             container.innerHTML = `
                 <div class="profile-header">
@@ -1080,8 +1114,8 @@
                             <div style="font-weight: 800; color: var(--text-primary); font-size: 1.1rem; font-family: 'Space Grotesk', sans-serif;">Dom ${houseNumFromField}</div>
                         ` : ''}
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end;">
-                            ${person.protocolKey ? `
-                                <a href="../wlasciciele/protokol.html?ownerId=${person.protocolKey}" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border);">
+                            ${protocolKey ? `
+                                <a href="../wlasciciele/protokol.html?ownerId=${encodeURIComponent(protocolKey)}" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border);">
                                     <i class="fas fa-file-alt"></i> Zobacz protokół
                                 </a>
                             ` : ''}

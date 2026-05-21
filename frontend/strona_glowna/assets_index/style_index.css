@@ -367,6 +367,12 @@ body {
     gap: 1.5rem;
 }
 
+/* Siatka wyśrodkowana dla 1-2 kart */
+.documents-grid--centered {
+    grid-template-columns: minmax(280px, 420px);
+    justify-content: center;
+}
+
 /* Karty dokumentów */
 .doc-card {
     background: white;

@@ -13,13 +13,111 @@
     box-sizing: border-box;
 }
 
-body, html {
+/* ==========================================================================
+   ZMIENNE MOTYWU – jasny domyślnie
+   ========================================================================== */
+body {
+    --graf-bg: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 50%, #f5f0ff 100%);
+    --graf-text: #1e293b;
+    --graf-panel-bg: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,255,0.95) 100%);
+    --graf-panel-border: rgba(0,0,0,0.1);
+    --graf-panel-shadow: rgba(0,0,0,0.15);
+    --graf-input-bg: rgba(0,0,0,0.03);
+    --graf-input-text: #1e293b;
+    --graf-input-border: rgba(0,0,0,0.1);
+    --graf-input-hover: rgba(0,0,0,0.06);
+    --graf-input-placeholder: rgba(0,0,0,0.35);
+    --graf-stat-bg: rgba(0,0,0,0.03);
+    --graf-stat-hover: rgba(0,0,0,0.06);
+    --graf-btn-bg: rgba(0,0,0,0.06);
+    --graf-btn-hover: rgba(0,0,0,0.12);
+    --graf-btn-text: #1e293b;
+    --graf-muted: rgba(0,0,0,0.45);
+    --graf-gradient: linear-gradient(90deg, #4a90e2 0%, #e74c3c 100%);
+    --graf-loading-bg: rgba(248,250,255,0.98);
+    --graf-loading-text: #1e293b;
+    --graf-spinner-track: rgba(0,0,0,0.1);
+    --graf-progress-bg: rgba(0,0,0,0.08);
+    --graf-tooltip-bg: rgba(255,255,255,0.95);
+    --graf-tooltip-border: rgba(0,0,0,0.15);
+    --graf-tooltip-text: #1e293b;
+    --graf-scrollbar-track: rgba(0,0,0,0.05);
+    --graf-scrollbar-thumb: rgba(0,0,0,0.2);
+    --graf-scrollbar-thumb-hover: rgba(0,0,0,0.3);
+    --graf-mobile-nav-bg: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,255,0.98) 100%);
+    --graf-mobile-nav-text: rgba(0,0,0,0.55);
+    --graf-mobile-nav-border: rgba(0,0,0,0.1);
+    --graf-header-bg: rgba(0,0,0,0.02);
+    --graf-header-border: rgba(0,0,0,0.08);
+    --graf-nav-bg: rgba(0,0,0,0.03);
+    --graf-nav-border: rgba(0,0,0,0.08);
+    --graf-search-result-bg: rgba(0,0,0,0.03);
+    --graf-search-result-hover: rgba(74,144,226,0.12);
+    --graf-overlay-gradient: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.12) 100%);
+    --graf-minimap-bg: rgba(255,255,255,0.95);
+    --graf-minimap-border: rgba(0,0,0,0.15);
+    --graf-focus-outline: #4a90e2;
+}
+
+html { background: #f0f4ff; }
+html.dark-mode { background: #0f0f1e; }
+
+html.dark-mode body {
+    --graf-bg: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 50%, #16213e 100%);
+    --graf-text: #ffffff;
+    --graf-panel-bg: linear-gradient(135deg, rgba(26,26,46,0.95) 0%, rgba(22,33,62,0.95) 100%);
+    --graf-panel-border: rgba(255,255,255,0.1);
+    --graf-panel-shadow: rgba(0,0,0,0.5);
+    --graf-input-bg: rgba(255,255,255,0.05);
+    --graf-input-text: #ffffff;
+    --graf-input-border: rgba(255,255,255,0.1);
+    --graf-input-hover: rgba(255,255,255,0.08);
+    --graf-input-placeholder: rgba(255,255,255,0.35);
+    --graf-stat-bg: rgba(255,255,255,0.05);
+    --graf-stat-hover: rgba(255,255,255,0.1);
+    --graf-btn-bg: rgba(255,255,255,0.1);
+    --graf-btn-hover: rgba(255,255,255,0.2);
+    --graf-btn-text: #ffffff;
+    --graf-muted: rgba(255,255,255,0.5);
+    --graf-gradient: linear-gradient(90deg, #4a90e2 0%, #ff6b6b 100%);
+    --graf-loading-bg: rgba(15,15,30,0.98);
+    --graf-loading-text: #ffffff;
+    --graf-spinner-track: rgba(255,255,255,0.1);
+    --graf-progress-bg: rgba(255,255,255,0.1);
+    --graf-tooltip-bg: rgba(26,26,46,0.95);
+    --graf-tooltip-border: rgba(255,255,255,0.2);
+    --graf-tooltip-text: #ffffff;
+    --graf-scrollbar-track: rgba(255,255,255,0.05);
+    --graf-scrollbar-thumb: rgba(255,255,255,0.2);
+    --graf-scrollbar-thumb-hover: rgba(255,255,255,0.3);
+    --graf-mobile-nav-bg: linear-gradient(135deg, rgba(26,26,46,0.98) 0%, rgba(22,33,62,0.98) 100%);
+    --graf-mobile-nav-text: rgba(255,255,255,0.6);
+    --graf-mobile-nav-border: rgba(255,255,255,0.1);
+    --graf-header-bg: rgba(255,255,255,0.02);
+    --graf-header-border: rgba(255,255,255,0.1);
+    --graf-nav-bg: rgba(255,255,255,0.05);
+    --graf-nav-border: rgba(255,255,255,0.1);
+    --graf-search-result-bg: rgba(255,255,255,0.05);
+    --graf-search-result-hover: rgba(74,144,226,0.2);
+    --graf-overlay-gradient: radial-gradient(circle at center, transparent 0%, rgba(15,15,30,0.4) 100%);
+    --graf-minimap-bg: rgba(26,26,46,0.95);
+    --graf-minimap-border: rgba(255,255,255,0.2);
+    --graf-focus-outline: #4a90e2;
+}
+
+html {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+body {
     height: 100%;
     width: 100%;
     overflow: hidden;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 50%, #16213e 100%);
-    color: #ffffff;
+    background: var(--graf-bg);
+    color: var(--graf-text);
 }
 
 /* ==========================================================================
@@ -39,7 +137,7 @@ body, html {
     left: 0;
     right: 0;
     bottom: 0;
-    background: radial-gradient(circle at center, transparent 0%, rgba(15,15,30,0.4) 100%);
+    background: var(--graf-overlay-gradient);
     pointer-events: none;
     z-index: 2;
 }
@@ -53,11 +151,11 @@ body, html {
     left: 20px;
     width: 380px;
     max-height: calc(100vh - 40px);
-    background: linear-gradient(135deg, rgba(26,26,46,0.95) 0%, rgba(22,33,62,0.95) 100%);
+    background: var(--graf-panel-bg);
     backdrop-filter: blur(20px);
     border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 100px rgba(74,144,226,0.1);
-    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 20px 60px var(--graf-panel-shadow), 0 0 100px rgba(74,144,226,0.1);
+    border: 1px solid var(--graf-panel-border);
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 1000;
@@ -75,8 +173,8 @@ body, html {
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid var(--graf-header-border);
+    background: var(--graf-header-bg);
 }
 
 .panel-header h1 {
@@ -93,9 +191,9 @@ body, html {
 
 /* Przycisk zwijania panelu */
 .panel-toggle {
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.2);
-    color: white;
+    background: var(--graf-btn-bg);
+    border: 1px solid var(--graf-panel-border);
+    color: var(--graf-btn-text);
     width: 30px;
     height: 30px;
     border-radius: 8px;
@@ -107,7 +205,7 @@ body, html {
 }
 
 .panel-toggle:hover {
-    background: rgba(255,255,255,0.2);
+    background: var(--graf-btn-hover);
     transform: scale(1.1);
 }
 
@@ -154,7 +252,7 @@ h3 {
     font-size: 0.9rem;
     font-weight: 500;
     margin-bottom: 15px;
-    color: rgba(255,255,255,0.8);
+    color: var(--graf-text);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -172,23 +270,27 @@ h3 {
 .search-icon {
     position: absolute;
     left: 12px;
-    color: rgba(255,255,255,0.4);
+    color: var(--graf-input-placeholder);
 }
 
 #search-input {
     width: 100%;
     padding: 12px 40px 12px 35px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: var(--graf-input-bg);
+    border: 1px solid var(--graf-input-border);
     border-radius: 10px;
-    color: white;
+    color: var(--graf-input-text);
     font-size: 0.9rem;
     transition: all 0.3s;
 }
 
+#search-input::placeholder {
+    color: var(--graf-input-placeholder);
+}
+
 #search-input:focus {
     outline: none;
-    background: rgba(255,255,255,0.08);
+    background: var(--graf-input-hover);
     border-color: #4a90e2;
     box-shadow: 0 0 0 3px rgba(74,144,226,0.1);
 }
@@ -199,14 +301,14 @@ h3 {
     right: 10px;
     background: transparent;
     border: none;
-    color: rgba(255,255,255,0.5);
+    color: var(--graf-muted);
     cursor: pointer;
     padding: 5px;
     transition: color 0.3s;
 }
 
 .clear-btn:hover {
-    color: white;
+    color: var(--graf-text);
 }
 
 /* Wyniki wyszukiwania */
@@ -219,7 +321,7 @@ h3 {
 
 #search-results li {
     padding: 10px;
-    background: rgba(255,255,255,0.05);
+    background: var(--graf-search-result-bg);
     border-radius: 8px;
     margin-bottom: 5px;
     cursor: pointer;
@@ -228,17 +330,18 @@ h3 {
     align-items: center;
     gap: 10px;
     font-size: 0.85rem;
+    color: var(--graf-text);
 }
 
 #search-results li:hover {
-    background: rgba(74,144,226,0.2);
+    background: var(--graf-search-result-hover);
     transform: translateX(5px);
 }
 
 .connections {
     margin-left: auto;
     font-size: 0.75rem;
-    color: rgba(255,255,255,0.5);
+    color: var(--graf-muted);
 }
 
 /* ==========================================================================
@@ -251,8 +354,8 @@ h3 {
 }
 
 .stat-item {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: var(--graf-stat-bg);
+    border: 1px solid var(--graf-panel-border);
     border-radius: 10px;
     padding: 15px 10px;
     text-align: center;
@@ -260,7 +363,7 @@ h3 {
 }
 
 .stat-item:hover {
-    background: rgba(255,255,255,0.08);
+    background: var(--graf-stat-hover);
     transform: translateY(-2px);
 }
 
@@ -268,7 +371,7 @@ h3 {
     display: block;
     font-size: 1.5rem;
     font-weight: 600;
-    background: linear-gradient(135deg, #4a90e2 0%, #ff6b6b 100%);
+    background: var(--graf-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -277,7 +380,7 @@ h3 {
 .stat-label {
     display: block;
     font-size: 0.75rem;
-    color: rgba(255,255,255,0.6);
+    color: var(--graf-muted);
     margin-top: 5px;
 }
 
@@ -292,10 +395,10 @@ h3 {
 
 .control-btn {
     padding: 10px;
-    background: linear-gradient(135deg, rgba(74,144,226,0.1) 0%, rgba(74,144,226,0.2) 100%);
+    background: var(--graf-btn-bg);
     border: 1px solid rgba(74,144,226,0.3);
     border-radius: 10px;
-    color: white;
+    color: var(--graf-btn-text);
     font-size: 0.8rem;
     cursor: pointer;
     transition: all 0.3s;
@@ -306,7 +409,7 @@ h3 {
 }
 
 .control-btn:hover {
-    background: linear-gradient(135deg, rgba(74,144,226,0.2) 0%, rgba(74,144,226,0.3) 100%);
+    background: var(--graf-btn-hover);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(74,144,226,0.3);
 }
@@ -331,7 +434,7 @@ h3 {
     gap: 10px;
     cursor: pointer;
     font-size: 0.85rem;
-    color: rgba(255,255,255,0.8);
+    color: var(--graf-text);
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -344,7 +447,7 @@ h3 {
     display: block;
     font-size: 0.85rem;
     margin-bottom: 8px;
-    color: rgba(255,255,255,0.8);
+    color: var(--graf-text);
 }
 
 #min-connections {
@@ -366,14 +469,14 @@ h3 {
     align-items: center;
     gap: 10px;
     font-size: 0.85rem;
-    color: rgba(255,255,255,0.8);
+    color: var(--graf-text);
 }
 
 .node-sample {
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    border: 2px solid rgba(255,255,255,0.3);
+    border: 2px solid var(--graf-panel-border);
 }
 
 .node-sample.normal {
@@ -397,16 +500,16 @@ h3 {
     display: flex;
     gap: 10px;
     padding-top: 15px;
-    border-top: 1px solid rgba(255,255,255,0.1);
+    border-top: 1px solid var(--graf-panel-border);
 }
 
 .nav-link {
     flex: 1;
     padding: 12px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: var(--graf-nav-bg);
+    border: 1px solid var(--graf-nav-border);
     border-radius: 10px;
-    color: white;
+    color: var(--graf-text);
     text-decoration: none;
     text-align: center;
     font-size: 0.85rem;
@@ -418,7 +521,7 @@ h3 {
 }
 
 .nav-link:hover {
-    background: rgba(255,255,255,0.1);
+    background: var(--graf-btn-bg);
     transform: translateY(-2px);
 }
 
@@ -427,12 +530,13 @@ h3 {
    ========================================================================== */
 .tooltip {
     position: absolute;
-    background: rgba(26,26,46,0.95);
+    background: var(--graf-tooltip-bg);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid var(--graf-tooltip-border);
     border-radius: 8px;
     padding: 10px;
     font-size: 0.85rem;
+    color: var(--graf-tooltip-text);
     display: none;
     z-index: 2000;
     pointer-events: none;
@@ -448,8 +552,8 @@ h3 {
     right: 20px;
     width: 200px;
     height: 150px;
-    background: rgba(26,26,46,0.95);
-    border: 1px solid rgba(255,255,255,0.2);
+    background: var(--graf-minimap-bg);
+    border: 1px solid var(--graf-minimap-border);
     border-radius: 10px;
     display: none; /* Opcjonalnie widoczna */
     z-index: 100;
@@ -464,7 +568,7 @@ h3 {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(15,15,30,0.98);
+    background: var(--graf-loading-bg);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -473,6 +577,7 @@ h3 {
 
 .loading-content {
     text-align: center;
+    color: var(--graf-loading-text);
 }
 
 /* Animowany spinner */
@@ -480,7 +585,7 @@ h3 {
     width: 60px;
     height: 60px;
     margin: 0 auto 20px;
-    border: 3px solid rgba(255,255,255,0.1);
+    border: 3px solid var(--graf-spinner-track);
     border-top-color: #4a90e2;
     border-radius: 50%;
     animation: spin 1s linear infinite;
@@ -490,7 +595,7 @@ h3 {
 .loading-progress {
     width: 200px;
     height: 4px;
-    background: rgba(255,255,255,0.1);
+    background: var(--graf-progress-bg);
     border-radius: 2px;
     margin: 20px auto 0;
     overflow: hidden;
@@ -581,9 +686,9 @@ h3 {
         left: 0;
         right: 0;
         height: 56px;
-        background: linear-gradient(135deg, rgba(26,26,46,0.98) 0%, rgba(22,33,62,0.98) 100%);
+        background: var(--graf-mobile-nav-bg);
         backdrop-filter: blur(20px);
-        border-top: 1px solid rgba(255,255,255,0.1);
+        border-top: 1px solid var(--graf-mobile-nav-border);
         z-index: 1001;
         justify-content: space-around;
         align-items: center;
@@ -594,7 +699,7 @@ h3 {
         flex-direction: column;
         align-items: center;
         text-decoration: none;
-        color: rgba(255,255,255,0.6);
+        color: var(--graf-mobile-nav-text);
         font-size: 10px;
         flex: 1;
         padding: 6px 0;
@@ -630,17 +735,17 @@ h3 {
 }
 
 ::-webkit-scrollbar-track {
-    background: rgba(255,255,255,0.05);
+    background: var(--graf-scrollbar-track);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.2);
+    background: var(--graf-scrollbar-thumb);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255,255,255,0.3);
+    background: var(--graf-scrollbar-thumb-hover);
 }
 
 /* ==========================================================================
@@ -667,7 +772,7 @@ h3 {
 button:focus-visible,
 input:focus-visible,
 a:focus-visible {
-    outline: 2px solid #4a90e2;
+    outline: 2px solid var(--graf-focus-outline);
     outline-offset: 2px;
 }
 

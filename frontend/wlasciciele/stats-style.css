@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    Plik: stats-style.css
    Opis: Arkusz stylów dla Centrum Analitycznego - wizualizacja danych
          katastralnych Gminy Czarna z XIX wieku. Nowoczesny design z gradientami,
@@ -3715,3 +3715,4 @@ kbd {
   background: rgba(156, 163, 175, 0.15);
   color: #9ca3af;
 }
+html.dark-mode,body.dark-mode{background:#0f172a}
