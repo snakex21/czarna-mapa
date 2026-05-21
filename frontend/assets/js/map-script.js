@@ -2365,6 +2365,8 @@ function findAndHighlightLayer(featureId, shouldHighlight, highlightColor = "lim
  * @param {L.LatLng|L.Layer} latlngOrLayer - Pozycja lub warstwa
  */
 function handleObjectClick(wlasciciele, latlngOrLayer) {
+    wlasciciele = uniqueOwnersForPopup(wlasciciele);
+
     if (!wlasciciele || wlasciciele.length === 0) {
         if (latlngOrLayer instanceof L.Layer) {
             focusOnLayer(latlngOrLayer);
@@ -2377,11 +2379,26 @@ function handleObjectClick(wlasciciele, latlngOrLayer) {
 
     if (wlasciciele.length === 1) {
         map.closePopup();
-        window.location.href = `views/wlasciciele/protokol.html?ownerId=${wlasciciele[0].unikalny_klucz}`;
+        window.location.href = getProtocolUrl(wlasciciele[0].unikalny_klucz);
     } else {
         const latlng = latlngOrLayer instanceof L.LatLng ? latlngOrLayer : getCenterOfLayer(latlngOrLayer);
         showOwnerSelectionPopup(wlasciciele, latlng);
     }
+}
+
+function getProtocolUrl(ownerKey) {
+    return `/wlasciciele/protokol.html?ownerId=${encodeURIComponent(ownerKey || '')}`;
+}
+
+function uniqueOwnersForPopup(wlasciciele) {
+    if (!Array.isArray(wlasciciele)) return [];
+    const seen = new Set();
+    return wlasciciele.filter(w => {
+        const key = w?.unikalny_klucz || `id:${w?.id}`;
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
 }
 
 /**
@@ -2390,6 +2407,8 @@ function handleObjectClick(wlasciciele, latlngOrLayer) {
  * @param {L.LatLng} latlng - Pozycja popup
  */
 function showOwnerSelectionPopup(wlasciciele, latlng) {
+    wlasciciele = uniqueOwnersForPopup(wlasciciele);
+
     let listaHtml = "<h3>Ta działka ma wielu właścicieli.<br>Wybierz protokół:</h3><ul>";
 
     wlasciciele.forEach(w => {
@@ -2398,7 +2417,7 @@ function showOwnerSelectionPopup(wlasciciele, latlng) {
         listaHtml += `
             <li>
                 <a href="#" class="protocol-link-in-popup" 
-                   data-url="views/wlasciciele/protokol.html?ownerId=${w.unikalny_klucz}">
+                   data-url="${getProtocolUrl(w.unikalny_klucz)}">
                    ${w.nazwa} (Lp. ${lp})
                 </a>
             </li>`;
@@ -2407,21 +2426,22 @@ function showOwnerSelectionPopup(wlasciciele, latlng) {
 
     const popup = L.popup().setLatLng(latlng).setContent(listaHtml).openOn(map);
 
-    /* Obsługa kliknięć na linki */
-    popup.on("contentupdate", () => {
-        const links = popup.getElement().querySelectorAll(".protocol-link-in-popup");
-        links.forEach(link => {
+    /* Obsługa kliknięć na linki: contentupdate w Leaflet nie zawsze odpala po openOn(). */
+    const bindPopupLinks = () => {
+        const element = popup.getElement();
+        if (!element) return;
+        element.querySelectorAll(".protocol-link-in-popup").forEach(link => {
             link.addEventListener("click", e => {
                 e.preventDefault();
+                const url = e.currentTarget.dataset.url;
                 map.closePopup();
-                setTimeout(() => {
-                    window.location.href = e.target.dataset.url;
-                }, 100);
-            });
+                window.location.href = url;
+            }, { once: true });
         });
-    });
+    };
 
-    popup.update();
+    bindPopupLinks();
+    map.once('popupopen', bindPopupLinks);
 }
 
 /**

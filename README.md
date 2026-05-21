@@ -1,18 +1,37 @@
-# Mapa Katastralna Czarna — Aplikacja Desktopowa
+# Mapa Katastralna Czarna — wersja portable desktop
 
 > Aplikacja desktopowa do przeglądania historycznej mapy katastralnej gminy Czarna z 1882 roku.
 > Działa jako samodzielny program Windows — bez instalacji, bez serwera, zero konfiguracji.
 
 ## Dlaczego powstała?
 
-W ramach pracy inżynierskiej powstała najpierw wersja serwerowa / webowa:
+Pierwszą wersją projektu była aplikacja serwerowa / webowa:
 [Projekt-Czarna (Flask + Python)](https://github.com/snakex21/Projekt-Czarna) — backend Python, frontend HTML/CSS/JS, baza PostgreSQL + PostGIS.
+
+Ta aplikacja desktopowa powstała z mojej własnej inicjatywy jako niezależna,
+lokalna wersja portable. Jej celem jest umożliwienie wygodnego korzystania
+z mapy katastralnej i danych historycznych bez uruchamiania całego środowiska
+serwerowego.
+
+Nie jest to główna wersja projektu dyplomowego, lecz osobne praktyczne
+rozwinięcie — przygotowane po to, aby aplikację można było łatwo przekazać,
+uruchomić lokalnie, zarchiwizować i przenieść np. na pendrive.
 
 Ta wersja **desktopowa** zastępuje cały stos serwerowy jednym plikiem EXE (~80 MB). Dzięki temu:
 - nie potrzebujesz Pythona, PostgreSQL ani serwera,
 - uruchamiasz aplikację jak każdy inny program Windows,
 - dane są w jednym folderze — łatwe do kopiowania i backupowania,
 - możesz przenosić całą aplikację na pendrive.
+
+## Relacja do projektu webowego
+
+Wersja portable korzysta z tej samej idei i tego samego zakresu danych co
+projekt webowy, ale została przebudowana pod tryb lokalny. Zamiast serwera,
+bazy PostgreSQL i konfiguracji środowiska użytkownik otrzymuje gotową aplikację
+Windows z lokalną bazą SQLite oraz folderem danych.
+
+Dzięki temu projekt może działać offline i być używany jako samodzielne
+narzędzie do przeglądania mapy, protokołów, genealogii oraz danych historycznych.
 
 ## Co potrafi aplikacja?
 
@@ -84,15 +103,10 @@ go build -ldflags="-H windowsgui" -o "Mapa Katastralna Czarna.exe" .
 go test ./internal/...
 ```
 
-## Autorzy i podziękowania
+## Autor
 
-- **Maksymilian Augustyn** — koncepcja, dane historyczne, dokumentacja
-- Opiekun naukowy: dr inż. Adam Pieprzycki, Akademia Tarnowska
-
-Specjalne podziękowania dla wszystkich, którzy przyczynili się do digitalizacji
-i udostępnienia danych katastralnych gminy Czarna.
+**Maksymilian Augustyn** — autor i inicjator wersji portable desktop.
 
 ## Licencja
 
-Projekt powstał jako praca inżynierska. Kod źródłowy jest dostępny na licencji MIT.
-Dane historyczne i skany protokołów — proszę o kontakt przed wykorzystaniem komercyjnym.
+Kod źródłowy jest dostępny na licencji MIT.

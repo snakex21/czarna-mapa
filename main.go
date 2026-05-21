@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"czarna-mapa/internal/db"
+	"czarna-mapa/internal/service"
 	"embed"
 	"fmt"
 	"io/fs"
@@ -69,6 +70,11 @@ func main() {
 	}
 	if err := app.ensureGenealogyProtocolLinks(); err != nil {
 		log.Printf("Nie można odtworzyć powiązań genealogia-protokół: %v", err)
+	}
+	if repaired, err := service.RepairOwnerParcelLinksFromJSON(database, dataDir); err != nil {
+		log.Printf("Nie można uzupełnić powiązań działek ułamkowych: %v", err)
+	} else if repaired > 0 {
+		log.Printf("Uzupełniono brakujące powiązania działka-właściciel: %d", repaired)
 	}
 
 	// Serwuj frontend z embed

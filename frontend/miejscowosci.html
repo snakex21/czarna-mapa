@@ -18,7 +18,7 @@
   <div class="wrap">
     <header class="top">
       <div class="brand"><i class="fas fa-map-location-dot"></i><h1>System Zarządzania Mapą Katastralną</h1></div>
-      <div class="toolbar"><a class="btn btn-secondary" href="/index.html"><i class="fas fa-arrow-left"></i> Panel główny</a><button class="btn btn-info" onclick="page.load()"><i class="fas fa-rotate"></i> Odśwież</button></div>
+      <div class="toolbar"><a class="btn btn-secondary" href="/index.html"><i class="fas fa-arrow-left"></i> Panel główny</a><button class="btn btn-secondary" onclick="page.openAbout()"><i class="fas fa-circle-info"></i> O aplikacji</button><button class="btn btn-info" onclick="page.load()"><i class="fas fa-rotate"></i> Odśwież</button></div>
     </header>
 
     <section class="card active-banner">
@@ -51,6 +51,7 @@
       <div style="color:#cbd5e1;font-size:.9rem">Kliknij tło albo naciśnij Esc, aby zamknąć</div>
     </div>
   </div>
+  <div class="modal" id="about-modal"><div class="modal-card" style="width:min(620px,94vw)"><div class="modal-head"><h2 style="margin:0"><i class="fas fa-circle-info"></i> O aplikacji</h2><button class="btn btn-secondary" onclick="page.closeAbout()">×</button></div><div class="modal-body" style="line-height:1.65"><h3 style="margin-top:0">Mapa Katastralna Czarna — wersja portable desktop</h3><p style="color:var(--muted);margin-top:0">Lokalna aplikacja Windows do przeglądania historycznej mapy katastralnej, protokołów, genealogii i danych miejscowości.</p><div style="display:grid;grid-template-columns:130px 1fr;gap:8px 14px;background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:14px;margin:14px 0"><strong>Wersja</strong><span>1.0.0</span><strong>Autor</strong><span>Maksymilian Augustyn</span><strong>Charakter</strong><span>Niezależna wersja portable desktop, przygotowana z własnej inicjatywy autora.</span><strong>Technologie</strong><span>Go, SQLite, WebView2, HTML/CSS/JS, Leaflet</span></div><p style="margin-bottom:0">Wersja portable działa lokalnie — bez serwera, bez PostgreSQL i bez dodatkowej konfiguracji środowiska.</p></div></div></div>
   <div class="toast" id="toast"></div>
   <script>
     const page={locations:[],active:null,editing:null,pendingHistoryPhotos:[],fileChanged(input){const wrap=input.closest('.file-input-wrap');const nameEl=wrap?.querySelector('.file-input-name');if(!nameEl)return;if(!input.files.length){nameEl.textContent='Nie wybrano pliku';return}const names=[...input.files].map(f=>f.name);nameEl.textContent=names.join(', ');nameEl.title=names.join('\n')}};
@@ -60,6 +61,8 @@
     function ensureHistorySubtitleField(){if(document.getElementById('f-history-subtitle'))return;const p1=document.getElementById('f-history-p1');if(!p1)return;p1.closest('div').insertAdjacentHTML('beforebegin','<div style="margin-top:8px"><label style="display:block;font-weight:700;margin-bottom:8px;font-size:.92rem"><i class="fas fa-heading"></i> Historia — podtytuł pod nazwą</label><textarea id="f-history-subtitle" rows="2" style="width:100%;padding:.65rem;border:2px solid var(--border);border-radius:8px;font-size:.92rem;font-family:inherit;resize:vertical" placeholder="Np. Jej mieszkańcy, ich posiadłości..."></textarea></div>')}
     page.openPhotoPreview=function(src,title){document.getElementById('photo-preview-img').src=src;document.getElementById('photo-preview-title').textContent=title||'Podgląd zdjęcia';document.getElementById('photo-preview-modal').style.display='flex'};
     page.closePhotoPreview=function(e){if(e&&e.target&&e.target.id!=='photo-preview-modal')return;document.getElementById('photo-preview-modal').style.display='none';document.getElementById('photo-preview-img').src=''};
+    page.openAbout=()=>document.getElementById('about-modal').classList.add('open');
+    page.closeAbout=()=>document.getElementById('about-modal').classList.remove('open');
     document.addEventListener('keydown',e=>{if(e.key==='Escape')page.closePhotoPreview()});
     document.addEventListener('click',e=>{const img=e.target.closest?.('img[title="Kliknij, aby powiększyć"]');if(!img)return;e.preventDefault();e.stopPropagation();const row=img.closest('[data-filename],[data-index]');page.openPhotoPreview(img.currentSrc||img.src,img.alt||row?.dataset.filename||'Podgląd zdjęcia')},true);
     document.addEventListener('dblclick',e=>{const img=e.target.closest?.('img[title="Kliknij, aby powiększyć"]');if(!img)return;e.preventDefault();e.stopPropagation();const row=img.closest('[data-filename],[data-index]');page.openPhotoPreview(img.currentSrc||img.src,img.alt||row?.dataset.filename||'Podgląd zdjęcia')},true);

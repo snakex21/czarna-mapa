@@ -6,6 +6,31 @@
 (function() {
     'use strict';
 
+    // =========================================================================
+    // DESKTOP WEBVIEW GUARD — blokuje typowo-przeglądarkowe skróty nawigacji
+    // =========================================================================
+    const blockedBrowserShortcuts = new Set([
+        'F5',
+        'BrowserRefresh',
+        'BrowserBack',
+        'BrowserForward',
+    ]);
+
+    document.addEventListener('keydown', function(event) {
+        const key = event.key;
+        const lowerKey = String(key || '').toLowerCase();
+        const ctrlOrMeta = event.ctrlKey || event.metaKey;
+        const shouldBlock =
+            blockedBrowserShortcuts.has(key) ||
+            (ctrlOrMeta && ['r', 'l', 'n', 'o'].includes(lowerKey)) ||
+            (event.altKey && ['arrowleft', 'arrowright'].includes(lowerKey));
+
+        if (shouldBlock) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    }, true);
+
     /**
      * Uniwersalne wywołanie RPC — zastępuje Tauri invoke.
      */
