@@ -426,6 +426,71 @@ func importOwnersJSON(tx *sql.Tx, raw []byte) (int, error) {
 	return len(data), nil
 }
 
+// RepairOwnerParcelLinksFromJSON uzupełnia brakujące relacje działka-właściciel
+// z pliku owner_data_to_import.json. Starsze bazy potrafią mieć poprawne
+// powiązania dla działek całkowitych, ale brak powiązań dla numerów ułamkowych
+// typu "800/1". Funkcja niczego nie usuwa — tylko dopisuje brakujące relacje.
+func RepairOwnerParcelLinksFromJSON(db *sql.DB, dataDir string) (int, error) {
+	path := filepath.Join(dataDir, "owner_data_to_import.json")
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return 0, nil
+		}
+		return 0, err
+	}
+
+	var data oldOwners
+	if err := json.Unmarshal(raw, &data); err != nil {
+		return 0, err
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback()
+
+	inserted := 0
+	for ownerKey, record := range data {
+		var ownerID int64
+		if err := tx.QueryRow(`SELECT id FROM wlasciciele WHERE unikalny_klucz=?`, ownerKey).Scan(&ownerID); err != nil {
+			continue
+		}
+
+		for _, field := range []string{"realbuildingPlots", "realagriculturalPlots", "buildingPlots", "agriculturalPlots"} {
+			real := strings.HasPrefix(field, "real")
+			building := strings.Contains(strings.ToLower(field), "building")
+			typ := "wlasnosc z protokolu"
+			if real {
+				typ = "wlasnosc rzeczywista"
+			}
+
+			for _, num := range toStringArray(record[field]) {
+				if strings.TrimSpace(num) == "" {
+					continue
+				}
+				objectID, err := ensureObjectTx(tx, num, building)
+				if err != nil {
+					return 0, err
+				}
+				res, err := tx.Exec(
+					`INSERT OR IGNORE INTO dzialki_wlasciciele (wlasciciel_id,obiekt_id,typ_posiadania,opis_udzialu) VALUES (?,?,?,?)`,
+					ownerID, objectID, typ, "",
+				)
+				if err != nil {
+					return 0, err
+				}
+				if n, _ := res.RowsAffected(); n > 0 {
+					inserted++
+				}
+			}
+		}
+	}
+
+	return inserted, tx.Commit()
+}
+
 func importDemographyJSON(tx *sql.Tx, raw []byte) (int, error) {
 	var rows []map[string]interface{}
 	if err := json.Unmarshal(raw, &rows); err != nil {

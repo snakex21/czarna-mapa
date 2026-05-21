@@ -1579,6 +1579,29 @@ input:checked+.slider:before {
     pointer-events: none;
 }
 
+.virtual-parcel-label {
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+}
+
+.selection-focus-mode .parcel-label-dimmed {
+    opacity: 0.32;
+    filter: grayscale(1);
+}
+
+.selection-focus-mode .parcel-label-selected {
+    opacity: 1;
+    color: #fff7ed;
+    font-size: 17px;
+    font-weight: 900;
+    text-shadow:
+        -2px -2px 0 #000,
+        2px -2px 0 #000,
+        -2px 2px 0 #000,
+        2px 2px 0 #000,
+        0 0 10px rgba(255, 255, 255, 0.95);
+}
+
 /* Etykiety dla punktów (domy, kapliczki, obiekty specjalne) */
 .point-label {
     background-color: rgba(0, 0, 0, 0.7) !important;

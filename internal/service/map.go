@@ -159,7 +159,7 @@ func ZnajdzObiektPoPunkcie(db *sql.DB, lat, lng float64) (*models.ObiektGeografi
 // PobierzWlascicieliObiektu zwraca właścicieli dla danego obiektu.
 func PobierzWlascicieliObiektu(db *sql.DB, obiektID int64) ([]models.DzialkaWlascicielInfo, error) {
 	rows, err := db.Query(
-		`SELECT dw.obiekt_id, dw.wlasciciel_id, w.nazwa_wlasciciela, dw.typ_posiadania
+		`SELECT DISTINCT dw.obiekt_id, dw.wlasciciel_id, w.nazwa_wlasciciela, dw.typ_posiadania
 		 FROM dzialki_wlasciciele dw
 		 JOIN wlasciciele w ON w.id = dw.wlasciciel_id
 		 WHERE dw.obiekt_id = ?`, obiektID,
@@ -262,7 +262,7 @@ func GetOwnerParcels(db *sql.DB, ownerID int64) ([]map[string]interface{}, error
 // getOwnersForParcel zwraca właścicieli dla danej działki (do API_Dzialki).
 func getOwnersForParcel(db *sql.DB, obiektID int64) ([]map[string]interface{}, error) {
 	rows, err := db.Query(
-		`SELECT w.id, w.unikalny_klucz, w.nazwa_wlasciciela, dw.typ_posiadania
+		`SELECT DISTINCT w.id, w.unikalny_klucz, w.nazwa_wlasciciela, dw.typ_posiadania
 		 FROM wlasciciele w JOIN dzialki_wlasciciele dw ON w.id = dw.wlasciciel_id
 		 WHERE dw.obiekt_id = ?`, obiektID,
 	)

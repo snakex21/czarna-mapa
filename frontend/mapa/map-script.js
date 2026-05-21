@@ -19,6 +19,7 @@ let geojsonLayer = null;
 let historicalMapOverlay = null;
 let layersByCategory = {};
 let markerClusterGroup = null;
+let parcelLabelLayer = null;
 
 /* Cache dla szybkiego wyszukiwania warstw - optymalizacja wydajności */
 let layersById = new Map();
@@ -30,6 +31,7 @@ let selectedForCompare = [];
 /* Warstwy podświetleń */
 let highlightedLayer = null;
 let ownerHighlightLayer = null;
+let focusedParcelIds = null;
 
 /* Paleta kolorów dla właścicieli */
 const HIGHLIGHT_COLORS = [
@@ -184,6 +186,9 @@ function initializeMap() {
             coordsDiv.innerHTML = `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
         }
     }, 100)); // Aktualizacja max co 100ms
+
+    parcelLabelLayer = L.layerGroup().addTo(map);
+    map.on("moveend zoomend", debounce(updateVisibleParcelLabels, 120));
 
     console.log("✅ Mapa zainicjalizowana");
 }
@@ -377,7 +382,12 @@ function renderMapObjects(parcels) {
 
     /* Tworzenie warstwy GeoJSON dla poligonów i linii */
     geojsonLayer = L.geoJSON(nonPointFeatures, {
-        style: (feature) => STYLES[feature.properties.kategoria] || STYLES.default,
+        style: (feature) => ({
+            ...(STYLES[feature.properties.kategoria] || STYLES.default),
+            // Leaflet/Canvas upraszcza geometrię zależnie od zoomu. Wizualnie
+            // zostaje praktycznie tak samo, a mniej punktów trafia do renderera.
+            smoothFactor: 1.6,
+        }),
 
         onEachFeature: (feature, layer) => {
             const props = feature.properties;
@@ -403,14 +413,9 @@ function renderMapObjects(parcels) {
                 }
                 layer.bindPopup(popupContent);
 
-                /* Dodawanie etykiet - zawsze widocznych */
-                if (props.numer_obiektu) {
-                    layer.bindTooltip(props.numer_obiektu.toString(), {
-                        permanent: true,
-                        direction: 'center',
-                        className: 'parcel-label'
-                    });
-                }
+                /* Etykiety są renderowane wirtualnie tylko dla widocznego obszaru
+                   w updateVisibleParcelLabels(). Wygląd zostaje ten sam, ale DOM
+                   nie trzyma naraz etykiet dla wszystkich działek. */
             }
 
             /* Zdarzenia interakcji - pomiń dla obrysu miejscowości */
@@ -451,15 +456,7 @@ function renderMapObjects(parcels) {
             }
             marker.bindPopup(popupContent);
 
-            /* Dodawanie etykiet z numerami - zawsze widocznych */
-            if (props.numer_obiektu) {
-                marker.bindTooltip(props.numer_obiektu.toString(), {
-                    permanent: true,
-                    direction: 'bottom',
-                    className: 'parcel-label point-label',
-                    offset: [0, 10]
-                });
-            }
+            /* Etykiety punktów także renderujemy wirtualnie. */
 
             /* Dodaj feature do markera dla późniejszego dostępu */
             marker.feature = feature;
@@ -478,7 +475,116 @@ function renderMapObjects(parcels) {
     markerClusterGroup.addLayer(pointLayer);
     map.addLayer(markerClusterGroup);
 
+    updateVisibleParcelLabels();
+
     console.log("✅ Zakończono rysowanie obiektów");
+}
+
+function updateVisibleParcelLabels() {
+    if (!map || !parcelLabelLayer) return;
+    parcelLabelLayer.clearLayers();
+
+    // Renderujemy etykiety z dużym zapasem poza ekranem. Dzięki temu podczas
+    // przesuwania mapy numery są już gotowe na obrzeżach i nie widać tak mocno
+    // efektu „dorysowywania” po puszczeniu myszy.
+    const bounds = map.getBounds().pad(0.85);
+    const zoom = map.getZoom();
+    const focusMode = focusedParcelIds instanceof Set;
+    const labelSpacing = getAdaptiveLabelSpacing(zoom, focusMode);
+    const occupiedCells = new Set();
+    const selectedLabelItems = [];
+    const normalLabelItems = [];
+
+    const addLabelForLayer = (layer) => {
+        const feature = layer.feature;
+        const props = feature?.properties;
+        const label = props?.numer_obiektu;
+        if (!feature || !props || !label || props.kategoria === 'obrys_miejscowosci') return;
+
+        const center = getCenterOfLayer(layer);
+        if (!bounds.contains(center)) return;
+
+        const selected = focusMode && focusedParcelIds.has(Number(feature.id));
+        const isPoint = feature.geometry?.type === 'Point';
+        const point = map.latLngToLayerPoint(center);
+        const item = { feature, label, center, selected, isPoint, point };
+
+        if (selected) selectedLabelItems.push(item);
+        else normalLabelItems.push(item);
+    };
+
+    if (geojsonLayer) geojsonLayer.eachLayer(addLabelForLayer);
+    if (markerClusterGroup) markerClusterGroup.eachLayer(addLabelForLayer);
+
+    // Najpierw zawsze pokazujemy etykiety zaznaczonych działek, potem dokładamy
+    // pozostałe tylko jeśli nie kolidują w pikselach. Dzięki temu przy dużej
+    // liczbie działek DOM jest mniejszy, a mapa czytelniejsza.
+    selectedLabelItems.forEach(item => {
+        reserveLabelCell(item.point, labelSpacing, occupiedCells);
+        renderVirtualParcelLabel(item);
+    });
+    normalLabelItems.forEach(item => {
+        if (shouldRenderLabelAtPoint(item.point, labelSpacing, occupiedCells)) {
+            renderVirtualParcelLabel(item);
+        }
+    });
+
+    function renderVirtualParcelLabel(item) {
+        const className = [
+            'parcel-label',
+            'virtual-parcel-label',
+            item.isPoint ? 'point-label' : '',
+            focusMode && !item.selected ? 'parcel-label-dimmed' : '',
+            focusMode && item.selected ? 'parcel-label-selected' : '',
+        ].filter(Boolean).join(' ');
+
+        const icon = L.divIcon({
+            className,
+            html: escapeHtml(String(item.label)),
+            iconSize: null,
+        });
+        L.marker(item.center, {
+            icon,
+            interactive: false,
+            keyboard: false,
+            zIndexOffset: item.selected ? 1200 : 900,
+        }).addTo(parcelLabelLayer);
+    }
+}
+
+function getAdaptiveLabelSpacing(zoom, focusMode) {
+    if (focusMode) return zoom >= 16 ? 14 : 22;
+    if (zoom <= 13) return 72;
+    if (zoom === 14) return 54;
+    if (zoom === 15) return 36;
+    if (zoom === 16) return 22;
+    return 12;
+}
+
+function shouldRenderLabelAtPoint(point, spacing, occupiedCells) {
+    const key = labelCellKey(point, spacing);
+    if (occupiedCells.has(key)) return false;
+    occupiedCells.add(key);
+    return true;
+}
+
+function reserveLabelCell(point, spacing, occupiedCells) {
+    occupiedCells.add(labelCellKey(point, spacing));
+}
+
+function labelCellKey(point, spacing) {
+    const cellX = Math.round(point.x / spacing);
+    const cellY = Math.round(point.y / spacing);
+    return `${cellX}:${cellY}`;
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
 }
 
 /* ==========================================================================
@@ -1189,7 +1295,6 @@ function setupPanelToggles() {
  * Konfiguruje akcje paska narzędzi.
  */
 function setupToolbarActions() {
-    const fullscreenBtn = document.getElementById('fullscreen-btn');
     const helpBtn = document.getElementById('help-btn');
     const settingsBtn = document.getElementById('settings-btn');
     const helpModal = document.getElementById('help-modal');
@@ -1197,7 +1302,6 @@ function setupToolbarActions() {
     const themeToggle = document.getElementById('theme-toggle');
     const resetViewBtn = document.getElementById('reset-view-btn');
 
-    setupFullscreen(fullscreenBtn);
     setupModals(helpBtn, settingsBtn, helpModal, settingsModal);
     setupTheme(themeToggle);
 
@@ -1430,8 +1534,21 @@ function setupMobileSearch() {
 function handleFeatureMouseover(e, feature) {
     /* Użycie requestAnimationFrame dla płynnych zmian wizualnych */
     requestAnimationFrame(() => {
+        const isFocusMode = focusedParcelIds instanceof Set;
+        const isFocusedParcel = isFocusMode && focusedParcelIds.has(Number(feature.id));
+
         if (e.target.setStyle) {
-            e.target.setStyle({ weight: 5, color: "red" });
+            if (isFocusMode) {
+                // Gdy użytkownik ogląda zaznaczone działki właściciela, hover nie może
+                // przemalowywać pozostałych działek na inny kolor. Zostawiamy więc
+                // wygaszenie tła, a dla zaznaczonych tylko lekko wzmacniamy obrys.
+                applyFocusStyleToLayer(e.target, focusedParcelIds);
+                if (isFocusedParcel) {
+                    e.target.setStyle({ weight: 5, opacity: 1, fillOpacity: 0.45 });
+                }
+            } else {
+                e.target.setStyle({ weight: 5, color: "red" });
+            }
         }
 
         /* Podświetlenie w panelu działek */
@@ -1468,6 +1585,9 @@ function handleFeatureMouseout(e) {
     requestAnimationFrame(() => {
         if (geojsonLayer && e.target) {
             geojsonLayer.resetStyle(e.target);
+            if (focusedParcelIds) {
+                applyFocusStyleToLayer(e.target, focusedParcelIds);
+            }
         }
 
         /* Usunięcie podświetlenia z panelu działek */
@@ -1548,6 +1668,7 @@ if (clearHighlightBtn) {
  * @param {string} ownershipType - Opcjonalny typ własności
  */
 function highlightFeaturesByIds(featureIds, color, ownerName = null, ownershipType = null) {
+    resetDimmedParcelFocus();
     if (highlightedLayer) {
         map.removeLayer(highlightedLayer);
     }
@@ -1568,11 +1689,11 @@ function highlightFeaturesByIds(featureIds, color, ownerName = null, ownershipTy
         let clonedLayer;
 
         if (layer instanceof L.Polygon) {
-            clonedLayer = L.polygon(layer.getLatLngs(), highlightStyle);
+            clonedLayer = L.polygon(layer.getLatLngs(), { ...highlightStyle, interactive: false });
         } else if (layer instanceof L.Polyline) {
-            clonedLayer = L.polyline(layer.getLatLngs(), { ...highlightStyle, fill: false });
+            clonedLayer = L.polyline(layer.getLatLngs(), { ...highlightStyle, fill: false, interactive: false });
         } else if (layer instanceof L.Marker) {
-            clonedLayer = L.circleMarker(layer.getLatLng(), { radius: 15, ...highlightStyle });
+            clonedLayer = L.circleMarker(layer.getLatLng(), { radius: 15, ...highlightStyle, interactive: false });
         }
 
         if (clonedLayer) {
@@ -1591,6 +1712,7 @@ function highlightFeaturesByIds(featureIds, color, ownerName = null, ownershipTy
     }
 
     if (highlightedLayer.getLayers().length > 0) {
+        applyDimmedParcelFocus(featureIds);
         highlightedLayer.addTo(map);
 
         /* Sprawdź czy jest parametr zoom w URL */
@@ -1636,6 +1758,7 @@ function highlightAndColorOwners(uniqueOwnerKeys, ownershipType = 'wszystkie') {
     if (ownerHighlightLayer) {
         map.removeLayer(ownerHighlightLayer);
     }
+    resetDimmedParcelFocus();
 
     if (uniqueOwnerKeys.length === 0) {
         console.warn('⚠️ Brak kluczy właścicieli do podświetlenia');
@@ -1651,12 +1774,15 @@ function highlightAndColorOwners(uniqueOwnerKeys, ownershipType = 'wszystkie') {
     });
 
     let foundCount = 0;
+    const selectedIds = new Set();
 
     /* Przetwarzanie warstw z geojsonLayer */
     if (geojsonLayer) {
         geojsonLayer.eachLayer(layer => {
             const beforeCount = ownerHighlightLayer.getLayers().length;
-            processLayerForOwnerHighlight(layer, ownerColorMap, ownershipType);
+            if (processLayerForOwnerHighlight(layer, ownerColorMap, ownershipType)) {
+                selectedIds.add(Number(layer.feature.id));
+            }
             const afterCount = ownerHighlightLayer.getLayers().length;
             if (afterCount > beforeCount) foundCount++;
         });
@@ -1666,7 +1792,9 @@ function highlightAndColorOwners(uniqueOwnerKeys, ownershipType = 'wszystkie') {
     if (markerClusterGroup) {
         markerClusterGroup.eachLayer(layer => {
             const beforeCount = ownerHighlightLayer.getLayers().length;
-            processLayerForOwnerHighlight(layer, ownerColorMap, ownershipType);
+            if (processLayerForOwnerHighlight(layer, ownerColorMap, ownershipType)) {
+                selectedIds.add(Number(layer.feature.id));
+            }
             const afterCount = ownerHighlightLayer.getLayers().length;
             if (afterCount > beforeCount) foundCount++;
         });
@@ -1676,6 +1804,7 @@ function highlightAndColorOwners(uniqueOwnerKeys, ownershipType = 'wszystkie') {
     console.log('📍 Łączna liczba warstw w ownerHighlightLayer:', ownerHighlightLayer.getLayers().length);
 
     if (ownerHighlightLayer.getLayers().length > 0) {
+        applyDimmedParcelFocus([...selectedIds]);
         ownerHighlightLayer.addTo(map);
         map.fitBounds(ownerHighlightLayer.getBounds());
         createOwnerHighlightLegend(uniqueOwnerKeys, ownerColorMap);
@@ -1694,11 +1823,13 @@ function highlightParcels(parcelNumbers) {
     if (ownerHighlightLayer) {
         map.removeLayer(ownerHighlightLayer);
     }
+    resetDimmedParcelFocus();
 
     if (!parcelNumbers || parcelNumbers.length === 0) return;
 
     ownerHighlightLayer = new L.FeatureGroup();
     let foundCount = 0;
+    const selectedIds = new Set();
 
     /* Przetwarzanie wszystkich warstw */
     if (geojsonLayer) {
@@ -1714,21 +1845,25 @@ function highlightParcels(parcelNumbers) {
                 };
 
                 const highlightedCopy = L.geoJSON(layer.toGeoJSON(), {
-                    style: highlightStyle,
+                    style: { ...highlightStyle, interactive: false },
+                    interactive: false,
                     pointToLayer: (feature, latlng) => {
                         return L.circleMarker(latlng, {
                             ...highlightStyle,
-                            radius: 8
+                            radius: 8,
+                            interactive: false
                         });
                     }
                 });
                 ownerHighlightLayer.addLayer(highlightedCopy);
+                selectedIds.add(Number(layer.feature.id));
                 foundCount++;
             }
         });
     }
 
     if (ownerHighlightLayer.getLayers().length > 0) {
+        applyDimmedParcelFocus([...selectedIds]);
         ownerHighlightLayer.addTo(map);
         map.fitBounds(ownerHighlightLayer.getBounds());
         console.log(`✅ Znaleziono i zaznaczono ${foundCount} działek`);
@@ -1839,6 +1974,8 @@ function clearAllHighlights() {
         ownerHighlightLayer = null;
     }
 
+    resetDimmedParcelFocus();
+
     document.getElementById("highlight-controls")?.classList.add("hidden");
 
     /* Usuń dynamiczne wpisy właścicieli z legendy */
@@ -1870,6 +2007,69 @@ function clearAllHighlights() {
     if (selectedCountEl) {
         selectedCountEl.textContent = 0;
     }
+}
+
+function applyDimmedParcelFocus(featureIds) {
+    const selected = new Set((featureIds || []).map(id => Number(id)).filter(id => !Number.isNaN(id)));
+    if (selected.size === 0) return;
+
+    focusedParcelIds = selected;
+    document.getElementById('map')?.classList.add('selection-focus-mode');
+
+    if (geojsonLayer) {
+        geojsonLayer.eachLayer(layer => applyFocusStyleToLayer(layer, selected));
+    }
+    if (markerClusterGroup) {
+        markerClusterGroup.eachLayer(layer => applyFocusStyleToLayer(layer, selected));
+    }
+    updateVisibleParcelLabels();
+}
+
+function resetDimmedParcelFocus() {
+    focusedParcelIds = null;
+    document.getElementById('map')?.classList.remove('selection-focus-mode');
+
+    if (geojsonLayer) {
+        geojsonLayer.eachLayer(layer => {
+            if (layer.setStyle) geojsonLayer.resetStyle(layer);
+            setLayerTooltipFocus(layer, false, false);
+        });
+    }
+    if (markerClusterGroup) {
+        markerClusterGroup.eachLayer(layer => {
+            if (layer.setOpacity) layer.setOpacity(1);
+            setLayerTooltipFocus(layer, false, false);
+        });
+    }
+    updateVisibleParcelLabels();
+}
+
+function applyFocusStyleToLayer(layer, selectedSet) {
+    const featureId = Number(layer.feature?.id);
+    const isSelected = selectedSet.has(featureId);
+    setLayerTooltipFocus(layer, isSelected, true);
+
+    if (layer.setStyle) {
+        if (isSelected) {
+            // Zaznaczone działki rysujemy osobną, kolorową warstwą ponad mapą.
+            // Oryginał pod spodem chowamy, żeby hover Leafleta nie mieszał jego
+            // niebieskiego obrysu z kolorem zaznaczenia.
+            layer.setStyle({ opacity: 0.01, fillOpacity: 0.01, weight: 0 });
+            if (layer.bringToFront) layer.bringToFront();
+        } else {
+            layer.setStyle({ color: '#64748b', weight: 1, opacity: 0.34, fillOpacity: 0.08 });
+        }
+    } else if (layer.setOpacity) {
+        layer.setOpacity(isSelected ? 1 : 0.18);
+    }
+}
+
+function setLayerTooltipFocus(layer, isSelected, focusMode) {
+    const tooltip = layer.getTooltip?.();
+    const el = tooltip?.getElement?.();
+    if (!el) return;
+    el.classList.toggle('parcel-label-dimmed', !!focusMode && !isSelected);
+    el.classList.toggle('parcel-label-selected', !!focusMode && !!isSelected);
 }
 
 /* ==========================================================================
@@ -2276,6 +2476,14 @@ function findAndHighlightLayer(featureId, shouldHighlight, highlightColor = "lim
 
     const layer = findLayerById(featureId);
     if (layer) {
+        if (focusedParcelIds) {
+            applyFocusStyleToLayer(layer, focusedParcelIds);
+            if (shouldHighlight && focusedParcelIds.has(Number(featureId)) && layer.setStyle) {
+                layer.setStyle({ weight: 5, opacity: 1, fillOpacity: 0.45 });
+            }
+            return;
+        }
+
         if (shouldHighlight) {
             if (layer.setStyle) layer.setStyle({ weight: 5, color: highlightColor });
             if (layer.bringToFront) layer.bringToFront();
@@ -2291,6 +2499,8 @@ function findAndHighlightLayer(featureId, shouldHighlight, highlightColor = "lim
  * @param {L.LatLng|L.Layer} latlngOrLayer - Pozycja lub warstwa
  */
 function handleObjectClick(wlasciciele, latlngOrLayer) {
+    wlasciciele = uniqueOwnersForPopup(wlasciciele);
+
     if (!wlasciciele || wlasciciele.length === 0) {
         if (latlngOrLayer instanceof L.Layer) {
             focusOnLayer(latlngOrLayer);
@@ -2303,11 +2513,26 @@ function handleObjectClick(wlasciciele, latlngOrLayer) {
 
     if (wlasciciele.length === 1) {
         map.closePopup();
-        window.location.href = `../wlasciciele/protokol.html?ownerId=${wlasciciele[0].unikalny_klucz}`;
+        window.location.href = getProtocolUrl(wlasciciele[0].unikalny_klucz);
     } else {
         const latlng = latlngOrLayer instanceof L.LatLng ? latlngOrLayer : getCenterOfLayer(latlngOrLayer);
         showOwnerSelectionPopup(wlasciciele, latlng);
     }
+}
+
+function getProtocolUrl(ownerKey) {
+    return `/wlasciciele/protokol.html?ownerId=${encodeURIComponent(ownerKey || '')}`;
+}
+
+function uniqueOwnersForPopup(wlasciciele) {
+    if (!Array.isArray(wlasciciele)) return [];
+    const seen = new Set();
+    return wlasciciele.filter(w => {
+        const key = w?.unikalny_klucz || `id:${w?.id}`;
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
 }
 
 /**
@@ -2316,6 +2541,8 @@ function handleObjectClick(wlasciciele, latlngOrLayer) {
  * @param {L.LatLng} latlng - Pozycja popup
  */
 function showOwnerSelectionPopup(wlasciciele, latlng) {
+    wlasciciele = uniqueOwnersForPopup(wlasciciele);
+
     let listaHtml = "<h3>Ta działka ma wielu właścicieli.<br>Wybierz protokół:</h3><ul>";
 
     wlasciciele.forEach(w => {
@@ -2324,7 +2551,7 @@ function showOwnerSelectionPopup(wlasciciele, latlng) {
         listaHtml += `
             <li>
                 <a href="#" class="protocol-link-in-popup" 
-                   data-url="../wlasciciele/protokol.html?ownerId=${w.unikalny_klucz}">
+                   data-url="${getProtocolUrl(w.unikalny_klucz)}">
                    ${w.nazwa} (Lp. ${lp})
                 </a>
             </li>`;
@@ -2333,21 +2560,22 @@ function showOwnerSelectionPopup(wlasciciele, latlng) {
 
     const popup = L.popup().setLatLng(latlng).setContent(listaHtml).openOn(map);
 
-    /* Obsługa kliknięć na linki */
-    popup.on("contentupdate", () => {
-        const links = popup.getElement().querySelectorAll(".protocol-link-in-popup");
-        links.forEach(link => {
+    /* Obsługa kliknięć na linki: contentupdate w Leaflet nie zawsze odpala po openOn(). */
+    const bindPopupLinks = () => {
+        const element = popup.getElement();
+        if (!element) return;
+        element.querySelectorAll(".protocol-link-in-popup").forEach(link => {
             link.addEventListener("click", e => {
                 e.preventDefault();
+                const url = e.currentTarget.dataset.url;
                 map.closePopup();
-                setTimeout(() => {
-                    window.location.href = e.target.dataset.url;
-                }, 100);
-            });
+                window.location.href = url;
+            }, { once: true });
         });
-    });
+    };
 
-    popup.update();
+    bindPopupLinks();
+    map.once('popupopen', bindPopupLinks);
 }
 
 /**
@@ -2604,7 +2832,7 @@ function assignColorsToOwners(ownerKeys, ownershipType) {
  */
 function processLayerForOwnerHighlight(layer, ownerColorMap, ownershipType) {
     const parcelOwners = layer.feature?.properties?.wlasciciele;
-    if (!parcelOwners) return;
+    if (!parcelOwners) return false;
 
     // Szukaj właściciela który pasuje do ownerColorMap I ma odpowiedni typ własności
     let matchedOwner;
@@ -2642,7 +2870,7 @@ function processLayerForOwnerHighlight(layer, ownerColorMap, ownershipType) {
         matchedOwner = parcelOwners.find(o => ownerColorMap[o.unikalny_klucz]);
     }
 
-    if (!matchedOwner) return;
+    if (!matchedOwner) return false;
 
     const ownerKey = matchedOwner.unikalny_klucz;
     const isReal = isRealOwnershipType(matchedOwner.typ_posiadania);
@@ -2658,12 +2886,14 @@ function processLayerForOwnerHighlight(layer, ownerColorMap, ownershipType) {
             color,
             weight: 3,
             fillColor: color,
-            fillOpacity: 0.6
+            fillOpacity: 0.6,
+            interactive: false
         });
     } else if (layer instanceof L.Polyline) {
         clonedLayer = L.polyline(layer.getLatLngs(), {
             color,
-            weight: 5
+            weight: 5,
+            interactive: false
         });
     } else if (layer instanceof L.Marker) {
         clonedLayer = L.circleMarker(layer.getLatLng(), {
@@ -2671,13 +2901,17 @@ function processLayerForOwnerHighlight(layer, ownerColorMap, ownershipType) {
             color: 'black',
             weight: 2,
             fillColor: color,
-            fillOpacity: 1
+            fillOpacity: 1,
+            interactive: false
         });
     }
 
     if (clonedLayer) {
         ownerHighlightLayer.addLayer(clonedLayer);
+        return true;
     }
+
+    return false;
 }
 
 /**
@@ -2803,47 +3037,6 @@ function createOwnerLegendItem(label, color) {
 /* ==========================================================================
    FUNKCJE INTERFEJSU UŻYTKOWNIKA
    ========================================================================== */
-
-/**
- * Konfiguruje tryb pełnoekranowy.
- * @param {HTMLElement} btn - Przycisk pełnego ekranu
- */
-function setupFullscreen(btn) {
-    const appWrapper = document.getElementById('app-wrapper');
-
-    const toggleFullscreen = () => {
-        if (!document.fullscreenElement) {
-            if (appWrapper.requestFullscreen) {
-                appWrapper.requestFullscreen();
-            } else if (appWrapper.webkitRequestFullscreen) {
-                appWrapper.webkitRequestFullscreen();
-            }
-            btn.innerHTML = '<i class="fas fa-compress"></i>';
-        } else {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            }
-            btn.innerHTML = '<i class="fas fa-expand"></i>';
-        }
-    };
-
-    btn.addEventListener('click', toggleFullscreen);
-
-    /* Obsługa zmiany stanu fullscreen - wymuszenie odświeżenia mapy */
-    const handleFullscreenChange = () => {
-        if (map) {
-            setTimeout(() => {
-                map.invalidateSize();
-                console.log("🔄 Mapa odświeżona po zmianie trybu pełnoekranowego");
-            }, 300);
-        }
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-}
 
 /**
  * Konfiguruje modale pomocy i ustawień.
