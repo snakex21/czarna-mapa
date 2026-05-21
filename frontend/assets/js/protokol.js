@@ -114,7 +114,23 @@ document.addEventListener('DOMContentLoaded', () => {
      * Wyszukuje skany protokołu w katalogu serwera
      */
     const findProtocolImages = async () => {
-        const basePath = `/protokoly/${ownerKey}/`;
+        // Nowy backend Go potrafi bezpośrednio zwrócić listę skanów z katalogu
+        // protokołu. To jest pewniejsze niż zgadywanie 1.jpg, 2.jpg itd., bo
+        // działa także dla .jpeg/.png i dla ścieżki data/protokoly/protokoly.
+        if (window.API?.protokoly?.listaZdjec) {
+            try {
+                const files = await API.protokoly.listaZdjec(ownerKey);
+                if (files && files.length > 0) {
+                    const urls = files.map(f => `/protokoly/${encodeURIComponent(ownerKey)}/${encodeURIComponent(f.nazwa)}`);
+                    finishImageSearch(urls);
+                    return;
+                }
+            } catch (e) {
+                console.warn('Nie udało się pobrać listy skanów przez API, próbuję stary sposób.', e);
+            }
+        }
+
+        const basePath = `/protokoly/${ownerKey.replace(/ /g, '_')}/`;
         const found = [];
         let i = 1;
 

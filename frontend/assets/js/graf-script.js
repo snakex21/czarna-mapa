@@ -4,15 +4,6 @@
  *       Wykorzystuje bibliotekę Vis.js do renderowania interaktywnego grafu.
  */
 
-// Tauri API bridge
-async function invoke(cmd, args = {}) {
-    if (window.__TAURI_INTERNALS__ && window.__TAURI_INTERNALS__.invoke) {
-        return await window.__TAURI_INTERNALS__.invoke(cmd, args);
-    }
-    console.warn('[FALLBACK] invoke:', cmd, args);
-    return null;
-}
-
 /* ==========================================================================
    KLASA GŁÓWNA - MENEDŻER GRAFU
    ========================================================================== */
@@ -54,14 +45,22 @@ class GraphManager {
             // Symulacja postępu ładowania
             progressBar.style.width = '30%';
             
-            const data = await invoke('pobierz_dane_grafu');
+            const response = await fetch('/api/graph-data');
+            progressBar.style.width = '60%';
+            
+            if (!response.ok) throw new Error('Błąd serwera');
+            
+            const data = await response.json();
             progressBar.style.width = '90%';
+            
+            console.log('[GRAF] Data loaded:', data.nodes?.length, 'nodes,', data.edges?.length, 'edges');
             
             this.createNetwork(data);
             progressBar.style.width = '100%';
             
         } catch (error) {
             console.error('Błąd ładowania:', error);
+            document.body.innerHTML += '<div style=\"color:red;position:fixed;top:0;z-index:9999;background:black;padding:20px;\">GRAF ERROR: ' + error.message + '</div>';
             this.showError();
         }
     }
@@ -97,6 +96,13 @@ class GraphManager {
             edges: this.allEdges
         };
         
+        // Wykryj aktywny motyw – dostosuj kolory grafu
+        const isDark = document.documentElement.classList.contains('dark-mode');
+        const edgeColor = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(100,100,120,0.35)';
+        const fontColor = isDark ? '#ffffff' : '#1e293b';
+        const fontStroke = isDark ? '#1a1a2e' : '#ffffff';
+        const nodeBorder = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.15)';
+
         // Konfiguracja opcji wizualizacji
         const options = {
             nodes: {
@@ -114,21 +120,21 @@ class GraphManager {
                 font: {
                     size: 12,
                     face: 'Inter',
-                    color: '#ffffff',
+                    color: fontColor,
                     strokeWidth: 3,
-                    strokeColor: '#1a1a2e'
+                    strokeColor: fontStroke
                 },
                 borderWidth: 2,
                 borderWidthSelected: 3,
                 color: {
-                    border: 'rgba(255,255,255,0.3)',
+                    border: nodeBorder,
                     background: '#4a90e2',
                     highlight: {
                         border: '#ffd700',
                         background: '#ff6b6b'
                     },
                     hover: {
-                        border: '#ffffff',
+                        border: isDark ? '#ffffff' : '#333333',
                         background: '#5aa3f0'
                     }
                 },
@@ -147,9 +153,9 @@ class GraphManager {
                     roundness: 0.5
                 },
                 color: {
-                    color: 'rgba(255,255,255,0.2)',
+                    color: edgeColor,
                     highlight: '#ffd700',
-                    hover: 'rgba(255,255,255,0.5)'
+                    hover: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'
                 },
                 selectionWidth: 2,
                 hoverWidth: 2
@@ -311,11 +317,13 @@ class GraphManager {
         this.allNodes.update(updateNodes);
         
         // Modyfikacja krawędzi - podświetlenie aktywnych
+        const isDark = document.documentElement.classList.contains('dark-mode');
+        const dimEdgeColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)';
         const updateEdges = this.allEdges.get().map(edge => ({
             id: edge.id,
             color: connectedEdges.includes(edge.id) 
                 ? { color: '#ffd700' } 
-                : { color: 'rgba(100,100,100,0.1)' },
+                : { color: dimEdgeColor },
             width: connectedEdges.includes(edge.id) ? 2 : 0.5
         }));
         
@@ -688,6 +696,43 @@ class GraphManager {
     }
     
     /**
+     * Odświeżenie kolorów grafu po zmianie motywu
+     */
+    refreshTheme() {
+        if (!this.network) return;
+        const isDark = document.documentElement.classList.contains('dark-mode');
+        const edgeColor = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(100,100,120,0.35)';
+        const fontColor = isDark ? '#ffffff' : '#1e293b';
+        const fontStroke = isDark ? '#1a1a2e' : '#ffffff';
+        const nodeBorder = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.15)';
+        const dimEdgeColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)';
+        const hoverEdgeColor = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)';
+        const hoverBorder = isDark ? '#ffffff' : '#333333';
+
+        this.network.setOptions({
+            nodes: {
+                font: { color: fontColor, strokeColor: fontStroke },
+                color: {
+                    border: nodeBorder,
+                    hover: { border: hoverBorder }
+                }
+            },
+            edges: {
+                color: {
+                    color: edgeColor,
+                    hover: hoverEdgeColor
+                }
+            }
+        });
+
+        // Odśwież podświetlenia
+        this.clearHighlight();
+        if (this.selectedNode) {
+            this.highlightConnections(this.selectedNode);
+        }
+    }
+
+    /**
      * Wyświetlenie komunikatu błędu
      */
     showError() {
@@ -706,5 +751,32 @@ class GraphManager {
    INICJALIZACJA APLIKACJI
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
-    new GraphManager();
+    // Obsługa motywu
+    const themeBtn = document.getElementById('theme-toggle-btn');
+    if (themeBtn) {
+        const applyTheme = (t) => {
+            document.documentElement.classList.toggle('dark-mode', t === 'dark');
+            const icon = themeBtn.querySelector('i');
+            if (icon) icon.className = t === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+            // Odśwież kolory grafu jeśli już załadowany
+            if (window.graphManager && window.graphManager.refreshTheme) {
+                window.graphManager.refreshTheme();
+            }
+        };
+        applyTheme(localStorage.getItem('mapTheme') || 'light');
+        themeBtn.addEventListener('click', () => {
+            const cur = document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light';
+            const next = cur === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('mapTheme', next);
+            applyTheme(next);
+        });
+    }
+
+    if (typeof vis !== 'undefined') {
+        console.log('[GRAF] vis-network loaded OK');
+        window.graphManager = new GraphManager();
+    } else {
+        console.error('[GRAF] vis-network NOT loaded!');
+        document.body.innerHTML += '<div style="color:red;position:fixed;top:0;z-index:9999;background:black;padding:20px;">vis-network library failed to load from CDN!</div>';
+    }
 });

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edytor Danych Demograficznych</title>
+  <link rel="icon" href="/location_favicon" type="image/x-icon">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="/assets/js/api.js"></script>
+  <style>
+    :root{--primary:#667eea;--primary-gradient:linear-gradient(135deg,#667eea 0%,#764ba2 100%);--danger:#dc3545;--success:#198754;--bg:#f4f7f6;--card:#fff;--text:#2d3748;--muted:#718096;--border:#d8dee8;--radius:10px}*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column}.top{background:var(--card);border-bottom:1px solid var(--border);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,.08)}h1{font-size:1.25rem;margin:0;display:flex;gap:.6rem;align-items:center}.main{flex:1;padding:12px;display:flex;flex-direction:column;min-height:0}.box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;display:flex;flex-direction:column;min-height:0;flex:1}.box-title{font-weight:700;margin-bottom:10px;color:var(--text)}.table-wrap{flex:1;overflow:auto;border:1px solid var(--border)}table{width:100%;border-collapse:collapse;background:white}th,td{border:1px solid var(--border);padding:0}th{background:#eef2f7;padding:8px;font-size:.85rem;text-align:left;position:sticky;top:0;z-index:1}td input,td textarea{width:100%;border:0;padding:7px;font:14px Inter,sans-serif;background:transparent;min-width:70px}td textarea{min-width:280px;min-height:34px;resize:vertical}.row-actions{white-space:nowrap;padding:4px;text-align:center}.btn{border:1px solid var(--border);border-radius:8px;background:white;padding:.55rem .9rem;cursor:pointer;font-weight:600;display:inline-flex;gap:.4rem;align-items:center}.btn:hover{filter:brightness(.97)}.btn-primary{background:var(--primary-gradient);color:white;border:0}.btn-success{background:var(--success);color:white;border:0}.btn-danger{background:var(--danger);color:white;border:0}.bar{display:flex;justify-content:space-between;gap:.6rem;margin-top:10px}.left,.right{display:flex;gap:.5rem}.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:2rem;z-index:10}.modal.open{display:flex}.modal-card{background:white;border-radius:12px;width:min(900px,95vw);height:min(620px,90vh);display:flex;flex-direction:column;box-shadow:0 20px 70px rgba(0,0,0,.35)}.modal-head{padding:1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}.modal textarea{flex:1;margin:1rem;border:2px solid var(--border);border-radius:8px;padding:1rem;font:16px Inter,sans-serif;resize:none}.status{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#2d3748;color:white;padding:10px 16px;border-radius:8px;opacity:0;transition:.2s}.status.show{opacity:1}
+  </style>
+</head>
+<body>
+  <header class="top">
+    <h1><i class="fas fa-users-cog"></i> Edytor Danych Demograficznych</h1>
+    <div><a class="btn" href="/index.html"><i class="fas fa-home"></i> Start</a></div>
+  </header>
+  <main class="main">
+    <section class="box">
+      <div class="box-title">Dane demograficzne</div>
+      <div class="table-wrap">
+        <table id="demo-table">
+          <thead><tr><th style="width:90px">Rok</th><th style="width:120px">Populacja</th><th style="width:120px">Katolicy</th><th style="width:120px">Żydzi</th><th style="width:120px">Inni</th><th>Opis</th><th style="width:90px">Akcje</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="bar">
+        <div class="left"><button class="btn" onclick="demo.addRow()"><i class="fas fa-plus"></i> Dodaj wiersz</button><button class="btn btn-danger" onclick="demo.deleteSelected()"><i class="fas fa-trash"></i> Usuń zaznaczony</button></div>
+        <div class="right"><button class="btn btn-success" onclick="demo.save()"><i class="fas fa-save"></i> Zapisz i zamknij</button></div>
+      </div>
+    </section>
+  </main>
+  <div class="modal" id="text-modal"><div class="modal-card"><div class="modal-head"><strong>Edytuj opis</strong><button class="btn" onclick="demo.closeModal()">Anuluj</button></div><textarea id="modal-text"></textarea><div style="padding:0 1rem 1rem;display:flex;justify-content:flex-end"><button class="btn btn-primary" onclick="demo.saveModal()">Zapisz</button></div></div></div>
+  <div id="status" class="status"></div>
+  <script>
+  const demo = { rows: [], selected: null, modalIndex: null };
+  const tbody = document.querySelector('#demo-table tbody');
+  function val(v){ return v ?? ''; }
+  function esc(s){ return String(s ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])); }
+  function intOrNull(v){ v=String(v??'').trim(); return v===''?null:parseInt(v,10); }
+  function status(msg){const s=document.getElementById('status');s.textContent=msg;s.classList.add('show');setTimeout(()=>s.classList.remove('show'),1800)}
+  demo.render = function(){ tbody.innerHTML = this.rows.map((r,i)=>`<tr data-i="${i}" onclick="demo.select(${i})" style="background:${this.selected===i?'#eef2ff':'white'}"><td><input value="${esc(val(r.rok))}" oninput="demo.rows[${i}].rok=this.value"></td><td><input value="${esc(val(r.populacja_ogolem))}" oninput="demo.rows[${i}].populacja_ogolem=this.value"></td><td><input value="${esc(val(r.katolicy))}" oninput="demo.rows[${i}].katolicy=this.value"></td><td><input value="${esc(val(r.zydzi))}" oninput="demo.rows[${i}].zydzi=this.value"></td><td><input value="${esc(val(r.inni))}" oninput="demo.rows[${i}].inni=this.value"></td><td><textarea oninput="demo.rows[${i}].opis=this.value">${esc(val(r.opis))}</textarea></td><td class="row-actions"><button class="btn" onclick="event.stopPropagation();demo.openModal(${i})">Powiększ</button></td></tr>`).join(''); };
+  demo.select = function(i){ this.selected=i; this.render(); };
+  demo.addRow = function(){ this.rows.push({rok:'',populacja_ogolem:'',katolicy:'',zydzi:'',inni:'',opis:''}); this.selected=this.rows.length-1; this.render(); setTimeout(()=>tbody.lastElementChild?.scrollIntoView({block:'nearest'}),0); };
+  demo.deleteSelected = function(){ if(this.selected===null) return alert('Najpierw zaznacz wiersz.'); if(confirm('Czy na pewno chcesz usunąć zaznaczony wiersz?')){ this.rows.splice(this.selected,1); this.selected=null; this.render(); } };
+  demo.openModal = function(i){ this.modalIndex=i; document.getElementById('modal-text').value=this.rows[i].opis||''; document.getElementById('text-modal').classList.add('open'); document.getElementById('modal-text').focus(); };
+  demo.closeModal = function(){ document.getElementById('text-modal').classList.remove('open'); };
+  demo.saveModal = function(){ if(this.modalIndex!==null){ this.rows[this.modalIndex].opis=document.getElementById('modal-text').value; this.render(); } this.closeModal(); };
+  demo.save = async function(){ const out=[]; for(const r of this.rows){ if(![r.rok,r.populacja_ogolem,r.katolicy,r.zydzi,r.inni,r.opis].some(x=>String(x??'').trim())) continue; const row={rok:intOrNull(r.rok),populacja_ogolem:intOrNull(r.populacja_ogolem),katolicy:intOrNull(r.katolicy),zydzi:intOrNull(r.zydzi),inni:intOrNull(r.inni),opis:String(r.opis||'')}; if(!row.rok || Number.isNaN(row.rok)) return alert('Kolumna Rok musi zawierać liczbę.'); for(const k of ['populacja_ogolem','katolicy','zydzi','inni']) if(Number.isNaN(row[k])) return alert('Kolumny numeryczne mogą zawierać tylko liczby.'); out.push(row); } await API.demografia.zapisz(out); status('Zapisano demografię'); setTimeout(()=>location.href='/index.html',700); };
+  (async()=>{ demo.rows = (await API.demografia.pobierz()).map(r=>({...r})); demo.render(); })();
+  </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    Plik: compare-style.css
    Opis: Dedykowany arkusz stylów dla strony porównywania protokołów.
          Rozszerza protokol_styles.css o funkcjonalność równoległego
@@ -360,3 +360,4 @@
     flex: 1;
     max-width: 300px;
 }
+html.dark-mode,body.dark-mode{background:#0f172a}

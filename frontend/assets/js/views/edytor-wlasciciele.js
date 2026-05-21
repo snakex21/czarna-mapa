@@ -113,10 +113,58 @@ const EdytorWlascicieleView = {
                     <textarea id="f-wnioski" rows="3">${this.esc(w.interpretacja_i_wnioski || '')}</textarea>
                 </div>
 
+                ${wlasciciel ? `
+                <div class="form-group">
+                    <label>Zdjecia protokolu</label>
+                    <div id="owner-protocol-photos" class="text-muted">Ladowanie zdjec...</div>
+                </div>` : ''}
+
                 <button class="btn-primary" onclick="EdytorWlascicieleView.zapisz()">
                     <i class="fas fa-save"></i> Zapisz
                 </button>
             </div>`;
+
+        if (wlasciciel) {
+            this.ladujZdjeciaProtokolu(wlasciciel);
+        }
+    },
+
+    async ladujZdjeciaProtokolu(wlasciciel) {
+        const box = document.getElementById('owner-protocol-photos');
+        if (!box) return;
+
+        try {
+            const key = wlasciciel.unikalny_klucz || wlasciciel.nazwa_wlasciciela;
+            const zdjecia = await API.protokoly.ladujZdjecia(key);
+            if (!zdjecia || zdjecia.length === 0) {
+                box.innerHTML = '<p class="text-muted">Brak zdjec dla tego protokolu</p>';
+                return;
+            }
+
+            box.innerHTML = '<div class="photo-gallery">' +
+                zdjecia.map((src, i) => `
+                    <div class="photo-item">
+                        <img src="${src}" alt="Strona ${i + 1}" loading="lazy"
+                             onclick="EdytorWlascicieleView.zoomPhoto(this.src)">
+                        <span>Str. ${i + 1}</span>
+                    </div>
+                `).join('') +
+                '</div>';
+        } catch (e) {
+            box.innerHTML = `<p class="text-muted">Blad ladowania zdjec: ${e}</p>`;
+        }
+    },
+
+    zoomPhoto(src) {
+        let overlay = document.getElementById('photo-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'photo-overlay';
+            overlay.className = 'photo-overlay';
+            document.body.appendChild(overlay);
+        }
+        overlay.innerHTML = `<img src="${src}" style="max-width:90vw; max-height:90vh; cursor:zoom-out;">`;
+        overlay.onclick = function() { this.remove(); };
     },
 
     esc(s) {

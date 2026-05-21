@@ -2,6 +2,13 @@
 <html lang="pl">
 
 <head>
+    <!-- Natychmiastowe ustawienie motywu – zapobiega białemu mignięciu -->
+    <script>
+        (function() {
+            var t = localStorage.getItem('mapTheme');
+            if (t === 'dark') document.documentElement.classList.add('dark-mode');
+        })();
+    </script>
     <script src="/assets/js/api.js"></script>
     <!-- ==========================================================================
          METADANE I KONFIGURACJA
@@ -102,6 +109,9 @@
                     <button id="fullscreen-btn" class="control-btn">
                         <i class="fas fa-expand"></i> Pełny ekran
                     </button>
+                    <button id="theme-toggle-btn" class="control-btn" title="Zmień motyw">
+                        <i class="fas fa-sun"></i> <span>Motyw</span>
+                    </button>
                 </div>
             </div>
 
@@ -151,7 +161,7 @@
                  NAWIGACJA DO INNYCH SEKCJI
                  ========================================================================== -->
             <div class="navigation-section">
-                <a href="../strona_glowna/index.html" class="nav-link">
+                <a href="../index.html" class="nav-link">
                     <i class="fas fa-home"></i> Strona główna
                 </a>
                 <a href="../mapa/mapa.html" class="nav-link">
@@ -189,7 +199,7 @@
     </div>
 
     <div class="mobile-bottom-nav">
-        <a href="../strona_glowna/index.html" class="mobile-nav-item">
+        <a href="../index.html" class="mobile-nav-item">
             <i class="fas fa-home"></i>
             <span>Główna</span>
         </a>

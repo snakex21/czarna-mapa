@@ -1,8 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pl">
 
 <head>
-    <script src="/assets/js/api.js"></script>
+        <!-- Natychmiastowe ustawienie motywu – zapobiega białemu mignięciu -->
+    <script>
+        (function() {
+            var t = localStorage.getItem('mapTheme');
+            if (t === 'dark') document.documentElement.classList.add('dark-mode');
+        })();
+    </script>
+<script src="/assets/js/api.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapa Rodzin - Genealogia</title>
@@ -529,7 +536,7 @@
     <!-- Header -->
     <header class="main-header">
         <div class="header-content">
-            <a href="../strona_glowna/index.html" class="brand">
+            <a href="../index.html" class="brand">
                 <div class="logo-animated">
                     <i class="fas fa-sitemap"></i>
                 </div>

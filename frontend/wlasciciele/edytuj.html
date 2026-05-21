@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edycja Właścicieli — Mapa Katastralna Czarna</title>
+    <link rel="icon" href="/location_favicon" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+    <script src="/assets/js/api.js"></script>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --primary-color: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary-color: #764ba2;
+            --bg-main: #f4f7f6;
+            --bg-card: white;
+            --bg-hover: #f7fafc;
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --text-light: #a0aec0;
+            --text-on-primary: white;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.15);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --danger: #e53e3e;
+            --success: #38a169;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--text-primary);
+            background: var(--bg-main);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .background-gradient {
+            position: fixed; top:0; left:0; right:0; bottom:0;
+            background: var(--primary-gradient); opacity: 0.05; z-index: 0;
+        }
+        #app-wrapper { position: relative; z-index: 1; max-width: 1440px; margin: 0 auto; padding: 1rem; }
+
+        /* Header */
+        .top-header {
+            background: var(--primary-gradient); color: white; border-radius: var(--radius);
+            padding: 1rem 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-md);
+        }
+        .header-content { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+        .app-title { font-size: 1.3rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+        .header-btn {
+            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white;
+            padding: 0.5rem 1rem; border-radius: var(--radius-sm); cursor: pointer;
+            font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem;
+            transition: background 0.2s; text-decoration: none;
+        }
+        .header-btn:hover { background: rgba(255,255,255,0.25); }
+
+        /* Karty */
+        .content-card {
+            background: var(--bg-card); border-radius: var(--radius); padding: 1.5rem;
+            box-shadow: var(--shadow-sm); margin-bottom: 1rem;
+        }
+        .card-header { margin-bottom: 1rem; }
+        .card-header h3 { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+        .card-header h3 i { color: var(--primary-color); }
+
+        /* Search */
+        .search-box {
+            display: flex; gap: 0.5rem; margin-bottom: 1rem;
+        }
+        .search-box input {
+            flex: 1; padding: 0.7rem 1rem; border: 2px solid var(--border-color);
+            border-radius: var(--radius-sm); font-size: 0.95rem; font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .search-box input:focus { outline: none; border-color: var(--primary-color); }
+
+        /* Lista */
+        .owner-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .owner-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.75rem 1rem; border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color); transition: background 0.15s;
+        }
+        .owner-row:hover { background: var(--bg-hover); }
+        .owner-info { flex: 1; }
+        .owner-name { font-weight: 600; }
+        .owner-meta { font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem; }
+        .owner-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+        .toolbar { display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:1rem; }
+        .toolbar-group { border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:.55rem; display:flex; gap:.5rem; align-items:center; background:#fbfbfd; }
+        .toolbar-title { color:var(--text-secondary); font-size:.8rem; font-weight:700; margin-right:.25rem; }
+        .search-toolbar { flex:1; min-width:360px; padding:.45rem .55rem; border-radius:999px; background:linear-gradient(135deg,#ffffff 0%,#f7f8ff 100%); box-shadow:0 6px 18px rgba(102,126,234,.12); border-color:#dfe4ff; }
+        .search-toolbar .toolbar-title { white-space:nowrap; color:var(--primary-color); }
+        .search-shell { flex:1; display:flex; align-items:center; gap:.6rem; background:white; border:2px solid transparent; border-radius:999px; padding:.18rem .75rem; min-height:40px; transition:all .2s; }
+        .search-shell:focus-within { border-color:var(--primary-color); box-shadow:0 0 0 4px rgba(102,126,234,.12); }
+        .search-shell i { color:var(--primary-color); opacity:.75; }
+        .search-shell input { flex:1; border:0; outline:0; padding:.55rem .15rem; font-size:.94rem; font-family:inherit; background:transparent; color:var(--text-primary); }
+        .search-shell input::placeholder { color:#a0aec0; }
+        .search-clear { width:28px; height:28px; border:0; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background:#eef2ff; color:var(--primary-color); cursor:pointer; transition:all .2s; }
+        .search-clear:hover { background:var(--primary-color); color:white; }
+        .owners-table { width:100%; border-collapse:collapse; overflow:hidden; border-radius:var(--radius-sm); }
+        .owners-table th, .owners-table td { padding:.75rem .9rem; border-bottom:1px solid var(--border-color); text-align:left; }
+        .owners-table th { background:#f7fafc; color:var(--text-secondary); font-size:.82rem; text-transform:uppercase; letter-spacing:.03em; }
+        .owners-table tr:hover td { background:var(--bg-hover); }
+        .owners-table .col-lp { width:80px; text-align:center; }
+        .owners-table .col-count { width:140px; text-align:center; }
+
+        .section-box { border:1px solid var(--border-color); border-radius:var(--radius); padding:1rem; margin:1rem 0; background:#fbfbfd; }
+        .section-box legend, .section-title { font-weight:700; color:var(--text-primary); margin-bottom:.75rem; display:flex; align-items:center; gap:.5rem; }
+        .parcel-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+        .parcel-box { border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:.8rem; background:white; }
+        .parcel-box h4 { font-size:.95rem; margin-bottom:.5rem; color:var(--text-primary); }
+        .parcel-box select { width:100%; min-height:96px; border:2px solid var(--border-color); border-radius:var(--radius-sm); padding:.4rem; font-family:inherit; }
+        .parcel-add-row { display:flex; gap:.5rem; margin-top:.5rem; }
+        .parcel-add-row input { flex:1; }
+        .date-grid { display:grid; grid-template-columns: 1fr 2fr 1fr; gap:.5rem; }
+        .date-grid label { font-size:.78rem; color:var(--text-secondary); margin-bottom:.2rem; }
+        .parcel-textarea { width:100%; min-height:62px !important; height:62px; resize:vertical; overflow:auto !important; }
+        .expand-row { display:flex; justify-content:flex-end; margin-bottom:.25rem; }
+
+        /* Przyciski */
+        .btn {
+            padding: 0.5rem 1rem; border: none; border-radius: var(--radius-sm);
+            cursor: pointer; font-size: 0.85rem; font-family: inherit;
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            transition: all 0.2s; font-weight: 500;
+        }
+        .btn-primary { background: var(--primary-gradient); color: white; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102,126,234,0.3); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #c53030; }
+        .btn-outline {
+            background: white; color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+        .btn-outline:hover { background: var(--primary-color); color: white; }
+        .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.8rem; }
+        .btn-back {
+            background: none; border: none; color: var(--primary-color);
+            cursor: pointer; font-size: 0.9rem; padding: 0.25rem 0;
+            display: flex; align-items: center; gap: 0.3rem; margin-bottom: 1rem;
+        }
+        .btn-back:hover { text-decoration: underline; }
+
+        /* Formularz */
+        .editor-form h2 { margin-bottom: 1.2rem; font-size: 1.2rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label {
+            display: block; font-weight: 500; margin-bottom: 0.3rem;
+            font-size: 0.85rem; color: var(--text-secondary);
+        }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 0.65rem 0.8rem; border: 2px solid var(--border-color);
+            border-radius: var(--radius-sm); font-size: 0.9rem; font-family: inherit;
+            transition: border-color 0.2s; background: var(--bg-card);
+        }
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none; border-color: var(--primary-color);
+        }
+        .form-group textarea { resize: vertical; min-height: 150px; overflow:hidden; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .protocol-place-group { padding-top: 1.45rem; }
+
+        /* Loading / puste */
+        .loading { text-align: center; padding: 2rem; color: var(--text-secondary); }
+        .empty { text-align: center; padding: 2rem; color: var(--text-light); }
+
+        .scan-thumb {
+            width: 74px; height: 96px; object-fit: contain; background: #111;
+            border-radius: var(--radius-sm); box-shadow: var(--shadow-sm); flex-shrink: 0;
+        }
+
+        /* Modal podglądu skanów — taki sam układ jak "Pokaż oryginał" w protokole */
+        .hidden { display: none !important; }
+        .modal-overlay {
+            position: fixed; inset: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center;
+            z-index: 2000; backdrop-filter: blur(5px);
+        }
+        .modal-close-btn {
+            position: absolute; top: 2rem; right: 2rem; color: white; font-size: 2.5rem;
+            cursor: pointer; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.1); border-radius: 50%; transition: all .3s ease;
+        }
+        .modal-close-btn:hover { background: rgba(255,255,255,0.2); transform: rotate(90deg); }
+        .modal-image-container { width: 90%; height: 85%; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        .modal-image { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: var(--radius); box-shadow: 0 0 50px rgba(0,0,0,.5); }
+        .modal-nav-controls {
+            position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,.7); backdrop-filter: blur(10px); padding: 1rem 2rem;
+            border-radius: 50px; display: flex; align-items: center; gap: 2rem;
+        }
+        .modal-nav-btn {
+            background: rgba(255,255,255,.1); color: white; border: 1px solid rgba(255,255,255,.3);
+            padding: .5rem 1rem; border-radius: var(--radius-sm); cursor: pointer; transition: all .3s ease;
+            font-size: .9rem; display: flex; align-items: center; gap: .5rem;
+        }
+        .modal-nav-btn:hover:not(:disabled) { background: rgba(255,255,255,.2); }
+        .modal-nav-btn:disabled { opacity: .3; cursor: not-allowed; }
+        .page-counter { color: white; font-weight: 600; font-size: .95rem; white-space: nowrap; }
+
+        /* Stopka */
+        .app-footer { text-align: center; padding: 1rem; color: var(--text-light); font-size: 0.8rem; }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+            .protocol-place-group { padding-top: 0; }
+            .search-toolbar { min-width:100%; border-radius:var(--radius-sm); }
+            .owner-row { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        }
+
+        /* Tryb ciemny */
+        body.dark-mode {
+            --bg-main: #1a202c;
+            --bg-card: #2d3748;
+            --bg-hover: #4a5568;
+            --text-primary: #e2e8f0;
+            --text-secondary: #a0aec0;
+            --border-color: #4a5568;
+        }
+        body.dark-mode .background-gradient { opacity: 0.3; }
+        body.dark-mode .toolbar-group { background: #2d3748; }
+        body.dark-mode .search-toolbar { background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%); box-shadow: 0 6px 18px rgba(0,0,0,0.3); border-color: #4a5568; }
+        body.dark-mode .search-shell { background: #1a202c; }
+        body.dark-mode .search-shell input::placeholder { color: #6b7280; }
+        body.dark-mode .search-clear { background: #4a5568; color: #a0aec0; }
+        body.dark-mode .search-clear:hover { background: var(--primary-color); color: white; }
+        body.dark-mode .owners-table th { background: #1a202c; }
+        body.dark-mode .section-box { background: #2d3748; }
+        body.dark-mode .parcel-box { background: #1a202c; }
+        body.dark-mode .owner-row { border-color: #4a5568; }
+        body.dark-mode .owner-row:hover { background: #3d4f63; }
+    </style>
+</head>
+<body>
+    <div class="background-gradient"></div>
+    <div id="app-wrapper">
+        <!-- ============ HEADER ============ -->
+        <header class="top-header">
+            <div class="header-content">
+                <h1 class="app-title">
+                    <i class="fas fa-user-edit"></i>
+                    Edycja Właścicieli
+                </h1>
+                <div style="display:flex;gap:0.5rem;">
+                    <a href="protokol.html" class="header-btn"><i class="fas fa-file-alt"></i> Protokoły</a>
+                    <a href="../mapa/mapa.html" class="header-btn"><i class="fas fa-map"></i> Mapa</a>
+                    <a href="../index.html" class="header-btn"><i class="fas fa-home"></i> Start</a>
+                    <button id="themeToggleBtn" class="header-btn" title="Zmień motyw" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);">
+                        <i class="fas fa-sun"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- ============ LISTA / FORMULARZ ============ -->
+        <div class="content-card" id="main-content">
+            <!-- Dynamicznie wypełniane -->
+            <div class="loading"><i class="fas fa-spinner fa-spin"></i> Ładowanie...</div>
+        </div>
+
+        <footer class="app-footer">
+            Mapa Katastralna Gminy Czarna &copy; 2025
+        </footer>
+    </div>
+
+    <div id="scanImageModal" class="modal-overlay hidden">
+        <span class="modal-close-btn" onclick="edytor.zamknijPodgladZdjecia()">&times;</span>
+        <div class="modal-image-container">
+            <img class="modal-image" id="scanModalImageSrc" alt="Skan protokołu">
+        </div>
+        <div class="modal-nav-controls">
+            <button id="scanPrevImageBtn" class="modal-nav-btn" onclick="edytor.poprzednieZdjecie()">
+                <i class="fas fa-chevron-left"></i> Poprzedni
+            </button>
+            <span id="scanPageCounter" class="page-counter">Strona 1 / 1</span>
+            <button id="scanNextImageBtn" class="modal-nav-btn" onclick="edytor.nastepneZdjecie()">
+                Następny <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+    /* ========================================================================
+       EDYTOR WŁAŚCICIELI — samodzielny skrypt
+       ======================================================================== */
+    (function() {
+        const content = document.getElementById('main-content');
+        let wszyscy = [];
+        let currentSearch = '';
+        let searchCursor = 0;
+        let refocusSearch = false;
+        let edytowany = null;
+        let wszystkieObiekty = [];
+        let zdjeciaCache = [];
+        let zdjeciaVersion = Date.now();
+        let aktualnyPodgladIndex = 0;
+        let panzoomInstance = null;
+
+        // ----- Inicjalizacja -----
+        async function init() {
+            await ladujListe();
+        }
+
+        // ----- Pobieranie listy -----
+        async function ladujListe(query = '', forceReload = false) {
+            content.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Ładowanie...</div>';
+            try {
+                currentSearch = query || currentSearch || '';
+                if (forceReload || wszyscy.length === 0) {
+                    wszyscy = await API.wlasciciele.pobierzWszystkich();
+                }
+                renderListe();
+            } catch (e) {
+                content.innerHTML = `<div class="empty" style="color:var(--danger);">Błąd: ${escHtml(String(e))}</div>`;
+            }
+        }
+
+        // ----- Render listy -----
+        function renderListe() {
+            const visibleOwners = filterOwners(wszyscy, currentSearch);
+
+            if (wszyscy.length === 0) {
+                content.innerHTML = `
+                    <div class="empty">
+                        <i class="fas fa-users" style="font-size:3rem;opacity:0.2;display:block;margin-bottom:0.5rem;"></i>
+                        Brak właścicieli
+                    </div>
+                    <div style="text-align:center;margin-top:0.5rem;">
+                        <button class="btn btn-primary" onclick="edytor.pokazFormularz()">
+                            <i class="fas fa-plus"></i> Dodaj pierwszego właściciela
+                        </button>
+                    </div>`;
+                return;
+            }
+
+            content.innerHTML = `
+                <div class="toolbar">
+                    <div class="toolbar-group">
+                        <span class="toolbar-title">👥 Zarządzaj</span>
+                        <button class="btn btn-primary" onclick="edytor.pokazFormularz()">
+                            <i class="fas fa-plus"></i> Dodaj właściciela
+                        </button>
+                    </div>
+                    <div class="toolbar-group search-toolbar">
+                        <span class="toolbar-title">🔍 Wyszukiwanie</span>
+                        <div class="search-shell">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="search-input" placeholder="Szukaj po nazwie, ID, domu lub numerze protokołu..." value="${escAttr(currentSearch)}"
+                                   oninput="edytor.szukaj(this.value, this.selectionStart)">
+                            ${currentSearch ? `<button class="search-clear" title="Wyczyść" onclick="edytor.szukaj('', 0)"><i class="fas fa-times"></i></button>` : ''}
+                        </div>
+                    </div>
+                </div>
+                ${visibleOwners.length === 0 ? `<div class="empty">Brak wyników dla: <strong>${escHtml(currentSearch)}</strong></div>` : `
+                <table class="owners-table">
+                    <thead>
+                        <tr>
+                            <th class="col-lp">Lp.</th>
+                            <th>Imię i nazwisko</th>
+                            <th class="col-count">Liczba działek</th>
+                            <th>Informacje</th>
+                            <th style="width:180px;">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    ${visibleOwners.map(w => {
+                        const count = (w.dzialki_wszystkie || w.dzialki_rzeczywiste || []).length;
+                        return `
+                        <tr ondblclick="edytor.edytuj(${w.id})">
+                            <td class="col-lp">${w.numer_protokolu || ''}</td>
+                            <td><strong>${escHtml(w.nazwa_wlasciciela || '(bez nazwy)')}</strong></td>
+                            <td class="col-count">${count}</td>
+                            <td class="owner-meta">
+                                ${w.numer_domu ? `Dom ${escHtml(w.numer_domu)}` : ''}
+                                ${w.miejsce_protokolu ? ` · ${escHtml(w.miejsce_protokolu)}` : ''}
+                            </td>
+                            <td>
+                                <div class="owner-actions">
+                                    <button class="btn btn-outline btn-sm" onclick="edytor.edytuj(${w.id})"><i class="fas fa-edit"></i> Edytuj</button>
+                                    <button class="btn btn-danger btn-sm" onclick="edytor.usun(${w.id})"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>`;
+                    }).join('')}
+                    </tbody>
+                </table>`}`;
+
+            if (refocusSearch) {
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) {
+                    searchInput.focus();
+                    const pos = Math.min(searchCursor, searchInput.value.length);
+                    searchInput.setSelectionRange(pos, pos);
+                }
+                refocusSearch = false;
+            }
+        }
+
+        function filterOwners(owners, query) {
+            const q = normalizeSearch(query);
+            if (!q) return owners;
+            return owners.filter(w => {
+                const haystack = [
+                    w.nazwa_wlasciciela,
+                    w.unikalny_klucz,
+                    w.numer_domu,
+                    w.miejsce_protokolu,
+                    w.numer_protokolu,
+                ].map(normalizeSearch).join(' ');
+                return haystack.includes(q);
+            });
+        }
+
+        function normalizeSearch(value) {
+            return String(value || '')
+                .toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/ł/g, 'l')
+                .replace(/[^a-z0-9]+/g, ' ')
+                .trim();
+        }
+
+        // ----- Pokaż formularz -----
+        function pokazFormularz(wlasciciel = null) {
+            edytowany = wlasciciel;
+            const w = wlasciciel || {};
+            const dateParts = parseProtocolDate(w.data_protokolu || '');
+
+            content.innerHTML = `
+                <button class="btn-back" onclick="edytor.ladujListe()">
+                    <i class="fas fa-arrow-left"></i> Powrót do listy
+                </button>
+                <div class="editor-form">
+                    <h2>${wlasciciel ? 'Edytuj właściciela' : 'Dodaj nowego właściciela'}</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nazwisko i imię *</label>
+                            <input type="text" id="f-nazwa" value="${escAttr(w.nazwa_wlasciciela || '')}" autofocus>
+                        </div>
+                        <div class="form-group">
+                            <label>ID / unikalny klucz</label>
+                            <input type="text" id="f-klucz" value="${escAttr(w.unikalny_klucz || '')}" placeholder="np. Marek_Kowalski">
+                            <div style="font-size:.75rem;color:var(--text-secondary);margin-top:.25rem;">
+                                Możesz zmienić ID ręcznie. Dla nowego właściciela wpisze się automatycznie z imienia i nazwiska.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Numer protokołu</label>
+                            <input type="text" id="f-protokol" value="${w.numer_protokolu || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Numer domu</label>
+                            <input type="text" id="f-dom" value="${escAttr(w.numer_domu || '')}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Data protokołu</label>
+                            <div class="date-grid">
+                                <div>
+                                    <label>Dzień</label>
+                                    <input type="text" id="f-data-dzien" value="${escAttr(dateParts.day)}" placeholder="10">
+                                </div>
+                                <div>
+                                    <label>Miesiąc (słownie)</label>
+                                    <input type="text" id="f-data-miesiac" value="${escAttr(dateParts.month)}" placeholder="lutego">
+                                </div>
+                                <div>
+                                    <label>Rok</label>
+                                    <input type="text" id="f-data-rok" value="${escAttr(dateParts.year)}" placeholder="1882">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group protocol-place-group">
+                            <label>Miejsce protokołu</label>
+                            <input type="text" id="f-miejsce" value="${escAttr(w.miejsce_protokolu || '')}" placeholder="np. Czarna">
+                        </div>
+                    </div>
+
+                    <div class="section-box">
+                        <div class="section-title"><i class="fas fa-layer-group"></i> Działki właściciela</div>
+                        <div id="parcel-editor-container" class="loading">
+                            <i class="fas fa-spinner fa-spin"></i> Ładowanie działek...
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Genealogia</label>
+                        <textarea id="f-genealogia" rows="7">${escHtml(w.genealogia || '')}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Historia własności</label>
+                        <textarea id="f-historia" rows="10">${escHtml(w.historia_wlasnosci || '')}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Ciąg dalszy / Uwagi</label>
+                        <textarea id="f-uwagi" rows="6">${escHtml(w.uwagi || '')}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Współwłasność / Służebność</label>
+                        <textarea id="f-wspolwlasnosc" rows="6">${escHtml(w.wspolwlasnosc || '')}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Powiązania i transakcje</label>
+                        <textarea id="f-powiazania" rows="8">${escHtml(w.powiazania_i_transakcje || '')}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Interpretacja i wnioski</label>
+                        <textarea id="f-wnioski" rows="8">${escHtml(w.interpretacja_i_wnioski || '')}</textarea>
+                    </div>
+
+                    ${wlasciciel ? `
+                    <!-- Sekcja zdjęć/skanów protokołu (tylko przy edycji) -->
+                    <div class="content-card" style="margin-top:1.5rem;" id="photos-section">
+                        <div class="card-header">
+                            <h3><i class="fas fa-images"></i> Skanów protokołu</h3>
+                            <button class="btn btn-primary btn-sm" onclick="edytor.dodajZdjecie()">
+                                <i class="fas fa-plus"></i> Dodaj skan
+                            </button>
+                        </div>
+                        <div id="photos-list" style="margin-top:1rem;">
+                            <div class="loading"><i class="fas fa-spinner fa-spin"></i> Ładowanie skanów...</div>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <div style="display:flex;gap:1rem;margin-top:1.5rem;">
+                        <button class="btn btn-primary" onclick="edytor.zapisz()">
+                            <i class="fas fa-save"></i> Zapisz
+                        </button>
+                        <button class="btn btn-outline" onclick="edytor.ladujListe()">
+                            Anuluj
+                        </button>
+                    </div>
+                </div>`;
+
+            // Załaduj listę zdjęć jeśli edytujemy
+            populateAndSetupParcelEditor(wlasciciel || {});
+            setupKeyGeneration(!wlasciciel);
+            autoGrowTextareas();
+            if (wlasciciel) {
+                ladujListeZdjec();
+            }
+        }
+
+        function parseProtocolDate(value) {
+            const s = String(value || '').trim();
+            const m = s.match(/^(\d{1,2})\s+([^\d\s]+)\s+(\d{4})(?:\s+rok)?$/i);
+            if (m) return { day: m[1], month: m[2], year: m[3] };
+            return { day: '', month: '', year: '' };
+        }
+
+        function buildProtocolDate() {
+            const day = (document.getElementById('f-data-dzien')?.value || '').trim();
+            const month = (document.getElementById('f-data-miesiac')?.value || '').trim();
+            const year = (document.getElementById('f-data-rok')?.value || '').trim();
+            if (!day && !month && !year) return null;
+            return `${day} ${month} ${year} rok`.replace(/\s+/g, ' ').trim();
+        }
+
+        function setupKeyGeneration(isNew) {
+            const nameInput = document.getElementById('f-nazwa');
+            const keyInput = document.getElementById('f-klucz');
+            if (!nameInput || !keyInput) return;
+
+            let autoKey = isNew && !keyInput.value.trim();
+            keyInput.addEventListener('input', () => { autoKey = false; });
+            nameInput.addEventListener('input', () => {
+                if (!autoKey) return;
+                keyInput.value = makeUniqueOwnerKey(nameInput.value);
+            });
+            if (autoKey && nameInput.value.trim()) {
+                keyInput.value = makeUniqueOwnerKey(nameInput.value);
+            }
+        }
+
+        function slugOwnerKey(name) {
+            return String(name || '')
+                .trim()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/ł/g, 'l').replace(/Ł/g, 'L')
+                .replace(/[^a-zA-Z0-9]+/g, '_')
+                .replace(/^_+|_+$/g, '');
+        }
+
+        function makeUniqueOwnerKey(name) {
+            const base = slugOwnerKey(name) || 'Nowy_Wlasciciel';
+            const currentId = edytowany?.id || null;
+            const existing = new Set(wszyscy
+                .filter(w => !currentId || w.id !== currentId)
+                .map(w => String(w.unikalny_klucz || '').toLowerCase()));
+            let key = base;
+            let i = 1;
+            while (existing.has(key.toLowerCase())) {
+                key = `${base}_${i}`;
+                i++;
+            }
+            return key;
+        }
+
+        function autoGrowTextareas() {
+            document.querySelectorAll('.editor-form textarea').forEach(t => {
+                const grow = () => {
+                    t.style.height = 'auto';
+                    t.style.height = Math.max(t.scrollHeight + 6, 150) + 'px';
+                };
+                t.addEventListener('input', grow);
+                setTimeout(grow, 0);
+            });
+        }
+
+        function powiekszPole(id, title) {
+            const original = document.getElementById(id);
+            if (!original) return;
+            let overlay = document.getElementById('text-edit-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'text-edit-overlay';
+                overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3000;display:flex;align-items:center;justify-content:center;padding:2rem;';
+                overlay.innerHTML = `
+                    <div style="background:white;width:min(1100px,95vw);height:min(760px,90vh);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.35);display:flex;flex-direction:column;overflow:hidden;">
+                        <div style="padding:1rem 1.25rem;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
+                            <strong id="text-edit-title"></strong>
+                            <button class="btn btn-outline btn-sm" id="text-edit-close">Zamknij</button>
+                        </div>
+                        <textarea id="text-edit-area" style="flex:1;margin:1rem;border:2px solid #e2e8f0;border-radius:8px;padding:1rem;font:16px Inter, sans-serif;resize:none;"></textarea>
+                        <div style="padding:0 1rem 1rem;display:flex;justify-content:flex-end;gap:.5rem;">
+                            <button class="btn btn-primary" id="text-edit-save"><i class="fas fa-save"></i> Zapisz</button>
+                        </div>
+                    </div>`;
+                document.body.appendChild(overlay);
+            }
+            const area = overlay.querySelector('#text-edit-area');
+            overlay.querySelector('#text-edit-title').textContent = title || 'Edytuj tekst';
+            area.value = original.value;
+            overlay.classList.remove('hidden');
+            area.focus();
+            overlay.querySelector('#text-edit-close').onclick = () => overlay.classList.add('hidden');
+            overlay.querySelector('#text-edit-save').onclick = () => {
+                original.value = area.value;
+                original.dispatchEvent(new Event('input'));
+                overlay.classList.add('hidden');
+            };
+        }
+
+        async function populateAndSetupParcelEditor(owner) {
+            const container = document.getElementById('parcel-editor-container');
+            if (!container) return;
+
+            try {
+                if (wszystkieObiekty.length === 0) {
+                    wszystkieObiekty = await API.wlasciciele.pobierzObiekty();
+                }
+
+                const ownerParcels = owner?.dzialki_wszystkie || [];
+                const realPlotIds = new Set(ownerParcels
+                    .filter(p => p.typ_posiadania === 'własność rzeczywista')
+                    .map(p => Number(p.id)));
+                const protocolPlotIds = new Set(ownerParcels
+                    .filter(p => p.typ_posiadania !== 'własność rzeczywista')
+                    .map(p => Number(p.id)));
+
+                const isBuilding = (p) => p.kategoria === 'budowlana';
+                const formatAssigned = (assignedIds, group) => {
+                    return wszystkieObiekty
+                        .filter(p => assignedIds.has(Number(p.id)))
+                        .filter(p => group === 'building' ? isBuilding(p) : !isBuilding(p))
+                        .map(p => p.nazwa_lub_numer)
+                        .join(', ');
+                };
+
+                const protocolBuilding = formatAssigned(protocolPlotIds, 'building');
+                const protocolAgricultural = formatAssigned(protocolPlotIds, 'agricultural');
+                const realBuilding = formatAssigned(realPlotIds, 'building');
+                const realAgricultural = formatAssigned(realPlotIds, 'agricultural');
+
+                container.innerHTML = `
+                    <div style="font-size:.82rem;color:var(--text-secondary);margin-bottom:.75rem;">
+                        Wpisuj numery działek ręcznie, oddzielając przecinkami — tak jak w starym edytorze. Przy zapisie program dopasuje wpisane numery do działek z mapy.
+                    </div>
+                    ${parcelTextareaHTML('protocol-building', 'Działki budowlane (z protokołu)', protocolBuilding)}
+                    ${parcelTextareaHTML('protocol-agricultural', 'Działki rolne (z protokołu)', protocolAgricultural)}
+                    ${parcelTextareaHTML('real-building', 'Działki budowlane (rzeczywiste)', realBuilding)}
+                    ${parcelTextareaHTML('real-agricultural', 'Działki rolne (rzeczywiste)', realAgricultural)}
+                `;
+
+                autoGrowTextareas();
+            } catch (e) {
+                container.innerHTML = `<div class="empty" style="color:var(--danger);">Błąd ładowania działek: ${escHtml(String(e))}</div>`;
+            }
+        }
+
+        function parcelTextareaHTML(type, label, value) {
+            return `
+                <div class="form-group">
+                    <div class="expand-row"><button type="button" class="btn btn-outline btn-sm" onclick="edytor.powiekszPole('parcel-${type}', '${escAttr(label)}')">Powiększ</button></div>
+                    <label>${label}</label>
+                    <textarea id="parcel-${type}" class="parcel-textarea" rows="2" placeholder="np. 801/2, 801/3, 804">${escHtml(value || '')}</textarea>
+                </div>`;
+        }
+
+        function findParcelByInput(raw, group) {
+            const value = raw.trim().toLowerCase();
+            const excludedCategories = ['budynek', 'kapliczka', 'obiekt_specjalny', 'obrys_miejscowosci'];
+            const candidates = wszystkieObiekty.filter(p => {
+                if (excludedCategories.includes(p.kategoria)) return false;
+                if (group === 'building') return p.kategoria === 'budowlana';
+                if (group === 'agricultural') return p.kategoria !== 'budowlana';
+                return true;
+            });
+
+            return candidates.find(p => `${p.nazwa_lub_numer} (${p.kategoria})`.toLowerCase() === value)
+                || candidates.find(p => String(p.nazwa_lub_numer).toLowerCase() === value)
+                || candidates.find(p => String(p.id) === value)
+                || candidates.find(p => String(p.nazwa_lub_numer).toLowerCase().startsWith(value));
+        }
+
+        // ----- Zapisz -----
+        async function zapisz() {
+            const g = (id) => document.getElementById(id)?.value || '';
+            const nazwa = g('f-nazwa').trim();
+            if (!nazwa) { alert('Nazwa właściciela jest wymagana.'); return; }
+
+            // Zachowaj oryginalny klucz przy edycji, generuj nowy przy dodawaniu
+            const orig = edytowany || {};
+            const klucz = g('f-klucz').trim() || makeUniqueOwnerKey(nazwa);
+            const duplicate = wszyscy.find(x => x.unikalny_klucz === klucz && x.id !== orig.id);
+            if (duplicate) {
+                alert(`ID/unikalny klucz "${klucz}" już istnieje. Zmień go albo użyj np. ${makeUniqueOwnerKey(nazwa)}.`);
+                return;
+            }
+            const realParcelIds = getAssignedParcelIds(['real-building', 'real-agricultural']);
+            const realUnresolved = getAssignedParcelIds.lastUnresolved || [];
+            const protocolParcelIds = getAssignedParcelIds(['protocol-building', 'protocol-agricultural']);
+            const protocolUnresolved = getAssignedParcelIds.lastUnresolved || [];
+            const unresolvedParcels = realUnresolved.concat(protocolUnresolved);
+            if (unresolvedParcels.length) {
+                alert('Nie znaleziono w mapie tych działek:\n\n' + unresolvedParcels.join('\n') + '\n\nPopraw numery albo usuń je z pól działek.');
+                return;
+            }
+
+            const w = {
+                id: orig.id || null,
+                unikalny_klucz: klucz,
+                nazwa_wlasciciela: nazwa,
+                numer_protokolu: g('f-protokol') ? parseInt(g('f-protokol')) : null,
+                numer_domu: g('f-dom') || null,
+                data_protokolu: buildProtocolDate(),
+                miejsce_protokolu: g('f-miejsce') || null,
+                genealogia: g('f-genealogia') || null,
+                historia_wlasnosci: g('f-historia') || null,
+                uwagi: g('f-uwagi') || null,
+                wspolwlasnosc: g('f-wspolwlasnosc') || null,
+                powiazania_i_transakcje: g('f-powiazania') || null,
+                interpretacja_i_wnioski: g('f-wnioski') || null,
+                dzialki_rzeczywiste_ids: realParcelIds,
+                dzialki_protokol_ids: protocolParcelIds,
+            };
+
+            try {
+                await API.wlasciciele.zapiszAdmin(w);
+                await ladujListe('', true);
+            } catch (e) {
+                alert(`Błąd zapisu: ${e}`);
+            }
+        }
+
+        function getAssignedParcelIds(types) {
+            const ids = [];
+            const seen = new Set();
+            const unresolved = [];
+            types.forEach(type => {
+                const group = type.endsWith('building') ? 'building' : 'agricultural';
+                const text = document.getElementById(`parcel-${type}`)?.value || '';
+                parseParcelText(text).forEach(token => {
+                    const parcel = findParcelByInput(token, group);
+                    if (!parcel) {
+                        unresolved.push(`${type}: ${token}`);
+                        return;
+                    }
+                    const id = Number(parcel.id);
+                    if (!seen.has(id)) {
+                        seen.add(id);
+                        ids.push(id);
+                    }
+                });
+            });
+            getAssignedParcelIds.lastUnresolved = unresolved;
+            return ids;
+        }
+
+        function parseParcelText(text) {
+            return String(text || '')
+                .split(/[,;\n]+/)
+                .map(s => s.trim())
+                .filter(Boolean);
+        }
+
+        // ----- Edytuj -----
+        async function edytuj(id) {
+            content.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Ładowanie...</div>';
+            try {
+                const w = await API.wlasciciele.pobierz(id);
+                if (w) pokazFormularz(w);
+                else { alert('Nie znaleziono właściciela.'); ladujListe(currentSearch); }
+            } catch (e) {
+                alert(`Błąd: ${e}`); ladujListe(currentSearch);
+            }
+        }
+
+        // ----- Usuń -----
+        async function usun(id) {
+            if (!confirm('Na pewno usunąć tego właściciela? Tej operacji nie można cofnąć.')) return;
+            try {
+                await API.wlasciciele.usun(id);
+                await ladujListe('', true);
+            } catch (e) {
+                alert(`Błąd usuwania: ${e}`);
+            }
+        }
+
+        // ----- Zarządzanie zdjęciami -----
+        async function ladujListeZdjec() {
+            if (!edytowany || !edytowany.unikalny_klucz) return;
+            const list = document.getElementById('photos-list');
+            if (!list) return;
+
+            try {
+                zdjeciaVersion = Date.now();
+                const zdjecia = await API.protokoly.listaZdjec(edytowany.unikalny_klucz);
+                zdjeciaCache = zdjecia || [];
+                if (zdjeciaCache.length === 0) {
+                    list.innerHTML = '<div class="empty">Brak skanów. Kliknij "Dodaj skan" aby przesłać.</div>';
+                } else {
+                    list.innerHTML = zdjeciaCache.map((z, idx) => `
+                        <div class="owner-row" style="align-items:center;">
+                            <div class="owner-info" style="display:flex;align-items:center;gap:0.75rem;">
+                                <img class="scan-thumb" src="${urlZdjecia(z.nazwa)}" alt="${escAttr(z.nazwa)}" loading="lazy">
+                                <div>
+                                    <div style="font-weight:500;">${escHtml(z.nazwa)}</div>
+                                    <div style="font-size:0.75rem;color:var(--text-secondary);">${formatSize(z.rozmiar)}</div>
+                                </div>
+                            </div>
+                            <div class="owner-actions">
+                                <a href="#" class="btn btn-outline btn-sm"
+                                   onclick="edytor.pokazZdjecie(${idx}); return false;">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button class="btn btn-danger btn-sm"
+                                        onclick="edytor.usunZdjecie('${escAttr(z.nazwa)}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                <button class="btn btn-outline btn-sm" onclick="edytor.przesunZdjecie('${escAttr(z.nazwa)}', 'up')" title="Przesuń wyżej">
+                                    <i class="fas fa-arrow-up"></i>
+                                </button>
+                                <button class="btn btn-outline btn-sm" onclick="edytor.przesunZdjecie('${escAttr(z.nazwa)}', 'down')" title="Przesuń niżej">
+                                    <i class="fas fa-arrow-down"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                list.innerHTML = `<div class="empty" style="color:var(--danger);">Błąd: ${escHtml(String(e))}</div>`;
+            }
+        }
+
+        async function dodajZdjecie() {
+            if (!edytowany || !edytowany.unikalny_klucz) return;
+            try {
+                const result = await API.protokoly.dodajZdjecie(edytowany.unikalny_klucz);
+                if (result) {
+                    await ladujListeZdjec();
+                }
+                // result === null oznacza anulowanie przez użytkownika
+            } catch (e) {
+                alert(`Błąd dodawania zdjęcia: ${e}`);
+            }
+        }
+
+        async function usunZdjecie(nazwaPliku) {
+            if (!edytowany || !edytowany.unikalny_klucz) return;
+            if (!confirm(`Usunąć skan "${nazwaPliku}"?`)) return;
+            try {
+                await API.protokoly.usunZdjecie(edytowany.unikalny_klucz, nazwaPliku);
+                await ladujListeZdjec();
+            } catch (e) {
+                alert(`Błąd usuwania: ${e}`);
+            }
+        }
+
+        async function przesunZdjecie(nazwaPliku, kierunek) {
+            if (!edytowany || !edytowany.unikalny_klucz) return;
+            try {
+                pokazLadowanieZdjec('Zmieniam kolejność skanów...');
+                await API.protokoly.przesun(edytowany.unikalny_klucz, nazwaPliku, kierunek);
+                await ladujListeZdjec();
+            } catch (e) {
+                alert(`Błąd przesuwania: ${e}`);
+            }
+        }
+
+        function urlZdjecia(nazwaPliku) {
+            return `/protokoly/${encodeURIComponent(edytowany.unikalny_klucz)}/${encodeURIComponent(nazwaPliku)}?v=${zdjeciaVersion}`;
+        }
+
+        function pokazLadowanieZdjec(tekst) {
+            const list = document.getElementById('photos-list');
+            if (list) list.innerHTML = `<div class="loading"><i class="fas fa-spinner fa-spin"></i> ${escHtml(tekst)}</div>`;
+        }
+
+        function pokazZdjecie(index) {
+            if (!zdjeciaCache.length) return;
+            aktualnyPodgladIndex = Math.max(0, Math.min(index, zdjeciaCache.length - 1));
+            aktualizujModalZdjecia();
+            const modal = document.getElementById('scanImageModal');
+            const img = document.getElementById('scanModalImageSrc');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            if (panzoomInstance) panzoomInstance.destroy();
+            if (window.Panzoom) {
+                panzoomInstance = Panzoom(img, { maxScale: 5, minScale: 0.5 });
+                img.parentElement.onwheel = panzoomInstance.zoomWithWheel;
+            }
+        }
+
+        function aktualizujModalZdjecia() {
+            const img = document.getElementById('scanModalImageSrc');
+            const counter = document.getElementById('scanPageCounter');
+            const prev = document.getElementById('scanPrevImageBtn');
+            const next = document.getElementById('scanNextImageBtn');
+            const nav = document.querySelector('#scanImageModal .modal-nav-controls');
+            const current = zdjeciaCache[aktualnyPodgladIndex];
+            if (!current) return;
+
+            img.src = urlZdjecia(current.nazwa);
+            counter.textContent = `Strona ${aktualnyPodgladIndex + 1} / ${zdjeciaCache.length}`;
+            prev.disabled = aktualnyPodgladIndex === 0;
+            next.disabled = aktualnyPodgladIndex === zdjeciaCache.length - 1;
+            nav.style.display = zdjeciaCache.length > 1 ? 'flex' : 'none';
+            if (panzoomInstance) panzoomInstance.reset();
+        }
+
+        function zamknijPodgladZdjecia() {
+            const modal = document.getElementById('scanImageModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            if (panzoomInstance) {
+                panzoomInstance.destroy();
+                panzoomInstance = null;
+            }
+        }
+
+        function nastepneZdjecie() {
+            if (aktualnyPodgladIndex < zdjeciaCache.length - 1) {
+                aktualnyPodgladIndex++;
+                aktualizujModalZdjecia();
+            }
+        }
+
+        function poprzednieZdjecie() {
+            if (aktualnyPodgladIndex > 0) {
+                aktualnyPodgladIndex--;
+                aktualizujModalZdjecia();
+            }
+        }
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // ----- Szukaj (z debounce) -----
+        let szukajTimeout;
+        function szukaj(q, cursorPos = 0) {
+            clearTimeout(szukajTimeout);
+            currentSearch = q || '';
+            searchCursor = cursorPos || currentSearch.length;
+            refocusSearch = true;
+            szukajTimeout = setTimeout(() => renderListe(), 120);
+        }
+
+        // ----- Helpers -----
+        function escHtml(s) {
+            if (!s) return '';
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+        function escAttr(s) {
+            if (!s) return '';
+            return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        // ----- Eksport do globalnego scope -----
+        window.edytor = { init, ladujListe, pokazFormularz, edytuj, usun, zapisz, szukaj,
+                           dodajZdjecie, usunZdjecie, pokazZdjecie, przesunZdjecie,
+                           zamknijPodgladZdjecia, nastepneZdjecie, poprzednieZdjecie, powiekszPole };
+
+        document.getElementById('scanImageModal').addEventListener('click', (e) => {
+            if (e.target.id === 'scanImageModal') zamknijPodgladZdjecia();
+        });
+        document.addEventListener('keydown', (e) => {
+            const modalOpen = !document.getElementById('scanImageModal').classList.contains('hidden');
+            if (!modalOpen) return;
+            if (e.key === 'Escape') zamknijPodgladZdjecia();
+            if (e.key === 'ArrowRight') nastepneZdjecie();
+            if (e.key === 'ArrowLeft') poprzednieZdjecie();
+        });
+
+        // ----- Tryb ciemny -----
+        (function() {
+            const btn = document.getElementById('themeToggleBtn');
+            if (!btn) return;
+            const icon = btn.querySelector('i');
+            const saved = localStorage.getItem('czarna-edytor-theme');
+            if (saved === 'dark') { document.body.classList.add('dark-mode'); icon.className = 'fas fa-moon'; }
+            btn.addEventListener('click', () => {
+                const isDark = document.body.classList.toggle('dark-mode');
+                icon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
+                localStorage.setItem('czarna-edytor-theme', isDark ? 'dark' : 'light');
+            });
+        })();
+
+        document.addEventListener('DOMContentLoaded', init);
+    })();
+    </script>
+</body>
+</html>

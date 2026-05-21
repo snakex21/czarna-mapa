@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edytor Mapy Katastralnej</title>
+  <link rel="icon" href="/location_favicon" type="image/x-icon">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.2/dist/leaflet-geoman.css">
+  <script src="/assets/js/api.js"></script>
+  <style>
+    :root{--primary-gradient:linear-gradient(135deg,#667eea 0%,#764ba2 100%);--primary:#667eea;--danger:#f56565;--bg:#f7fafc;--card:#fff;--text:#2d3748;--muted:#718096;--border:#e2e8f0;--radius:12px;--shadow:0 10px 15px rgba(0,0,0,.1);--header:64px}*{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}.background-gradient{position:fixed;inset:0;background:var(--primary-gradient);opacity:.05;z-index:-1}.app-container{height:100%;display:flex;flex-direction:column}.top-bar{height:var(--header);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;box-shadow:0 1px 3px rgba(0,0,0,.12);flex-shrink:0}.brand{display:flex;align-items:center;gap:12px}.brand i{font-size:1.5rem;background:var(--primary-gradient);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}.brand h1{font-size:1.25rem}.controls{display:flex;gap:12px;align-items:center}.btn-secondary,.btn-danger,#top-toolbar button{padding:.6rem 1rem;border-radius:8px;border:1px solid var(--border);background:white;color:var(--text);font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.45rem}.btn-danger{background:var(--danger);color:white;border:none}.theme-btn{background:var(--bg);border:none;width:40px;height:40px;border-radius:50%;cursor:pointer}#top-toolbar{background:var(--card);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:16px;box-shadow:0 1px 3px rgba(0,0,0,.08)}#create-actions,#dynamic-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.toolbar-label{font-weight:700;color:var(--muted);margin-right:4px}#top-toolbar button[data-category]{border-radius:20px;color:white;border:2px solid transparent;text-shadow:0 1px 2px rgba(0,0,0,.25)}#top-toolbar button[data-category]:hover{transform:translateY(-2px);box-shadow:var(--shadow)}#top-toolbar button[data-category].active{outline:3px solid rgba(102,126,234,.35);filter:saturate(1.25) brightness(1.05)}#top-toolbar button[data-category="budowlana"]{background:linear-gradient(135deg,#f97316,#ea580c)}#top-toolbar button[data-category="rolna"]{background:linear-gradient(135deg,#22c55e,#16a34a)}#top-toolbar button[data-category="droga"]{background:linear-gradient(135deg,#a16207,#854d0e)}#top-toolbar button[data-category="rzeka"]{background:linear-gradient(135deg,#3b82f6,#2563eb)}#top-toolbar button[data-category="las"]{background:linear-gradient(135deg,#14b8a6,#0d9488)}#top-toolbar button[data-category="pastwisko"]{background:linear-gradient(135deg,#eab308,#ca8a04)}#top-toolbar button[data-category="budynek"]{background:linear-gradient(135deg,#a855f7,#9333ea)}#top-toolbar button[data-category="kapliczka"]{background:linear-gradient(135deg,#ef4444,#dc2626)}.main-content{flex:1;display:flex;overflow:hidden;padding:20px;gap:20px}#map{flex:1;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--border)}#parcel-panel{width:380px;flex-shrink:0;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden}.sidebar-tabs{display:flex;border-bottom:1px solid var(--border)}.tab-btn{flex:1;padding:14px;border:none;background:transparent;cursor:pointer;font-weight:700;color:var(--muted)}.tab-btn.active{color:var(--primary);background:rgba(102,126,234,.08)}.search-container{padding:14px;border-bottom:1px solid var(--border)}#search-filter{width:100%;padding:.7rem;border:2px solid var(--border);border-radius:8px}.list-container{flex:1;overflow:auto}#parcel-list{list-style:none}#parcel-list li{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer}#parcel-list li:hover{background:#f7fafc}.parcel-id{font-weight:800}.parcel-category{display:inline-block;font-size:.8rem;padding:2px 8px;border-radius:12px;font-weight:600;text-transform:capitalize}.parcel-category.budowlana{background:#fed7aa;color:#c2410c}.parcel-category.rolna{background:#bbf7d0;color:#166534}.parcel-category.droga{background:#fef3c7;color:#92400e}.parcel-category.rzeka{background:#bfdbfe;color:#1e40af}.parcel-category.las{background:#a7f3d0;color:#065f46}.parcel-category.pastwisko{background:#fef08a;color:#854d0e}.parcel-category.budynek{background:#e9d5ff;color:#7c3aed}.parcel-category.kapliczka{background:#fecaca;color:#dc2626}.parcel-category.obrys_miejscowosci{background:#ffe4e6;color:#be123c}.parcel-actions{display:flex;gap:5px}.btn-action{border:1px solid var(--border);background:#edf2f7;border-radius:6px;padding:5px 7px;cursor:pointer}.btn-action:hover{background:var(--primary);color:white}.main-controls{padding:14px;border-top:1px solid var(--border);background:var(--bg)}.main-controls .danger{width:100%;padding:.75rem;background:var(--danger);color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer}#status-message{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#2d3748;color:white;padding:12px 18px;border-radius:8px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.25s;z-index:3000}#status-message.show{opacity:1}.edit-help{font-weight:700;color:#fff;background:rgba(0,0,0,.7);padding:.6rem 1rem;border-radius:8px}.leaflet-popup-content button{margin:3px;padding:5px 8px;border:1px solid #ddd;border-radius:5px;background:white;cursor:pointer}
+  </style>
+</head>
+<body>
+<div class="background-gradient"></div>
+<div class="app-container">
+  <header class="top-bar">
+    <div class="brand"><i class="fas fa-map-marked-alt"></i><h1>Edytor Mapy Katastralnej</h1></div>
+    <div class="top-bar-info"><span id="currentDate"></span><span id="currentTime" style="margin-left:.5rem;font-weight:600"></span></div>
+    <div class="controls"><a class="btn-secondary" href="/index.html"><i class="fas fa-home"></i> Start</a><a class="btn-secondary" href="/mapa/mapa.html"><i class="fas fa-map"></i> Mapa</a></div>
+  </header>
+  <div id="top-toolbar">
+    <div id="create-actions">
+      <span class="toolbar-label"><i class="fas fa-plus-circle"></i> Nowy obiekt:</span>
+      <button data-category="budowlana"><i class="fas fa-home"></i> Budowlana</button>
+      <button data-category="rolna"><i class="fas fa-seedling"></i> Rolna</button>
+      <button data-category="droga"><i class="fas fa-road"></i> Droga</button>
+      <button data-category="rzeka"><i class="fas fa-water"></i> Rzeka</button>
+      <button data-category="las"><i class="fas fa-tree"></i> Las</button>
+      <button data-category="pastwisko"><i class="fas fa-leaf"></i> Pastwisko</button>
+      <button data-category="budynek"><i class="fas fa-building"></i> Budynek</button>
+      <button data-category="kapliczka"><i class="fas fa-church"></i> Kapliczka</button>
+    </div>
+    <div id="dynamic-actions" style="display:none"></div>
+  </div>
+  <main class="main-content">
+    <div id="map"></div>
+    <aside id="parcel-panel">
+      <div class="sidebar-tabs"><button class="tab-btn active" data-tab="parcels"><i class="fas fa-th-list"></i> Działki</button><button class="tab-btn" data-tab="others"><i class="fas fa-layer-group"></i> Inne</button></div>
+      <div class="search-container"><input type="search" id="search-filter" placeholder="🔍 Szukaj działki..." autocomplete="off"></div>
+      <div class="list-container"><ul id="parcel-list"></ul></div>
+      <div class="main-controls"><button id="delete-all-parcels-btn" class="danger"><i class="fas fa-trash-alt"></i> Usuń Wszystkie Obiekty</button></div>
+    </aside>
+  </main>
+</div>
+<div id="status-message"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.2/dist/leaflet-geoman.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const POINT_CATEGORIES = ['budynek','kapliczka','obiekt_specjalny'];
+  const LINE_CATEGORIES = ['droga','rzeka'];
+  const LAND_CATEGORIES = ['rolna','budowlana','droga','las','pastwisko','rzeka'];
+  const styles = {budowlana:{color:'#e67e22',weight:2,fillColor:'#e67e22',fillOpacity:.4},rolna:{color:'#27ae60',weight:2,fillColor:'#27ae60',fillOpacity:.4},droga:{color:'#88540b',weight:3,fill:false},rzeka:{color:'#3498db',weight:4,fill:false},obrys_miejscowosci:{color:'#ff0000',weight:3,fill:false,dashArray:'10, 5'},las:{color:'#16a085',weight:1,fillColor:'#1abc9c',fillOpacity:.5},pastwisko:{color:'#f1c40f',weight:1,fillColor:'#f1c40f',fillOpacity:.5},budynek:{color:'#9b59b6',weight:1,fillColor:'#9b59b6',fillOpacity:.6},kapliczka:{color:'#e74c3c',weight:1,fillColor:'#e74c3c',fillOpacity:.6},default:{color:'#3388ff',weight:2,fillColor:'#3388ff',fillOpacity:.3}};
+  let data = {}, layers = L.layerGroup(), activeCategory = null, editedLayer = null, activeTab = 'parcels';
+  const $ = id => document.getElementById(id);
+  function tick(){const n=new Date();$('currentDate').textContent=n.toLocaleDateString('pl-PL',{weekday:'long',year:'numeric',month:'long',day:'numeric'});$('currentTime').textContent=n.toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'});} tick(); setInterval(tick,1000);
+  const cfg = await API._invoke('pobierz_konfiguracje_mapy');
+  const cal = typeof cfg.calibration === 'string' ? JSON.parse(cfg.calibration) : cfg.calibration;
+  const def = typeof cfg.defaults === 'string' ? JSON.parse(cfg.defaults) : cfg.defaults;
+  const map = L.map('map',{maxZoom:21,zoomSnap:.25,zoomDelta:.25}).setView([def.center.lat,def.center.lng],def.zoom);
+  L.imageOverlay('/mapa/mapa.jpg', [[cal.sw.lat,cal.sw.lng],[cal.ne.lat,cal.ne.lng]]).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{opacity:.45,maxZoom:21,attribution:'&copy; OpenStreetMap'});
+  layers.addTo(map); map.fitBounds([[cal.sw.lat,cal.sw.lng],[cal.ne.lat,cal.ne.lng]]);
+  map.pm.setLang('pl'); map.pm.addControls({position:'topleft',drawControls:false,editControls:false});
+
+  function status(msg){const el=$('status-message'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2200)}
+  function displayId(o){return o.properties.numer_obiektu}
+  function geomToLatLngs(g){ if(g.type==='Point') return [g.coordinates[1],g.coordinates[0]]; if(g.type==='LineString') return g.coordinates.map(c=>[c[1],c[0]]); return g.coordinates[0].map(c=>[c[1],c[0]]); }
+  function layerToGeom(layer, cat){ if(layer instanceof L.Marker){const p=layer.getLatLng(); return {type:'Point',coordinates:[p.lng,p.lat]};} const latlngs = layer.getLatLngs(); if(LINE_CATEGORIES.includes(cat)){return {type:'LineString',coordinates:latlngs.map(p=>[p.lng,p.lat])};} const ring=(Array.isArray(latlngs[0])?latlngs[0]:latlngs).map(p=>[p.lng,p.lat]); if(ring.length && (ring[0][0]!==ring[ring.length-1][0] || ring[0][1]!==ring[ring.length-1][1])) ring.push(ring[0]); return {type:'Polygon',coordinates:[ring]}; }
+  function makeLayer(f){const cat=f.properties.kategoria, geom=f.geometry; let l; const opt=styles[cat]||styles.default; const isBoundary=cat==='obrys_miejscowosci'; const layerOpt=isBoundary?{...opt,interactive:false,fillOpacity:.04,weight:1}:opt; if(geom.type==='Point') l=L.circleMarker(geomToLatLngs(geom),{...layerOpt,radius:7}); else if(geom.type==='LineString') l=L.polyline(geomToLatLngs(geom),layerOpt); else l=L.polygon(geomToLatLngs(geom),layerOpt); l.parcelId=f.id; l.parcelCategory=cat; if(!isBoundary){l.bindPopup(popupHtml(f)); l.on('click',()=>selectListItem(f.id));} return l; }
+  function popupHtml(f){return `<b>${displayId(f)}</b><br>${f.properties.kategoria}<br><button onclick="parcelEditor.edit(${f.id})">Edytuj</button><button onclick="parcelEditor.rename(${f.id})">Zmień nazwę</button><button onclick="parcelEditor.changeType(${f.id})">Typ</button><button onclick="parcelEditor.remove(${f.id})">Usuń</button>`}
+  async function load(){const fc=await API._invoke('api_dzialki'); data={}; layers.clearLayers(); (fc.features||[]).forEach(f=>{data[f.id]=f; makeLayer(f).addTo(layers)}); renderList();}
+  function renderList(){const q=$('search-filter').value.toLowerCase(); const isParcel=c=>['rolna','budowlana'].includes(c); $('parcel-list').innerHTML=Object.values(data).filter(f=>(activeTab==='parcels')===isParcel(f.properties.kategoria)).filter(f=>`${displayId(f)} ${f.properties.kategoria}`.toLowerCase().includes(q)).sort((a,b)=>String(displayId(a)).localeCompare(String(displayId(b)),undefined,{numeric:true})).map(f=>`<li data-id="${f.id}"><div class="parcel-info"><span class="parcel-id">${displayId(f)}</span><span class="parcel-category ${f.properties.kategoria}">${f.properties.kategoria.replace(/_/g,' ')}</span></div><div class="parcel-actions"><button class="btn-action" data-act="edit">✏️</button><button class="btn-action" data-act="rename">🏷️</button><button class="btn-action" data-act="type">🔄</button><button class="btn-action" data-act="delete">❌</button></div></li>`).join('')}
+  function selectListItem(id){document.querySelectorAll('#parcel-list li').forEach(li=>li.style.background=li.dataset.id==id?'#edf2ff':'')}
+  async function createObject(layer, cat){let name=prompt(`Podaj numer/nazwę obiektu (${cat}):`); if(!name){map.removeLayer(layer);return;} name=name.trim(); try{const res=await API._invoke('edytor_dzialek_dodaj_obiekt',{nazwa:name,kategoria:cat,geometria:layerToGeom(layer,cat)}); status('Dodano obiekt'); await load();}catch(e){alert(e); map.removeLayer(layer);} }
+  function startDraw(cat){activeCategory=cat; document.querySelectorAll('[data-category]').forEach(b=>b.classList.toggle('active',b.dataset.category===cat)); map.pm.disableDraw(); if(POINT_CATEGORIES.includes(cat)) map.pm.enableDraw('Marker'); else if(LINE_CATEGORIES.includes(cat)) map.pm.enableDraw('Line'); else map.pm.enableDraw('Polygon'); status(`Rysowanie: ${cat}`)}
+  map.on('pm:create', e=>{map.pm.disableDraw(); document.querySelectorAll('[data-category]').forEach(b=>b.classList.remove('active')); createObject(e.layer, activeCategory);});
+  document.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>startDraw(b.dataset.category));
+  $('search-filter').oninput=renderList; document.querySelectorAll('.tab-btn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');activeTab=b.dataset.tab;renderList();});
+  $('parcel-list').onclick=e=>{const li=e.target.closest('li'); if(!li)return; const id=Number(li.dataset.id); if(e.target.dataset.act==='edit') parcelEditor.edit(id); else if(e.target.dataset.act==='rename') parcelEditor.rename(id); else if(e.target.dataset.act==='type') parcelEditor.changeType(id); else if(e.target.dataset.act==='delete') parcelEditor.remove(id); else {const l=layers.getLayers().find(x=>x.parcelId===id); if(l){map.fitBounds(l.getBounds?l.getBounds():L.latLngBounds([l.getLatLng()])); l.openPopup(); selectListItem(id);}}};
+  $('delete-all-parcels-btn').onclick=async()=>{if(confirm('Usunąć wszystkie obiekty z mapy?')){await API._invoke('edytor_dzialek_usun_wszystkie'); await load();}};
+  window.parcelEditor={
+    edit(id){const l=layers.getLayers().find(x=>x.parcelId===id); if(!l)return; if(editedLayer) editedLayer.pm.disable(); editedLayer=l; l.pm.enable({allowSelfIntersection:false}); $('dynamic-actions').style.display='flex'; $('dynamic-actions').innerHTML='<span class="edit-help">Tryb edycji</span><button id="saveEdit">💾 Zapisz</button><button id="cancelEdit">Anuluj</button>'; $('saveEdit').onclick=async()=>{await API._invoke('edytor_dzialek_aktualizuj_geometrie',{id,geometria:layerToGeom(l,l.parcelCategory)}); l.pm.disable(); $('dynamic-actions').style.display='none'; await load(); status('Zapisano geometrię')}; $('cancelEdit').onclick=async()=>{l.pm.disable(); $('dynamic-actions').style.display='none'; await load();};},
+    async rename(id){const f=data[id]; const n=prompt('Nowa nazwa/numer:', displayId(f)); if(!n)return; await API._invoke('edytor_dzialek_zmien_nazwe',{id,nazwa:n.trim()}); await load();},
+    async changeType(id){const f=data[id]; const n=prompt('Nowa kategoria:', f.properties.kategoria); if(!n)return; await API._invoke('edytor_dzialek_zmien_kategorie',{id,kategoria:n.trim()}); await load();},
+    async remove(id){if(confirm('Usunąć obiekt?')){await API._invoke('edytor_dzialek_usun_obiekt',{id}); await load();}}
+  };
+  await load();
+});
+</script>
+</body>
+</html>
