@@ -1,0 +1,18 @@
+[
+    {
+        "rok": 1882,
+        "populacja_ogolem": 555,
+        "katolicy": 505,
+        "zydzi": 50,
+        "inni": 0,
+        "opis": "Dane szacunkowe na podstawie pierwszych spisów po uruchomieniu kolei żelaznej."
+    },
+    {
+        "rok": 1855,
+        "populacja_ogolem": 442,
+        "katolicy": 0,
+        "zydzi": 0,
+        "inni": 0,
+        "opis": "Dane sprzed budowy kolei."
+    }
+]

@@ -2,17 +2,19 @@
 *.exe
 *.test
 *.out
-
-# Rust (stare, zostawiamy aż nie wyczyścimy)
-target/
+*.syso
 
 # Node
 node_modules/
+
+# Build output (ZIP, EXE są w głównym katalogu tylko podczas dev)
+dist/
 
 # Temp database files
 *.db-shm
 *.db-wal
 *.db-journal
+*.log
 
 # Environment
 .env
