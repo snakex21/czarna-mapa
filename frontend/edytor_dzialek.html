@@ -7,89 +7,403 @@
   <link rel="icon" href="/location_favicon" type="image/x-icon">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.2/dist/leaflet-geoman.css">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="https://unpkg.com/@mapbox/mapbox-gl-draw@1.5.1/dist/mapbox-gl-draw.css">
   <script src="/assets/js/api.js"></script>
   <style>
-    :root{--primary-gradient:linear-gradient(135deg,#667eea 0%,#764ba2 100%);--primary:#667eea;--danger:#f56565;--bg:#f7fafc;--card:#fff;--text:#2d3748;--muted:#718096;--border:#e2e8f0;--radius:12px;--shadow:0 10px 15px rgba(0,0,0,.1);--header:64px}*{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}.background-gradient{position:fixed;inset:0;background:var(--primary-gradient);opacity:.05;z-index:-1}.app-container{height:100%;display:flex;flex-direction:column}.top-bar{height:var(--header);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;box-shadow:0 1px 3px rgba(0,0,0,.12);flex-shrink:0}.brand{display:flex;align-items:center;gap:12px}.brand i{font-size:1.5rem;background:var(--primary-gradient);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}.brand h1{font-size:1.25rem}.controls{display:flex;gap:12px;align-items:center}.btn-secondary,.btn-danger,#top-toolbar button{padding:.6rem 1rem;border-radius:8px;border:1px solid var(--border);background:white;color:var(--text);font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.45rem}.btn-danger{background:var(--danger);color:white;border:none}.theme-btn{background:var(--bg);border:none;width:40px;height:40px;border-radius:50%;cursor:pointer}#top-toolbar{background:var(--card);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:16px;box-shadow:0 1px 3px rgba(0,0,0,.08)}#create-actions,#dynamic-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.toolbar-label{font-weight:700;color:var(--muted);margin-right:4px}#top-toolbar button[data-category]{border-radius:20px;color:white;border:2px solid transparent;text-shadow:0 1px 2px rgba(0,0,0,.25)}#top-toolbar button[data-category]:hover{transform:translateY(-2px);box-shadow:var(--shadow)}#top-toolbar button[data-category].active{outline:3px solid rgba(102,126,234,.35);filter:saturate(1.25) brightness(1.05)}#top-toolbar button[data-category="budowlana"]{background:linear-gradient(135deg,#f97316,#ea580c)}#top-toolbar button[data-category="rolna"]{background:linear-gradient(135deg,#22c55e,#16a34a)}#top-toolbar button[data-category="droga"]{background:linear-gradient(135deg,#a16207,#854d0e)}#top-toolbar button[data-category="rzeka"]{background:linear-gradient(135deg,#3b82f6,#2563eb)}#top-toolbar button[data-category="las"]{background:linear-gradient(135deg,#14b8a6,#0d9488)}#top-toolbar button[data-category="pastwisko"]{background:linear-gradient(135deg,#eab308,#ca8a04)}#top-toolbar button[data-category="budynek"]{background:linear-gradient(135deg,#a855f7,#9333ea)}#top-toolbar button[data-category="kapliczka"]{background:linear-gradient(135deg,#ef4444,#dc2626)}.main-content{flex:1;display:flex;overflow:hidden;padding:20px;gap:20px}#map{flex:1;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--border)}#parcel-panel{width:380px;flex-shrink:0;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden}.sidebar-tabs{display:flex;border-bottom:1px solid var(--border)}.tab-btn{flex:1;padding:14px;border:none;background:transparent;cursor:pointer;font-weight:700;color:var(--muted)}.tab-btn.active{color:var(--primary);background:rgba(102,126,234,.08)}.search-container{padding:14px;border-bottom:1px solid var(--border)}#search-filter{width:100%;padding:.7rem;border:2px solid var(--border);border-radius:8px}.list-container{flex:1;overflow:auto}#parcel-list{list-style:none}#parcel-list li{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer}#parcel-list li:hover{background:#f7fafc}.parcel-id{font-weight:800}.parcel-category{display:inline-block;font-size:.8rem;padding:2px 8px;border-radius:12px;font-weight:600;text-transform:capitalize}.parcel-category.budowlana{background:#fed7aa;color:#c2410c}.parcel-category.rolna{background:#bbf7d0;color:#166534}.parcel-category.droga{background:#fef3c7;color:#92400e}.parcel-category.rzeka{background:#bfdbfe;color:#1e40af}.parcel-category.las{background:#a7f3d0;color:#065f46}.parcel-category.pastwisko{background:#fef08a;color:#854d0e}.parcel-category.budynek{background:#e9d5ff;color:#7c3aed}.parcel-category.kapliczka{background:#fecaca;color:#dc2626}.parcel-category.obrys_miejscowosci{background:#ffe4e6;color:#be123c}.parcel-actions{display:flex;gap:5px}.btn-action{border:1px solid var(--border);background:#edf2f7;border-radius:6px;padding:5px 7px;cursor:pointer}.btn-action:hover{background:var(--primary);color:white}.main-controls{padding:14px;border-top:1px solid var(--border);background:var(--bg)}.main-controls .danger{width:100%;padding:.75rem;background:var(--danger);color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer}#status-message{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#2d3748;color:white;padding:12px 18px;border-radius:8px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.25s;z-index:3000}#status-message.show{opacity:1}.edit-help{font-weight:700;color:#fff;background:rgba(0,0,0,.7);padding:.6rem 1rem;border-radius:8px}.leaflet-popup-content button{margin:3px;padding:5px 8px;border:1px solid #ddd;border-radius:5px;background:white;cursor:pointer}
+    :root{--primary-gradient:linear-gradient(135deg,#667eea 0%,#764ba2 100%);--primary:#667eea;--danger:#f56565;--bg:#f7fafc;--card:#fff;--text:#2d3748;--muted:#718096;--border:#e2e8f0;--radius:12px;--shadow:0 10px 15px rgba(0,0,0,.1);--header:64px}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+    .app-container{height:100%;display:flex;flex-direction:column}
+    .top-bar{height:var(--header);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;box-shadow:0 1px 3px rgba(0,0,0,.12);flex-shrink:0}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand i{font-size:1.5rem;background:var(--primary-gradient);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .brand h1{font-size:1.25rem}
+    .controls{display:flex;gap:12px;align-items:center}
+    .btn-secondary,.btn-danger,#toolbar button{padding:.6rem 1rem;border-radius:8px;border:1px solid var(--border);background:white;color:var(--text);font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.45rem}
+    .btn-danger{background:var(--danger);color:white;border:none}
+    #toolbar{background:var(--card);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:16px;box-shadow:0 1px 3px rgba(0,0,0,.08);flex-shrink:0}
+    #create-actions,#dynamic-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .toolbar-label{font-weight:700;color:var(--muted);margin-right:4px}
+    #toolbar button[data-category]{border-radius:20px;color:white;border:2px solid transparent;text-shadow:0 1px 2px rgba(0,0,0,.25);min-width:auto}
+    #toolbar button[data-category]:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+    #toolbar button[data-category].active{border-color:white;box-shadow:0 0 0 3px rgba(255,255,255,.4)}
+    .main-content{flex:1;display:flex;overflow:hidden}
+    #map{flex:1}
+    #parcel-panel{width:340px;background:var(--card);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+    .sidebar-tabs{display:flex;border-bottom:1px solid var(--border)}
+    .tab-btn{flex:1;padding:.75rem;background:transparent;border:none;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent}
+    .tab-btn.active{color:var(--primary);border-bottom-color:var(--primary)}
+    .search-container{padding:12px;border-bottom:1px solid var(--border)}
+    .search-container input{width:100%;padding:.5rem .75rem;border:1px solid var(--border);border-radius:8px;font-size:.9rem}
+    .list-container{flex:1;overflow-y:auto}
+    #parcel-list{list-style:none;padding:8px}
+    #parcel-list li{padding:10px 12px;border-radius:8px;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:.15s;border:1px solid transparent}
+    #parcel-list li:hover{background:#edf2ff}
+    #parcel-list .parcel-info{display:flex;flex-direction:column}
+    #parcel-list .parcel-id{font-weight:600}
+    #parcel-list .parcel-category{font-size:.75rem;color:var(--muted);text-transform:capitalize}
+    #parcel-list .parcel-actions{display:flex;gap:4px}
+    #parcel-list .parcel-actions button{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem}
+    #parcel-list .parcel-actions button:hover{background:#f0f0f0}
+    .main-controls{padding:12px;border-top:1px solid var(--border)}
+    .main-controls button{width:100%}
+    #status-message{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--card);padding:.75rem 1.5rem;border-radius:var(--radius);box-shadow:var(--shadow);font-weight:600;opacity:0;transition:.3s;pointer-events:none;z-index:1000}
+    #status-message.show{opacity:1}
+    .mapbox-gl-draw_ctrl-draw-btn{background-color:white!important}
   </style>
 </head>
 <body>
-<div class="background-gradient"></div>
 <div class="app-container">
   <header class="top-bar">
     <div class="brand"><i class="fas fa-map-marked-alt"></i><h1>Edytor Mapy Katastralnej</h1></div>
     <div class="top-bar-info"><span id="currentDate"></span><span id="currentTime" style="margin-left:.5rem;font-weight:600"></span></div>
     <div class="controls"><a class="btn-secondary" href="/index.html"><i class="fas fa-home"></i> Start</a><a class="btn-secondary" href="/mapa/mapa.html"><i class="fas fa-map"></i> Mapa</a></div>
   </header>
-  <div id="top-toolbar">
+  <div id="toolbar">
     <div id="create-actions">
-      <span class="toolbar-label"><i class="fas fa-plus-circle"></i> Nowy obiekt:</span>
-      <button data-category="budowlana"><i class="fas fa-home"></i> Budowlana</button>
-      <button data-category="rolna"><i class="fas fa-seedling"></i> Rolna</button>
-      <button data-category="droga"><i class="fas fa-road"></i> Droga</button>
-      <button data-category="rzeka"><i class="fas fa-water"></i> Rzeka</button>
-      <button data-category="las"><i class="fas fa-tree"></i> Las</button>
-      <button data-category="pastwisko"><i class="fas fa-leaf"></i> Pastwisko</button>
-      <button data-category="budynek"><i class="fas fa-building"></i> Budynek</button>
-      <button data-category="kapliczka"><i class="fas fa-church"></i> Kapliczka</button>
+      <span class="toolbar-label"><i class="fas fa-plus-circle"></i> Nowy:</span>
+      <button data-category="budowlana" style="background:#e67e22"><i class="fas fa-home"></i> Budowlana</button>
+      <button data-category="rolna" style="background:#27ae60"><i class="fas fa-seedling"></i> Rolna</button>
+      <button data-category="droga" style="background:#88540b"><i class="fas fa-road"></i> Droga</button>
+      <button data-category="rzeka" style="background:#3498db"><i class="fas fa-water"></i> Rzeka</button>
+      <button data-category="las" style="background:#16a085"><i class="fas fa-tree"></i> Las</button>
+      <button data-category="pastwisko" style="background:#f1c40f;color:#333"><i class="fas fa-leaf"></i> Pastwisko</button>
+      <button data-category="budynek" style="background:#9b59b6"><i class="fas fa-building"></i> Budynek</button>
+      <button data-category="kapliczka" style="background:#e74c3c"><i class="fas fa-church"></i> Kapliczka</button>
     </div>
     <div id="dynamic-actions" style="display:none"></div>
   </div>
   <main class="main-content">
     <div id="map"></div>
     <aside id="parcel-panel">
-      <div class="sidebar-tabs"><button class="tab-btn active" data-tab="parcels"><i class="fas fa-th-list"></i> Działki</button><button class="tab-btn" data-tab="others"><i class="fas fa-layer-group"></i> Inne</button></div>
-      <div class="search-container"><input type="search" id="search-filter" placeholder="🔍 Szukaj działki..." autocomplete="off"></div>
+      <div class="sidebar-tabs">
+        <button class="tab-btn active" data-tab="parcels"><i class="fas fa-th-list"></i> Działki</button>
+        <button class="tab-btn" data-tab="others"><i class="fas fa-layer-group"></i> Inne</button>
+      </div>
+      <div class="search-container"><input type="search" id="search-filter" placeholder="Szukaj działki..." autocomplete="off"></div>
       <div class="list-container"><ul id="parcel-list"></ul></div>
-      <div class="main-controls"><button id="delete-all-parcels-btn" class="danger"><i class="fas fa-trash-alt"></i> Usuń Wszystkie Obiekty</button></div>
+      <div class="main-controls"><button id="delete-all-parcels-btn" class="btn-danger"><i class="fas fa-trash-alt"></i> Usuń Wszystkie Obiekty</button></div>
     </aside>
   </main>
 </div>
 <div id="status-message"></div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.2/dist/leaflet-geoman.min.js"></script>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/@mapbox/mapbox-gl-draw@1.5.1/dist/mapbox-gl-draw.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
-  const POINT_CATEGORIES = ['budynek','kapliczka','obiekt_specjalny'];
-  const LINE_CATEGORIES = ['droga','rzeka'];
-  const LAND_CATEGORIES = ['rolna','budowlana','droga','las','pastwisko','rzeka'];
-  const styles = {budowlana:{color:'#e67e22',weight:2,fillColor:'#e67e22',fillOpacity:.4},rolna:{color:'#27ae60',weight:2,fillColor:'#27ae60',fillOpacity:.4},droga:{color:'#88540b',weight:3,fill:false},rzeka:{color:'#3498db',weight:4,fill:false},obrys_miejscowosci:{color:'#ff0000',weight:3,fill:false,dashArray:'10, 5'},las:{color:'#16a085',weight:1,fillColor:'#1abc9c',fillOpacity:.5},pastwisko:{color:'#f1c40f',weight:1,fillColor:'#f1c40f',fillOpacity:.5},budynek:{color:'#9b59b6',weight:1,fillColor:'#9b59b6',fillOpacity:.6},kapliczka:{color:'#e74c3c',weight:1,fillColor:'#e74c3c',fillOpacity:.6},default:{color:'#3388ff',weight:2,fillColor:'#3388ff',fillOpacity:.3}};
-  let data = {}, layers = L.layerGroup(), activeCategory = null, editedLayer = null, activeTab = 'parcels';
+  const STYLES = {
+    budowlana:   '#e67e22', rolna: '#27ae60', droga: '#8B4513', rzeka: '#3498db',
+    las:         '#1abc9c', pastwisko: '#f1c40f', budynek: '#e67e22', kapliczka: '#9b59b6',
+    obrys_miejscowosci: '#ff0000', obiekt_specjalny: '#2c3e50', default: '#3388ff',
+  };
+  const POINT_CATS = new Set(['budynek','kapliczka','obiekt_specjalny']);
+  const LINE_CATS  = new Set(['droga','rzeka']);
+
   const $ = id => document.getElementById(id);
-  function tick(){const n=new Date();$('currentDate').textContent=n.toLocaleDateString('pl-PL',{weekday:'long',year:'numeric',month:'long',day:'numeric'});$('currentTime').textContent=n.toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'});} tick(); setInterval(tick,1000);
+  let map, draw, allFeatures = {}, activeTab = 'parcels', drawingCategory = null;
+
+  // ---- Zegar ----
+  function tick() {
+    const n = new Date();
+    $('currentDate').textContent = n.toLocaleDateString('pl-PL', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    $('currentTime').textContent = n.toLocaleTimeString('pl-PL', {hour:'2-digit',minute:'2-digit'});
+  }
+  tick(); setInterval(tick, 1000);
+  function status(msg) {
+    const el = $('status-message');
+    el.textContent = msg; el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2200);
+  }
+  function dispId(f) { return f.properties?.numer_obiektu || (f.id ? String(f.id) : '?'); }
+  function colorFor(cat) { return STYLES[cat] || STYLES.default; }
+
+  // ---- Rysowanie warstw GeoJSON ----
+  function styleFill(feature) {
+    const cat = feature.properties.kategoria;
+    if (LINE_CATS.has(cat)) return null; // linie rysujemy osobno
+    const c = colorFor(cat);
+    const isOutline = cat === 'obrys_miejscowosci';
+    return { 'fill-color': c, 'fill-opacity': isOutline ? 0.04 : (['las','pastwisko'].includes(cat) ? 0.5 : 0.35), 'fill-outline-color': c };
+  }
+  function styleLine(feature) {
+    const cat = feature.properties.kategoria;
+    if (LINE_CATS.has(cat)) return { 'line-color': colorFor(cat), 'line-width': cat === 'rzeka' ? 4 : 3, 'line-opacity': 1 };
+    return { 'line-color': colorFor(cat), 'line-width': 2, 'line-opacity': 1 };
+  }
+
+  // ---- Ładowanie danych ----
+  async function load() {
+    const fc = await API._invoke('api_dzialki');
+    allFeatures = {};
+    const features = fc.features || [];
+    for (const f of features) allFeatures[f.id] = f;
+
+    // GeoJSON dla MapLibre — NIE używamy promoteId, id jest na top-level
+    const geojson = { type: 'FeatureCollection', features: features.map(f => ({
+      type: 'Feature',
+      id: f.id,
+      geometry: f.geometry,
+      properties: f.properties,
+    })) };
+
+    if (draw) draw.deleteAll();
+    if (map.getSource('parcels')) {
+      map.getSource('parcels').setData(geojson);
+    }
+    renderList();
+  }
+
+  function renderList() {
+    const q = ($('search-filter').value || '').toLowerCase();
+    const isParcel = c => ['rolna','budowlana'].includes(c);
+    const filtered = Object.values(allFeatures)
+      .filter(f => (activeTab === 'parcels') === isParcel(f.properties.kategoria))
+      .filter(f => `${dispId(f)} ${f.properties.kategoria}`.toLowerCase().includes(q || ''))
+      .sort((a,b) => String(dispId(a)).localeCompare(String(dispId(b)), undefined, {numeric:true}));
+
+    $('parcel-list').innerHTML = filtered.map(f => {
+      const cat = (f.properties.kategoria || '').replace(/_/g, ' ');
+      return `<li data-id="${f.id}">
+        <div class="parcel-info"><span class="parcel-id">${dispId(f)}</span><span class="parcel-category">${cat}</span></div>
+        <div class="parcel-actions">
+          <button data-act="edit" title="Edytuj geometrię">✏️</button>
+          <button data-act="rename" title="Zmień nazwę">🏷️</button>
+          <button data-act="type" title="Zmień typ">🔄</button>
+          <button data-act="delete" title="Usuń">❌</button>
+        </div>
+      </li>`;
+    }).join('');
+  }
+
+  // ---- Inicjalizacja MapLibre GL ----
   const cfg = await API._invoke('pobierz_konfiguracje_mapy');
   const cal = typeof cfg.calibration === 'string' ? JSON.parse(cfg.calibration) : cfg.calibration;
   const def = typeof cfg.defaults === 'string' ? JSON.parse(cfg.defaults) : cfg.defaults;
-  const map = L.map('map',{maxZoom:21,zoomSnap:.25,zoomDelta:.25}).setView([def.center.lat,def.center.lng],def.zoom);
-  L.imageOverlay('/mapa/mapa.jpg', [[cal.sw.lat,cal.sw.lng],[cal.ne.lat,cal.ne.lng]]).addTo(map);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{opacity:.45,maxZoom:21,attribution:'&copy; OpenStreetMap'});
-  layers.addTo(map); map.fitBounds([[cal.sw.lat,cal.sw.lng],[cal.ne.lat,cal.ne.lng]]);
-  map.pm.setLang('pl'); map.pm.addControls({position:'topleft',drawControls:false,editControls:false});
 
-  function status(msg){const el=$('status-message'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2200)}
-  function displayId(o){return o.properties.numer_obiektu}
-  function geomToLatLngs(g){ if(g.type==='Point') return [g.coordinates[1],g.coordinates[0]]; if(g.type==='LineString') return g.coordinates.map(c=>[c[1],c[0]]); return g.coordinates[0].map(c=>[c[1],c[0]]); }
-  function layerToGeom(layer, cat){ if(layer instanceof L.Marker){const p=layer.getLatLng(); return {type:'Point',coordinates:[p.lng,p.lat]};} const latlngs = layer.getLatLngs(); if(LINE_CATEGORIES.includes(cat)){return {type:'LineString',coordinates:latlngs.map(p=>[p.lng,p.lat])};} const ring=(Array.isArray(latlngs[0])?latlngs[0]:latlngs).map(p=>[p.lng,p.lat]); if(ring.length && (ring[0][0]!==ring[ring.length-1][0] || ring[0][1]!==ring[ring.length-1][1])) ring.push(ring[0]); return {type:'Polygon',coordinates:[ring]}; }
-  function makeLayer(f){const cat=f.properties.kategoria, geom=f.geometry; let l; const opt=styles[cat]||styles.default; const isBoundary=cat==='obrys_miejscowosci'; const layerOpt=isBoundary?{...opt,interactive:false,fillOpacity:.04,weight:1}:opt; if(geom.type==='Point') l=L.circleMarker(geomToLatLngs(geom),{...layerOpt,radius:7}); else if(geom.type==='LineString') l=L.polyline(geomToLatLngs(geom),layerOpt); else l=L.polygon(geomToLatLngs(geom),layerOpt); l.parcelId=f.id; l.parcelCategory=cat; if(!isBoundary){l.bindPopup(popupHtml(f)); l.on('click',()=>selectListItem(f.id));} return l; }
-  function popupHtml(f){return `<b>${displayId(f)}</b><br>${f.properties.kategoria}<br><button onclick="parcelEditor.edit(${f.id})">Edytuj</button><button onclick="parcelEditor.rename(${f.id})">Zmień nazwę</button><button onclick="parcelEditor.changeType(${f.id})">Typ</button><button onclick="parcelEditor.remove(${f.id})">Usuń</button>`}
-  async function load(){const fc=await API._invoke('api_dzialki'); data={}; layers.clearLayers(); (fc.features||[]).forEach(f=>{data[f.id]=f; makeLayer(f).addTo(layers)}); renderList();}
-  function renderList(){const q=$('search-filter').value.toLowerCase(); const isParcel=c=>['rolna','budowlana'].includes(c); $('parcel-list').innerHTML=Object.values(data).filter(f=>(activeTab==='parcels')===isParcel(f.properties.kategoria)).filter(f=>`${displayId(f)} ${f.properties.kategoria}`.toLowerCase().includes(q)).sort((a,b)=>String(displayId(a)).localeCompare(String(displayId(b)),undefined,{numeric:true})).map(f=>`<li data-id="${f.id}"><div class="parcel-info"><span class="parcel-id">${displayId(f)}</span><span class="parcel-category ${f.properties.kategoria}">${f.properties.kategoria.replace(/_/g,' ')}</span></div><div class="parcel-actions"><button class="btn-action" data-act="edit">✏️</button><button class="btn-action" data-act="rename">🏷️</button><button class="btn-action" data-act="type">🔄</button><button class="btn-action" data-act="delete">❌</button></div></li>`).join('')}
-  function selectListItem(id){document.querySelectorAll('#parcel-list li').forEach(li=>li.style.background=li.dataset.id==id?'#edf2ff':'')}
-  async function createObject(layer, cat){let name=prompt(`Podaj numer/nazwę obiektu (${cat}):`); if(!name){map.removeLayer(layer);return;} name=name.trim(); try{const res=await API._invoke('edytor_dzialek_dodaj_obiekt',{nazwa:name,kategoria:cat,geometria:layerToGeom(layer,cat)}); status('Dodano obiekt'); await load();}catch(e){alert(e); map.removeLayer(layer);} }
-  function startDraw(cat){activeCategory=cat; document.querySelectorAll('[data-category]').forEach(b=>b.classList.toggle('active',b.dataset.category===cat)); map.pm.disableDraw(); if(POINT_CATEGORIES.includes(cat)) map.pm.enableDraw('Marker'); else if(LINE_CATEGORIES.includes(cat)) map.pm.enableDraw('Line'); else map.pm.enableDraw('Polygon'); status(`Rysowanie: ${cat}`)}
-  map.on('pm:create', e=>{map.pm.disableDraw(); document.querySelectorAll('[data-category]').forEach(b=>b.classList.remove('active')); createObject(e.layer, activeCategory);});
-  document.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>startDraw(b.dataset.category));
-  $('search-filter').oninput=renderList; document.querySelectorAll('.tab-btn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');activeTab=b.dataset.tab;renderList();});
-  $('parcel-list').onclick=e=>{const li=e.target.closest('li'); if(!li)return; const id=Number(li.dataset.id); if(e.target.dataset.act==='edit') parcelEditor.edit(id); else if(e.target.dataset.act==='rename') parcelEditor.rename(id); else if(e.target.dataset.act==='type') parcelEditor.changeType(id); else if(e.target.dataset.act==='delete') parcelEditor.remove(id); else {const l=layers.getLayers().find(x=>x.parcelId===id); if(l){map.fitBounds(l.getBounds?l.getBounds():L.latLngBounds([l.getLatLng()])); l.openPopup(); selectListItem(id);}}};
-  $('delete-all-parcels-btn').onclick=async()=>{if(confirm('Usunąć wszystkie obiekty z mapy?')){await API._invoke('edytor_dzialek_usun_wszystkie'); await load();}};
-  window.parcelEditor={
-    edit(id){const l=layers.getLayers().find(x=>x.parcelId===id); if(!l)return; if(editedLayer) editedLayer.pm.disable(); editedLayer=l; l.pm.enable({allowSelfIntersection:false}); $('dynamic-actions').style.display='flex'; $('dynamic-actions').innerHTML='<span class="edit-help">Tryb edycji</span><button id="saveEdit">💾 Zapisz</button><button id="cancelEdit">Anuluj</button>'; $('saveEdit').onclick=async()=>{await API._invoke('edytor_dzialek_aktualizuj_geometrie',{id,geometria:layerToGeom(l,l.parcelCategory)}); l.pm.disable(); $('dynamic-actions').style.display='none'; await load(); status('Zapisano geometrię')}; $('cancelEdit').onclick=async()=>{l.pm.disable(); $('dynamic-actions').style.display='none'; await load();};},
-    async rename(id){const f=data[id]; const n=prompt('Nowa nazwa/numer:', displayId(f)); if(!n)return; await API._invoke('edytor_dzialek_zmien_nazwe',{id,nazwa:n.trim()}); await load();},
-    async changeType(id){const f=data[id]; const n=prompt('Nowa kategoria:', f.properties.kategoria); if(!n)return; await API._invoke('edytor_dzialek_zmien_kategorie',{id,kategoria:n.trim()}); await load();},
-    async remove(id){if(confirm('Usunąć obiekt?')){await API._invoke('edytor_dzialek_usun_obiekt',{id}); await load();}}
+  map = new maplibregl.Map({
+    container: 'map',
+    style: {
+      version: 8,
+      glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+      sources: {
+        osm: { type: 'raster', tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19 },
+        historical: { type: 'image', url: '/mapa/mapa.jpg', coordinates: [[cal.sw.lng,cal.ne.lat],[cal.ne.lng,cal.ne.lat],[cal.ne.lng,cal.sw.lat],[cal.sw.lng,cal.sw.lat]] }
+      },
+      layers: [
+        { id: 'osm-layer', type: 'raster', source: 'osm', paint: { 'raster-opacity': 0.45 } },
+        { id: 'historical-layer', type: 'raster', source: 'historical' }
+      ]
+    },
+    center: [def.center.lng, def.center.lat],
+    zoom: def.zoom,
+    minZoom: 12, maxZoom: 22,
+    maxBounds: [[cal.sw.lng-0.02,cal.sw.lat-0.02],[cal.ne.lng+0.02,cal.ne.lat+0.02]],
+    attributionControl: false,
+    renderWorldCopies: false,
+  });
+  map.addControl(new maplibregl.NavigationControl(), 'top-left');
+
+  // mapbox-gl-draw — poprawiamy style (wbudowane mają starą składnię line-dasharray)
+  const fixedStyles = MapboxDraw.lib.theme.map(s => {
+    const obj = JSON.parse(JSON.stringify(s)); // deep clone
+    if (obj.paint && obj.paint['line-dasharray'] != null) {
+      // Usuwamy line-dasharray — MapLibre nie wspiera starej składni
+      delete obj.paint['line-dasharray'];
+    }
+    // Zaokrąglamy wierzchołki
+    if (obj.paint && obj.paint['circle-radius'] != null) {
+      obj.paint['circle-radius'] = 6;
+    }
+    return obj;
+  });
+  draw = new MapboxDraw({
+    displayControlsDefault: false,
+    controls: { point: true, line_string: true, polygon: true, trash: true, combine_features: false, uncombine_features: false },
+    styles: fixedStyles,
+  });
+  map.addControl(draw, 'top-left');
+
+  // Dodajemy source + warstwy po załadowaniu stylu
+  map.on('style.load', () => {
+    map.addSource('parcels', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+
+    map.addLayer({ id: 'parcels-fill', type: 'fill', source: 'parcels',
+      filter: ['!', ['match', ['get','kategoria'], ['droga','rzeka'], true, false]],
+      paint: { 'fill-color': ['get','_color'], 'fill-opacity': ['get','_fillOpacity'], 'fill-outline-color': ['get','_color'] }
+    });
+    map.addLayer({ id: 'parcels-line', type: 'line', source: 'parcels',
+      paint: { 'line-color': ['get','_color'], 'line-width': ['get','_lineWidth'], 'line-opacity': 1 }
+    });
+    map.addLayer({ id: 'parcels-labels', type: 'symbol', source: 'parcels',
+      layout: { 'text-field': ['get','numer_obiektu'], 'text-size': 12, 'text-allow-overlap': true, 'text-ignore-placement': true, 'symbol-placement': 'point', 'text-anchor': 'center' },
+      paint: { 'text-color': '#ffffff', 'text-halo-color': '#000000', 'text-halo-width': 1.5 }
+    });
+
+    load().then(() => {
+      map.fitBounds([[cal.sw.lng,cal.sw.lat],[cal.ne.lng,cal.ne.lat]], { padding: 40 });
+    });
+  });
+
+  // ---- Rysowanie ----
+  function startDraw(cat) {
+    drawingCategory = cat;
+    document.querySelectorAll('[data-category]').forEach(b => b.classList.toggle('active', b.dataset.category === cat));
+    const mode = POINT_CATS.has(cat) ? 'draw_point' : LINE_CATS.has(cat) ? 'draw_line_string' : 'draw_polygon';
+    draw.changeMode(mode);
+    status(`Rysowanie: ${cat}. Kliknij na mapę.`);
+  }
+  document.querySelectorAll('[data-category]').forEach(b => { b.onclick = () => startDraw(b.dataset.category); });
+
+  function clearDrawBtns() {
+    document.querySelectorAll('[data-category]').forEach(b => b.classList.remove('active'));
+  }
+
+  map.on('draw.create', async (e) => {
+    for (const f of e.features) {
+      const name = prompt(`Podaj numer/nazwę obiektu (${drawingCategory || '?'}):`);
+      if (!name) { draw.delete(f.id); continue; }
+      try {
+        await API._invoke('edytor_dzialek_dodaj_obiekt', { nazwa: name.trim(), kategoria: drawingCategory, geometria: f.geometry });
+        status('Dodano obiekt');
+      } catch (err) { alert(err); draw.delete(f.id); }
+    }
+    drawingCategory = null;
+    clearDrawBtns();
+    await load();
+  });
+
+  map.on('draw.update', async (e) => {
+    for (const f of e.features) {
+      const id = f.properties?._editingId;
+      if (!id) continue;
+      try {
+        await API._invoke('edytor_dzialek_aktualizuj_geometrie', { id, geometria: f.geometry });
+        status('Zapisano geometrię');
+      } catch (err) { alert(err); }
+    }
+  });
+
+  // ---- Panel: kliknięcia ----
+  $('search-filter').oninput = renderList;
+
+  document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => {
+    document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    activeTab = b.dataset.tab;
+    renderList();
+  });
+
+  $('parcel-list').onclick = e => {
+    const li = e.target.closest('li');
+    if (!li) return;
+    const id = Number(li.dataset.id);
+    const act = e.target.dataset.act;
+
+    if (act === 'edit')      editGeometry(id);
+    else if (act === 'rename') renameParcel(id);
+    else if (act === 'type')   changeType(id);
+    else if (act === 'delete') removeParcel(id);
+    else {
+      const f = allFeatures[id];
+      if (!f) return;
+      const bb = bboxGeom(f.geometry);
+      if (bb) map.fitBounds(bb, { padding: 60, maxZoom: 19 });
+      try { map.setFeatureState({ source:'parcels', id }, { hover:true }); } catch {}
+      setTimeout(() => { try { map.setFeatureState({ source:'parcels', id }, { hover:false }); } catch {} }, 2000);
+    }
   };
-  await load();
+
+  $('delete-all-parcels-btn').onclick = async () => {
+    if (!confirm('Usunąć wszystkie obiekty z mapy?')) return;
+    await API._invoke('edytor_dzialek_usun_wszystkie');
+    await load();
+    status('Usunięto wszystkie obiekty');
+  };
+
+  // ---- Edycja geometrii ----
+  function editGeometry(id) {
+    const f = allFeatures[id];
+    if (!f) return;
+    draw.deleteAll();
+    const feature = { type:'Feature', geometry: f.geometry, properties: { _editingId: id, kategoria: f.properties.kategoria } };
+    const ids = draw.add(feature);
+    draw.changeMode('direct_select', { featureId: ids[0] });
+    $('dynamic-actions').style.display = 'flex';
+    $('dynamic-actions').innerHTML = `
+      <span style="font-weight:600;color:var(--muted)">Tryb edycji — przeciągnij węzły</span>
+      <button id="cancelEditBtn" class="btn-secondary">Anuluj</button>`;
+    $('cancelEditBtn').onclick = async () => {
+      draw.deleteAll();
+      $('dynamic-actions').style.display = 'none';
+      await load();
+    };
+  }
+
+  // ---- CRUD ----
+  async function renameParcel(id) {
+    const f = allFeatures[id];
+    const n = prompt('Nowa nazwa/numer:', dispId(f));
+    if (!n) return;
+    await API._invoke('edytor_dzialek_zmien_nazwe', { id, nazwa: n.trim() });
+    await load();
+  }
+  async function changeType(id) {
+    const f = allFeatures[id];
+    const n = prompt('Nowa kategoria:', f.properties.kategoria);
+    if (!n) return;
+    await API._invoke('edytor_dzialek_zmien_kategorie', { id, kategoria: n.trim() });
+    await load();
+  }
+  async function removeParcel(id) {
+    if (!confirm('Usunąć obiekt?')) return;
+    await API._invoke('edytor_dzialek_usun_obiekt', { id });
+    await load();
+  }
+
+  // ---- Geometria: bbox ----
+  function bboxGeom(g) {
+    if (!g) return null;
+    let min = [Infinity,Infinity], max = [-Infinity,-Infinity];
+    const eat = ([x,y]) => { if(x<min[0])min[0]=x; if(y<min[1])min[1]=y; if(x>max[0])max[0]=x; if(y>max[1])max[1]=y; };
+    if (g.type==='Point') return [[g.coordinates[0],g.coordinates[1]],[g.coordinates[0],g.coordinates[1]]];
+    if (g.type==='LineString') g.coordinates.forEach(eat);
+    else if (g.type==='MultiLineString') g.coordinates.forEach(l=>l.forEach(eat));
+    else if (g.type==='Polygon') g.coordinates.forEach(r=>r.forEach(eat));
+    else if (g.type==='MultiPolygon') g.coordinates.forEach(p=>p.forEach(r=>r.forEach(eat)));
+    if (!Number.isFinite(min[0])) return null;
+    return [[min[0],min[1]],[max[0],max[1]]];
+  }
+
+  // Wstrzykujemy kolory do properties przed setData (żeby warstwy mogły je odczytać)
+  const origLoad = load;
+  load = async function() {
+    const fc = await API._invoke('api_dzialki');
+    allFeatures = {};
+    const features = fc.features || [];
+    for (const f of features) allFeatures[f.id] = f;
+
+    const geojson = { type:'FeatureCollection', features: features.map(f => {
+      const cat = f.properties.kategoria || 'default';
+      const c = colorFor(cat);
+      const isLine = LINE_CATS.has(cat);
+      const fillOp = ['las','pastwisko'].includes(cat) ? 0.5 : (cat==='obrys_miejscowosci' ? 0.04 : 0.35);
+      return {
+        type:'Feature', id: f.id, geometry: f.geometry,
+        properties: {
+          ...f.properties,
+          _color: c,
+          _fillOpacity: fillOp,
+          _lineWidth: isLine ? (cat==='rzeka' ? 4 : 3) : 2,
+        }
+      };
+    })};
+
+    if (draw) draw.deleteAll();
+    if (map.getSource('parcels')) map.getSource('parcels').setData(geojson);
+    renderList();
+  };
 });
 </script>
 </body>
