@@ -73,6 +73,11 @@
       <button data-category="kapliczka" style="background:#e74c3c"><i class="fas fa-church"></i> Kapliczka</button>
     </div>
     <div id="dynamic-actions" style="display:none"></div>
+    <div id="draw-actions" style="display:none;align-items:center;gap:8px">
+      <button id="draw-undo-btn" class="btn-secondary" title="Cofnij ostatni punkt (Ctrl+Z)"><i class="fas fa-undo"></i> Cofnij punkt</button>
+      <button id="draw-finish-btn" class="btn-secondary" title="Zakończ rysowanie"><i class="fas fa-check"></i> Zakończ</button>
+      <button id="draw-cancel-btn" class="btn-secondary" title="Anuluj rysowanie"><i class="fas fa-times"></i> Anuluj</button>
+    </div>
   </div>
   <main class="main-content">
     <div id="map"></div>
@@ -205,16 +210,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   map.addControl(new maplibregl.NavigationControl(), 'top-left');
 
-  // mapbox-gl-draw — poprawiamy style (wbudowane mają starą składnię line-dasharray)
+  // mapbox-gl-draw — fioletowe kolory, usuwamy błędne line-dasharray
+  const DRAW_COLOR = '#9b59b6';
+  const DRAW_COLOR_LIGHT = '#c39bdb';
   const fixedStyles = MapboxDraw.lib.theme.map(s => {
-    const obj = JSON.parse(JSON.stringify(s)); // deep clone
-    if (obj.paint && obj.paint['line-dasharray'] != null) {
-      // Usuwamy line-dasharray — MapLibre nie wspiera starej składni
-      delete obj.paint['line-dasharray'];
+    const obj = JSON.parse(JSON.stringify(s));
+    if (obj.paint && obj.paint['line-dasharray'] != null) delete obj.paint['line-dasharray'];
+    // Zamieniamy niebieski/zielony na fioletowy
+    ['line-color','fill-color','fill-outline-color','circle-color','circle-stroke-color'].forEach(key => {
+      if (obj.paint && obj.paint[key] != null && typeof obj.paint[key] === 'string') {
+        const v = obj.paint[key].toLowerCase();
+        if (v === '#3bb2d0' || v === '#fbb03b' || v === '#ff7800' || v === '#4898ff' || v === '#3887be') {
+          obj.paint[key] = key.includes('fill') ? DRAW_COLOR_LIGHT : DRAW_COLOR;
+        }
+      }
+    });
+    // Grubsza linia przy rysowaniu
+    if (obj.id && obj.id.includes('cold') && obj.paint && obj.paint['line-width'] != null) {
+      obj.paint['line-width'] = 3;
     }
-    // Zaokrąglamy wierzchołki
-    if (obj.paint && obj.paint['circle-radius'] != null) {
-      obj.paint['circle-radius'] = 6;
+    if (obj.id && obj.id.includes('hot') && obj.paint && obj.paint['line-width'] != null) {
+      obj.paint['line-width'] = 3;
     }
     return obj;
   });
@@ -222,6 +238,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     displayControlsDefault: false,
     controls: { point: true, line_string: true, polygon: true, trash: true, combine_features: false, uncombine_features: false },
     styles: fixedStyles,
+    defaultMode: 'simple_select',
   });
   map.addControl(draw, 'top-left');
 
@@ -252,8 +269,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('[data-category]').forEach(b => b.classList.toggle('active', b.dataset.category === cat));
     const mode = POINT_CATS.has(cat) ? 'draw_point' : LINE_CATS.has(cat) ? 'draw_line_string' : 'draw_polygon';
     draw.changeMode(mode);
-    status(`Rysowanie: ${cat}. Kliknij na mapę.`);
+    $('draw-actions').style.display = 'flex';
+    status(`Rysowanie: ${cat}. Kliknij na mapę, potem Enter lub przycisk 'Zakończ'.`);
   }
+
+  // Przyciski podczas rysowania
+  $('draw-undo-btn').onclick = () => {
+    try { draw.undo(); } catch {}
+    status('Cofnięto ostatni punkt');
+  };
+  $('draw-finish-btn').onclick = () => {
+    try {
+      // Kończy rysowanie — symulujemy kliknięcie w ostatni wierzchołek
+      const mode = draw.getMode();
+      if (mode.startsWith('draw_')) {
+        // Zmiana trybu na simple_select kończy rysowanie i zapisuje
+        draw.changeMode('simple_select');
+      }
+    } catch {}
+  };
+  $('draw-cancel-btn').onclick = () => {
+    draw.trash();
+    drawingCategory = null;
+    clearDrawBtns();
+    $('draw-actions').style.display = 'none';
+    status('Anulowano rysowanie');
+  };
   document.querySelectorAll('[data-category]').forEach(b => { b.onclick = () => startDraw(b.dataset.category); });
 
   function clearDrawBtns() {
@@ -261,6 +302,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   map.on('draw.create', async (e) => {
+    $('draw-actions').style.display = 'none';
     for (const f of e.features) {
       const name = prompt(`Podaj numer/nazwę obiektu (${drawingCategory || '?'}):`);
       if (!name) { draw.delete(f.id); continue; }
