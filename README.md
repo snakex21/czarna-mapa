@@ -1,17 +1,26 @@
-# Mapa Katastralna Czarna — wersja portable desktop
+# Mapa Katastralna Czarna — wersja portable desktop v1.1
 
 > Aplikacja desktopowa do przeglądania historycznej mapy katastralnej gminy Czarna z 1882 roku.
 > Działa jako samodzielny program Windows — bez instalacji, bez serwera, zero konfiguracji.
 
+## Nowości w wersji 1.1
+
+- **Nowy silnik mapy** — MapLibre GL zamiast Leaflet. Płynniejsze zoomowanie, lepsza wydajność.
+- **Zaznaczanie działek** — klikasz właściciela → jego działki podświetlają się fuksjowym kolorem. Rzeczywiste (pełny kolor) i wg protokołu (półprzezroczyste + grubszy obrys).
+- **Plakietki `Lp.X`** — na każdej zaznaczonej działce pojawia się etykieta z numerem protokołu właściciela.
+- **Tooltip na hover** — najeżdżasz na zaznaczoną działkę → widzisz nazwę właściciela + typ posiadania.
+- **Wielu właścicieli** — ze statystyk możesz zobaczyć top 5/10 właścicieli równocześnie, każdy innym kolorem z palety.
+- **Focus mode** — w trybie zaznaczenia reszta mapy jest delikatnie przyciemniona, wybrane działki wyciągnięte na plan.
+- **Poprawki** — usunięte błędy `line-dasharray` i `promoteId` które blokowały działanie poprzedniej wersji (v1.0).
+
 ## Dlaczego powstała?
 
 Pierwszą wersją projektu była aplikacja serwerowa / webowa:
-[Projekt-Czarna (Flask + Python)](https://github.com/snakex21/Projekt-Czarna) — backend Python, frontend HTML/CSS/JS, baza PostgreSQL + PostGIS.
+[Projekt-Czarna (Flask + Python)](https://github.com/snakex21/Projekt-Czarna) — backend Python, frontend HTML/CSS/JS z Leaflet, baza PostgreSQL + PostGIS.
 
-Ta aplikacja desktopowa powstała z mojej własnej inicjatywy jako niezależna,
-lokalna wersja portable. Jej celem jest umożliwienie wygodnego korzystania
-z mapy katastralnej i danych historycznych bez uruchamiania całego środowiska
-serwerowego.
+Ta aplikacja desktopowa powstała jako niezależna, lokalna wersja portable. Jej celem jest
+umożliwienie wygodnego korzystania z mapy katastralnej i danych historycznych bez całego
+środowiska serwerowego.
 
 Nie jest to główna wersja projektu dyplomowego, lecz osobne praktyczne
 rozwinięcie — przygotowane po to, aby aplikację można było łatwo przekazać,
@@ -23,26 +32,17 @@ Ta wersja **desktopowa** zastępuje cały stos serwerowy jednym plikiem EXE (~80
 - dane są w jednym folderze — łatwe do kopiowania i backupowania,
 - możesz przenosić całą aplikację na pendrive.
 
-## Relacja do projektu webowego
-
-Wersja portable korzysta z tej samej idei i tego samego zakresu danych co
-projekt webowy, ale została przebudowana pod tryb lokalny. Zamiast serwera,
-bazy PostgreSQL i konfiguracji środowiska użytkownik otrzymuje gotową aplikację
-Windows z lokalną bazą SQLite oraz folderem danych.
-
-Dzięki temu projekt może działać offline i być używany jako samodzielne
-narzędzie do przeglądania mapy, protokołów, genealogii oraz danych historycznych.
-
 ## Co potrafi aplikacja?
 
-- Interaktywna mapa katastralna — przeglądanie działek, właścicieli, obrysów.
-- Edytor właścicieli — dodawanie i edycja protokołów katastralnych ze skanami JPG.
-- Edytor działek — rysowanie i modyfikacja obiektów na mapie.
-- Genealogia — drzewo genealogiczne mieszkańców, relacje rodzinne, małżeństwa.
-- Demografia — dane ludnościowe (katolicy, żydzi, pozostali).
-- Statystyki i porównywarka protokołów.
-- Miejscowości — zarządzanie wieloma lokalizacjami, każda z własną bazą.
-- Backup i przywracanie — pełny backup ZIP (JSON, SQLite, protokoły, zdjęcia).
+- **Interaktywna mapa katastralna** — przeglądanie działek, właścicieli, obrysów. Silnik MapLibre GL z podkładem satelitarnym, OSM i historycznym (mapa.jpg z 1882 roku). Przeźroczystość podkładu regulowana suwakiem.
+- **Zaznaczanie i podświetlanie** — wybierz właściciela → jego działki flashują fuksjowym kolorem. Działki rzeczywiste (pełny kolor), wg protokołu (półprzezroczyste + grubszy obrys). Plakietki `Lp.X` na każdej działce.
+- **Edytor właścicieli** — dodawanie i edycja protokołów katastralnych ze skanami JPG.
+- **Edytor działek** — rysowanie i modyfikacja obiektów na mapie.
+- **Genealogia** — drzewo genealogiczne mieszkańców, relacje rodzinne, małżeństwa.
+- **Demografia** — dane ludnościowe (katolicy, żydzi, pozostali).
+- **Statystyki i porównywarka protokołów** — linki "Pokaż na mapie" przenoszące do podświetlonych działek.
+- **Miejscowości** — zarządzanie wieloma lokalizacjami, każda z własną bazą.
+- **Backup i przywracanie** — pełny backup ZIP (JSON, SQLite, protokoły, zdjęcia).
 
 ## Szybki start — Portable
 
@@ -62,13 +62,15 @@ Obie wersje (desktopowa i serwerowa) używają tego samego formatu JSON. Dzięki
 
 ## Technologie
 
-| Warstwa          | Technologia               |
-|------------------|---------------------------|
-| Backend / logika | Go 1.22                   |
-| Baza danych      | SQLite (`modernc.org/sqlite`) |
-| Frontend         | HTML + CSS + JS (Leaflet) |
-| Okno aplikacji   | WebView2 (Edge)           |
-| GeoJSON          | `github.com/paulmach/orb` |
+| Warstwa             | Technologia                         |
+|---------------------|-------------------------------------|
+| Backend / logika    | Go 1.22                             |
+| Baza danych         | SQLite (`modernc.org/sqlite`)       |
+| Silnik mapy         | MapLibre GL 4.7.1                   |
+| Frontend            | HTML + CSS + JavaScript (vanilla)   |
+| Okno aplikacji      | WebView2 (Microsoft Edge)           |
+| GeoJSON             | `github.com/paulmach/orb`           |
+| Embedowanie         | `//go:embed all:frontend` (Go 1.16+) |
 
 ## Struktura folderu
 
@@ -102,6 +104,13 @@ go build -ldflags="-H windowsgui" -o "Mapa Katastralna Czarna.exe" .
 # Testy
 go test ./internal/...
 ```
+
+## Wersje
+
+| Wersja | Data       | Zmiany                                                                     |
+|--------|------------|----------------------------------------------------------------------------|
+| v1.1   | maj 2026   | MapLibre GL zamiast Leaflet, zaznaczanie działek z `Lp.X`, tooltip hover, focus mode, wielokolorowa paleta dla wielu właścicieli |
+| v1.0   | marzec 2026| Pierwsze stabilne wydanie portable — Go + WebView2                          |
 
 ## Autor
 

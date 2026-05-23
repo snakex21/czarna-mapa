@@ -35,12 +35,8 @@
     <!-- ==========================================================================
          STYLE ZEWNĘTRZNE I BIBLIOTEKI
          ========================================================================== -->
-    <!-- Leaflet - framework mapowy -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css">
-    <!-- Leaflet MarkerCluster - grupowanie markerów -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+    <!-- MapLibre GL JS - silnik mapy (WebGL) -->
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 
     <!-- Font Awesome - ikony -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -436,14 +432,10 @@
     <script src="/location_js/location-config.js"></script>
     <script src="/location_js/location-data.js"></script>
 
-    <!-- Biblioteka Leaflet -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Rozszerzenie Leaflet Draw -->
-    <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
-    <!-- Leaflet MarkerCluster -->
-    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-    <!-- Główny skrypt aplikacji -->
-    <script src="map-script.js"></script>
+    <!-- MapLibre GL JS + skrypt mapy + panele -->
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <script src="panels.js"></script>
+    <script src="map-script-v2.js"></script>
 </body>
 
 </html>
