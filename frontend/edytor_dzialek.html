@@ -105,9 +105,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
   const POINT_CATS = new Set(['budynek','kapliczka','obiekt_specjalny']);
   const LINE_CATS  = new Set(['droga','rzeka']);
+  const CATEGORY_OPTIONS = [
+    { value:'budowlana', label:'Budowlana', kind:'polygon' },
+    { value:'rolna', label:'Rolna', kind:'polygon' },
+    { value:'las', label:'Las', kind:'polygon' },
+    { value:'pastwisko', label:'Pastwisko', kind:'polygon' },
+    { value:'obrys_miejscowosci', label:'Obrys miejscowości', kind:'polygon' },
+    { value:'droga', label:'Droga', kind:'line' },
+    { value:'rzeka', label:'Rzeka', kind:'line' },
+    { value:'budynek', label:'Budynek', kind:'point' },
+    { value:'kapliczka', label:'Kapliczka', kind:'point' },
+    { value:'obiekt_specjalny', label:'Obiekt specjalny', kind:'point' },
+  ];
 
   const $ = id => document.getElementById(id);
   let map, draw, allFeatures = {}, activeTab = 'parcels', drawingCategory = null;
+  let editingObjectId = null, editingDrawFeatureId = null;
 
   // ---- Zegar ----
   function tick() {
@@ -121,8 +134,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     el.textContent = msg; el.classList.add('show');
     setTimeout(() => el.classList.remove('show'), 2200);
   }
+  function clearDraftPreview() {
+    try { map.getSource('draft-edit-preview')?.setData({ type:'FeatureCollection', features:[] }); } catch {}
+  }
   function dispId(f) { return f.properties?.numer_obiektu || (f.id ? String(f.id) : '?'); }
   function colorFor(cat) { return STYLES[cat] || STYLES.default; }
+  function geometryKind(g) {
+    if (!g) return null;
+    if (g.type === 'Point' || g.type === 'MultiPoint') return 'point';
+    if (g.type === 'LineString' || g.type === 'MultiLineString') return 'line';
+    if (g.type === 'Polygon' || g.type === 'MultiPolygon') return 'polygon';
+    return null;
+  }
 
   // ---- Rysowanie warstw GeoJSON ----
   function styleFill(feature) {
@@ -231,18 +254,286 @@ document.addEventListener('DOMContentLoaded', async () => {
     { id:'gl-draw-vertex', type:'circle', filter:['all',['==','meta','vertex'],['==','$type','Point'],['!=','mode','static']], paint:{'circle-radius':4,'circle-color':DRAW_COLOR} },
     { id:'gl-draw-midpoint', type:'circle', filter:['all',['==','meta','midpoint'],['==','$type','Point']], paint:{'circle-radius':4,'circle-color':'#d8b4fe'} },
   ];
+
+  const drawModes = { ...MapboxDraw.modes };
+  // Lista uchwytów do przeciągania — wypełniana przez toDisplayFeatures
+  let draftVertices = [];
+  // Referencja do żywego obiektu Feature z aktywnego trybu rysowania.
+  // Uwaga: draw.get(id) zwraca zwykły GeoJSON bez metod updateCoordinate(),
+  // dlatego przy przeciąganiu punktu w trakcie dodawania musimy trzymać
+  // stan przekazany do toDisplayFeatures (state.polygon / state.line).
+  let activeDraftFeature = null;
+  let draftGeometryOverride = null;
+  // Domyślne draw.trash() w mapbox-gl-draw 1.5 anuluje cały szkic w trybie
+  // rysowania. Nadpisujemy tylko zachowanie kosza/undo tak, żeby usuwał
+  // ostatni faktycznie kliknięty wierzchołek i pozwalał rysować dalej.
+  // Dodatkowo w trakcie rysowania pokazujemy wszystkie już kliknięte punkty
+  // jako uchwyty, które można złapać myszką i przesunąć przed zapisaniem obiektu.
+  drawModes.draw_polygon = {
+    ...MapboxDraw.modes.draw_polygon,
+    onTrash(state) {
+      const count = draftVertices.filter(v => v.parent === state.polygon.id).length || state.currentVertexPosition || 0;
+      if (count <= 1) {
+        this.deleteFeature([state.polygon.id], { silent: true });
+        this.changeMode('simple_select');
+        return;
+      }
+      // Usuń tylko ostatni faktycznie kliknięty wierzchołek. Przy 2 punktach
+      // ma zostać 1 punkt, a nie znikać cały szkic.
+      state.polygon.removeCoordinate(`0.${count - 1}`);
+      state.currentVertexPosition = count - 1;
+      activeDraftFeature = { id: state.polygon.id, feature: state.polygon, state, kind: 'polygon' };
+      try { window._syncDraftPreviewFromDraw?.(); } catch {}
+    },
+    toDisplayFeatures(state, geojson, display) {
+      MapboxDraw.modes.draw_polygon.toDisplayFeatures.call(this, state, geojson, display);
+      if (geojson.properties.id !== state.polygon.id) return;
+      activeDraftFeature = { id: state.polygon.id, feature: state.polygon, state, kind: 'polygon' };
+      const ring = state.polygon.coordinates?.[0] || [];
+      draftVertices = [];
+      for (let i = 0; i < state.currentVertexPosition; i++) {
+        if (ring[i]) {
+          const v = { type:'Feature', properties:{ meta:'vertex', parent:state.polygon.id, coord_path:`0.${i}`, active:'false' }, geometry:{ type:'Point', coordinates:ring[i] } };
+          display(v);
+          draftVertices.push({ parent: state.polygon.id, path: `0.${i}`, lng: ring[i][0], lat: ring[i][1] });
+        }
+      }
+      // Odśwież uchwyty HTML
+      try { window._refreshDraftHandles?.(); } catch {}
+    }
+  };
+  drawModes.draw_line_string = {
+    ...MapboxDraw.modes.draw_line_string,
+    onTrash(state) {
+      const count = draftVertices.filter(v => v.parent === state.line.id).length || state.currentVertexPosition || 0;
+      if (count <= 1) {
+        this.deleteFeature([state.line.id], { silent: true });
+        this.changeMode('simple_select');
+        return;
+      }
+      // Usuń tylko ostatni faktycznie kliknięty wierzchołek. Przy 2 punktach
+      // ma zostać 1 punkt, a nie znikać cały szkic.
+      state.line.removeCoordinate(`${count - 1}`);
+      state.currentVertexPosition = count - 1;
+      activeDraftFeature = { id: state.line.id, feature: state.line, state, kind: 'line' };
+      try { window._syncDraftPreviewFromDraw?.(); } catch {}
+    },
+    toDisplayFeatures(state, geojson, display) {
+      MapboxDraw.modes.draw_line_string.toDisplayFeatures.call(this, state, geojson, display);
+      if (geojson.properties.id !== state.line.id) return;
+      activeDraftFeature = { id: state.line.id, feature: state.line, state, kind: 'line' };
+      const coords = state.line.coordinates || [];
+      draftVertices = [];
+      for (let i = 0; i < state.currentVertexPosition; i++) {
+        if (coords[i]) {
+          const v = { type:'Feature', properties:{ meta:'vertex', parent:state.line.id, coord_path:`${i}`, active:'false' }, geometry:{ type:'Point', coordinates:coords[i] } };
+          display(v);
+          draftVertices.push({ parent: state.line.id, path: `${i}`, lng: coords[i][0], lat: coords[i][1] });
+        }
+      }
+      try { window._refreshDraftHandles?.(); } catch {}
+    }
+  };
   draw = new MapboxDraw({
     displayControlsDefault: false,
     // Nie pokazujemy bocznych kontrolek Draw — użytkownik korzysta z naszych kolorowych przycisków kategorii.
     controls: { point: false, line_string: false, polygon: false, trash: false, combine_features: false, uncombine_features: false },
+    modes: drawModes,
     styles: fixedStyles,
+    clickBuffer: 10,
+    touchBuffer: 18,
     defaultMode: 'simple_select',
   });
   map.addControl(draw, 'top-left');
 
+  // ---- Przeciąganie uchwytów podczas rysowania (Canvas DOM) ----
+  (function setupDraftVertexDrag() {
+    let dragPath = null, dragFeatureId = null, moveCount = 0;
+    let dragPointerId = null;
+    const canvas = map.getCanvas();
+
+    function forceDrawRender(featureId) {
+      // MapboxDraw nie ma publicznego API do odświeżenia aktywnego szkicu,
+      // ale jego store udostępnia render(). Jeśli API się zmieni, błąd ignorujemy
+      // — HTML-owe uchwyty nadal zostaną odświeżone.
+      try { draw._ctx.store.featureChanged(featureId); } catch {}
+      try { draw._ctx.store.render(); } catch {}
+    }
+
+    function updateDraftCoordinate(featureId, path, lng, lat) {
+      let updated = false;
+
+      // Najważniejsza ścieżka: żywy Feature z aktualnego trybu rysowania.
+      // To faktycznie zmienia współrzędne zapisywane po kliknięciu „Zakończ”.
+      const live = activeDraftFeature && activeDraftFeature.id === featureId ? activeDraftFeature.feature : null;
+      if (live && typeof live.updateCoordinate === 'function') {
+        live.updateCoordinate(path, lng, lat);
+        updated = true;
+      }
+
+      // Awaryjnie spróbuj przez wewnętrzny store MapboxDraw.
+      if (!updated) {
+        try {
+          const stored = draw._ctx.store.get(featureId);
+          if (stored && typeof stored.updateCoordinate === 'function') {
+            stored.updateCoordinate(path, lng, lat);
+            updated = true;
+          }
+        } catch {}
+      }
+
+      if (updated) forceDrawRender(featureId);
+      return updated;
+    }
+
+    function setCoordinateInGeometry(geometry, path, lng, lat) {
+      if (!geometry) return null;
+      const clone = JSON.parse(JSON.stringify(geometry));
+      const parts = String(path).split('.').map(n => Number(n));
+      if (clone.type === 'LineString') {
+        const i = parts[0];
+        if (Number.isFinite(i) && clone.coordinates?.[i]) clone.coordinates[i] = [lng, lat];
+      } else if (clone.type === 'Polygon') {
+        const ringIdx = parts.length > 1 ? parts[0] : 0;
+        const i = parts.length > 1 ? parts[1] : parts[0];
+        if (Number.isFinite(i) && clone.coordinates?.[ringIdx]?.[i]) {
+          clone.coordinates[ringIdx][i] = [lng, lat];
+          // Dla domkniętego poligonu pierwszy i ostatni punkt muszą być takie same.
+          if (i === 0 && clone.coordinates[ringIdx].length > 1) {
+            clone.coordinates[ringIdx][clone.coordinates[ringIdx].length - 1] = [lng, lat];
+          }
+        }
+      }
+      return clone;
+    }
+
+    function refreshDraftPreview() {
+      const src = map.getSource('draft-edit-preview');
+      if (!src || !draftGeometryOverride) return;
+      src.setData({ type:'FeatureCollection', features:[{ type:'Feature', properties:{}, geometry:draftGeometryOverride }] });
+    }
+
+    function geometryFromActiveDraft() {
+      if (!activeDraftFeature?.feature) return null;
+      const pos = activeDraftFeature.state?.currentVertexPosition;
+      if (activeDraftFeature.kind === 'line') {
+        const coords = (activeDraftFeature.feature.coordinates || [])
+          .slice(0, Number.isFinite(pos) ? pos : undefined)
+          .map(c => [c[0], c[1]]);
+        return coords.length ? { type:'LineString', coordinates: coords } : null;
+      }
+      if (activeDraftFeature.kind === 'polygon') {
+        const ring = (activeDraftFeature.feature.coordinates?.[0] || [])
+          .slice(0, Number.isFinite(pos) ? pos : undefined)
+          .map(c => [c[0], c[1]]);
+        if (!ring.length) return null;
+        if (ring.length > 2) ring.push([ring[0][0], ring[0][1]]);
+        return { type:'Polygon', coordinates:[ring] };
+      }
+      return null;
+    }
+
+    window._syncDraftPreviewFromDraw = function() {
+      draftGeometryOverride = geometryFromActiveDraft();
+      if (draftGeometryOverride) refreshDraftPreview();
+      else clearDraftPreview();
+      try { window._refreshDraftHandles?.(); } catch {}
+    };
+
+    function swallow(ev) {
+      ev?.preventDefault?.();
+      ev?.stopPropagation?.();
+      ev?.stopImmediatePropagation?.();
+    }
+
+    function canvasCoords(ev) {
+      const container = document.getElementById('map');
+      const rect = container.getBoundingClientRect();
+      return { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
+    }
+
+    function findNearestVertex(cx, cy) {
+      let best = null, bestDist = 30;
+      for (const v of draftVertices) {
+        const pt = map.project([v.lng, v.lat]);
+        if (!pt) continue;
+        const dx = pt.x - cx, dy = pt.y - cy;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < bestDist) { bestDist = dist; best = v; }
+      }
+      return best;
+    }
+
+    function beginDrag(ev) {
+      if (ev.button != null && ev.button !== 0) return;
+      if (!drawingCategory) return;
+      const mode = draw.getMode();
+      if (mode !== 'draw_polygon' && mode !== 'draw_line_string') return;
+      const coords = canvasCoords(ev);
+      const hit = findNearestVertex(coords.x, coords.y);
+      if (!hit) return;
+      swallow(ev);
+      dragPath = hit.path;
+      dragFeatureId = hit.parent;
+      dragPointerId = ev.pointerId ?? null;
+      moveCount = 0;
+      map.dragPan.disable();
+      try { if (ev.pointerId != null) canvas.setPointerCapture(ev.pointerId); } catch {}
+      canvas.style.cursor = 'grabbing';
+    }
+
+    function moveDrag(ev) {
+      if (!dragPath || !dragFeatureId) return;
+      swallow(ev);
+      moveCount++;
+      const coords = canvasCoords(ev);
+      const lngLat = map.unproject([coords.x, coords.y]);
+      // Aktualizuj wewnętrzny model MapboxDraw. Nie używamy draw.get(), bo
+      // zwraca kopię GeoJSON bez updateCoordinate(), przez co wcześniej punkt
+      // wyglądał jak przeciągany, ale geometria zostawała w starym miejscu.
+      updateDraftCoordinate(dragFeatureId, dragPath, lngLat.lng, lngLat.lat);
+      const currentGeometry = geometryFromActiveDraft() || activeDraftFeature?.feature?.toGeoJSON?.()?.geometry || draw.get(dragFeatureId)?.geometry || draftGeometryOverride;
+      draftGeometryOverride = setCoordinateInGeometry(currentGeometry, dragPath, lngLat.lng, lngLat.lat) || draftGeometryOverride;
+      // Aktualizuj naszą tablicę
+      const dv = draftVertices.find(v => v.parent === dragFeatureId && v.path === dragPath);
+      if (dv) { dv.lng = lngLat.lng; dv.lat = lngLat.lat; }
+      refreshDraftPreview();
+      // Natychmiastowe odświeżenie wizualne (HTML)
+      try { window._refreshDraftHandles?.(); } catch {}
+      if (moveCount % 15 === 0) status(`Punkt: ${lngLat.lng.toFixed(5)}, ${lngLat.lat.toFixed(5)}`);
+    }
+
+    function stopDrag(ev) {
+      if (!dragPath) return;
+      swallow(ev);
+      try { if (dragPointerId != null) canvas.releasePointerCapture(dragPointerId); } catch {}
+      dragPath = null;
+      dragFeatureId = null;
+      dragPointerId = null;
+      moveCount = 0;
+      map.dragPan.enable();
+      canvas.style.cursor = '';
+    }
+
+    // MapboxDraw/MapLibre w zależności od WebView używa mouse albo pointer events.
+    // Obsługujemy oba typy i blokujemy je w fazie capture, żeby zachowanie było
+    // takie jak przy przesuwaniu węzłów istniejącej działki: mapa nie dodaje
+    // w tym czasie kolejnego punktu i nie przechwytuje przeciągania.
+    canvas.addEventListener('pointerdown', beginDrag, {capture: true, passive: false});
+    canvas.addEventListener('pointermove', moveDrag, {capture: true, passive: false});
+    canvas.addEventListener('pointerup', stopDrag, {capture: true});
+    canvas.addEventListener('pointercancel', stopDrag, {capture: true});
+    canvas.addEventListener('pointerleave', stopDrag, {capture: true});
+
+    canvas.addEventListener('mousedown', beginDrag, {capture: true, passive: false});
+    window.addEventListener('mousemove', moveDrag, {capture: true, passive: false});
+    window.addEventListener('mouseup', stopDrag, {capture: true, passive: false});
+  })();
+
   // Dodajemy source + warstwy po załadowaniu stylu
   map.on('style.load', () => {
     map.addSource('parcels', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    map.addSource('draft-edit-preview', { type: 'geojson', data: { type:'FeatureCollection', features:[] } });
 
     map.addLayer({ id: 'parcels-fill', type: 'fill', source: 'parcels',
       filter: ['!', ['match', ['get','kategoria'], ['droga','rzeka'], true, false]],
@@ -255,53 +546,161 @@ document.addEventListener('DOMContentLoaded', async () => {
       layout: { 'text-field': ['get','numer_obiektu'], 'text-size': 12, 'text-allow-overlap': true, 'text-ignore-placement': true, 'symbol-placement': 'point', 'text-anchor': 'center' },
       paint: { 'text-color': '#ffffff', 'text-halo-color': '#000000', 'text-halo-width': 1.5 }
     });
+    // Osobny podgląd szkicu po przeciągnięciu punktu podczas dodawania.
+    // Dzięki temu zachowuje się wizualnie jak edycja istniejącej działki: widać
+    // aktualną geometrię dokładnie tam, gdzie puszczony jest punkt.
+    map.addLayer({ id:'draft-edit-preview-fill', type:'fill', source:'draft-edit-preview',
+      filter:['==', ['geometry-type'], 'Polygon'],
+      paint:{ 'fill-color':DRAW_COLOR, 'fill-opacity':0.08 }
+    });
+    map.addLayer({ id:'draft-edit-preview-line', type:'line', source:'draft-edit-preview',
+      paint:{ 'line-color':'#ff00ff', 'line-width':3.5, 'line-opacity':1 }
+    });
 
     load().then(() => {
       map.fitBounds([[cal.sw.lng,cal.sw.lat],[cal.ne.lng,cal.ne.lat]], { padding: 40 });
     });
+
+    // Kontener na uchwyty HTML (pozycjonowane absolutnie nad mapą)
+    const handleBox = document.createElement('div');
+    handleBox.id = 'draft-handles';
+    handleBox.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:999;overflow:hidden';
+    map.getContainer().appendChild(handleBox);
+
+    // Funkcja odświeżająca uchwyty HTML
+    window._refreshDraftHandles = function() {
+      handleBox.innerHTML = '';
+      const svgNS = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(svgNS, 'svg');
+      svg.setAttribute('width', '100%');
+      svg.setAttribute('height', '100%');
+      svg.style.cssText = 'position:absolute;inset:0;overflow:visible;pointer-events:none';
+
+      function projectCoords(coords) {
+        return (coords || []).map(c => {
+          const pt = map.project(c);
+          return pt ? `${pt.x},${pt.y}` : null;
+        }).filter(Boolean).join(' ');
+      }
+
+      // Rysujemy własną linię/poligon nad MapboxDraw. To rozwiązuje przypadek,
+      // w którym punkt HTML przesuwa się poprawnie, ale wewnętrzna warstwa draw
+      // nie odświeża odcinka podczas aktywnego dodawania działki.
+      const previewGeom = draftGeometryOverride;
+      if (previewGeom?.type === 'LineString' && previewGeom.coordinates?.length > 1) {
+        const line = document.createElementNS(svgNS, 'polyline');
+        line.setAttribute('points', projectCoords(previewGeom.coordinates));
+        line.setAttribute('fill', 'none');
+        line.setAttribute('stroke', '#ff00ff');
+        line.setAttribute('stroke-width', '4');
+        line.setAttribute('stroke-linecap', 'round');
+        line.setAttribute('stroke-linejoin', 'round');
+        line.setAttribute('filter', 'drop-shadow(0 1px 2px rgba(0,0,0,.35))');
+        svg.appendChild(line);
+      } else if (previewGeom?.type === 'Polygon' && previewGeom.coordinates?.[0]?.length > 1) {
+        const ring = previewGeom.coordinates[0] || [];
+        const shape = document.createElementNS(svgNS, ring.length > 3 ? 'polygon' : 'polyline');
+        shape.setAttribute('points', projectCoords(ring));
+        shape.setAttribute('fill', ring.length > 3 ? 'rgba(255,0,255,.08)' : 'none');
+        shape.setAttribute('stroke', '#ff00ff');
+        shape.setAttribute('stroke-width', '4');
+        shape.setAttribute('stroke-linejoin', 'round');
+        shape.setAttribute('stroke-linecap', 'round');
+        shape.setAttribute('filter', 'drop-shadow(0 1px 2px rgba(0,0,0,.35))');
+        svg.appendChild(shape);
+      }
+
+      if (svg.childNodes.length) handleBox.appendChild(svg);
+      for (const v of draftVertices) {
+        const pt = map.project([v.lng, v.lat]);
+        if (!pt) continue;
+        const d = document.createElement('div');
+        d.style.cssText = `position:absolute;left:${pt.x-9}px;top:${pt.y-9}px;width:18px;height:18px;border-radius:50%;background:#ff00ff;border:3px solid white;box-shadow:0 0 4px rgba(0,0,0,.5)`;
+        handleBox.appendChild(d);
+      }
+    };
+    window._clearDraftHandles = function() { handleBox.innerHTML = ''; };
+
+    // Przerysowuj uchwyty przy każdej zmianie widoku mapy
+    map.on('move', () => { try { window._refreshDraftHandles(); } catch {} });
   });
 
   // ---- Rysowanie ----
   function startDraw(cat) {
+    editingObjectId = null;
+    editingDrawFeatureId = null;
+    $('dynamic-actions').style.display = 'none';
     drawingCategory = cat;
+    activeDraftFeature = null;
+    draftGeometryOverride = null;
+    clearDraftPreview();
     document.querySelectorAll('[data-category]').forEach(b => b.classList.toggle('active', b.dataset.category === cat));
     const mode = POINT_CATS.has(cat) ? 'draw_point' : LINE_CATS.has(cat) ? 'draw_line_string' : 'draw_polygon';
     draw.changeMode(mode);
     $('draw-actions').style.display = 'flex';
-    status(`Rysowanie: ${cat}. Kliknij na mapę, potem Enter lub przycisk 'Zakończ'.`);
+    status(`Rysowanie: ${cat}. Punkty możesz przesuwać: złap punkt myszką i przeciągnij.`);
   }
 
-  // Przyciski podczas rysowania
-  $('draw-undo-btn').onclick = () => {
-    // Nie używamy draw.trash(), bo w MapLibre/mapbox-gl-draw kasuje cały szkic.
-    // Cofnięcie pojedynczego wierzchołka robimy tak jak użytkownik z klawiatury:
-    // Backspace/Delete w trybie draw_polygon/draw_line_string.
+  function dispatchDrawKey(key, code, keyCode) {
     try {
       const events = [
-        new KeyboardEvent('keydown', { key:'Backspace', code:'Backspace', keyCode:8, which:8, bubbles:true }),
-        new KeyboardEvent('keyup',   { key:'Backspace', code:'Backspace', keyCode:8, which:8, bubbles:true }),
+        new KeyboardEvent('keydown', { key, code, keyCode, which:keyCode, bubbles:true, cancelable:true }),
+        new KeyboardEvent('keyup',   { key, code, keyCode, which:keyCode, bubbles:true, cancelable:true }),
       ];
       for (const ev of events) {
         map.getCanvas().dispatchEvent(ev);
         document.dispatchEvent(ev);
+        window.dispatchEvent(ev);
       }
-      status('Cofnięto ostatni punkt');
-    } catch {
+    } catch {}
+  }
+
+  function undoLastDrawPoint() {
+    if (!draw || !drawingCategory) return;
+    const mode = typeof draw.getMode === 'function' ? draw.getMode() : '';
+    if (!String(mode).startsWith('draw_')) {
+      status('Cofanie punktu działa tylko podczas rysowania');
+      return;
+    }
+
+    // W aktywnych trybach draw_polygon/draw_line_string MapboxDraw.trash()
+    // usuwa ostatnio dodany wierzchołek. Sztuczny Backspace bywa ignorowany
+    // przez WebView/MapLibre, dlatego API draw jest główną ścieżką.
+    try {
+      const wasPoint = POINT_CATS.has(drawingCategory);
+      draw.trash();
+      // Po cofnięciu usuń stary podgląd odcinka do cofniętego wierzchołka.
+      // Bez tego punkt znikał, ale nasza warstwa podglądu nadal rysowała
+      // poprzedni trójkąt/odcinek.
+      try { window._syncDraftPreviewFromDraw?.(); } catch {}
+      const newMode = typeof draw.getMode === 'function' ? draw.getMode() : mode;
+      const stillDrawing = String(newMode).startsWith('draw_');
+      if (!String(newMode).startsWith('draw_')) {
+        drawingCategory = null;
+        clearDrawBtns();
+        $('draw-actions').style.display = 'none';
+      }
+      status(wasPoint || !stillDrawing ? 'Anulowano ostatni punkt' : 'Cofnięto ostatni punkt');
+    } catch (err) {
+      dispatchDrawKey('Backspace', 'Backspace', 8);
       status('Nie udało się cofnąć punktu');
     }
-  };
+  }
+
+  // Przyciski podczas rysowania
+  $('draw-undo-btn').onclick = undoLastDrawPoint;
+
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && drawingCategory) {
+      e.preventDefault();
+      undoLastDrawPoint();
+    }
+  });
   $('draw-finish-btn').onclick = () => {
     try {
       // MapboxDraw kończy linię/poligon po Enter. Wysyłamy event do canvasa i dokumentu,
       // bo różne wersje draw nasłuchują w różnych miejscach.
-      const events = [
-        new KeyboardEvent('keydown', { key:'Enter', code:'Enter', keyCode:13, which:13, bubbles:true }),
-        new KeyboardEvent('keyup',   { key:'Enter', code:'Enter', keyCode:13, which:13, bubbles:true }),
-      ];
-      for (const ev of events) {
-        map.getCanvas().dispatchEvent(ev);
-        document.dispatchEvent(ev);
-      }
+      dispatchDrawKey('Enter', 'Enter', 13);
     } catch {}
   };
   $('draw-cancel-btn').onclick = () => {
@@ -309,6 +708,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     try { draw.deleteAll(); } catch {}
     try { draw.changeMode('simple_select'); } catch {}
     drawingCategory = null;
+    draftVertices = [];
+    activeDraftFeature = null;
+    draftGeometryOverride = null;
+    try { window._clearDraftHandles?.(); } catch {}
+    clearDraftPreview();
     clearDrawBtns();
     $('draw-actions').style.display = 'none';
     status('Anulowano rysowanie');
@@ -321,28 +725,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   map.on('draw.create', async (e) => {
     $('draw-actions').style.display = 'none';
+    draftVertices = [];
+    activeDraftFeature = null;
+    const geometryOverride = draftGeometryOverride ? JSON.parse(JSON.stringify(draftGeometryOverride)) : null;
+    draftGeometryOverride = null;
+    try { window._clearDraftHandles?.(); } catch {}
+    clearDraftPreview();
+    let createdId = null;
     for (const f of e.features) {
       const name = prompt(`Podaj numer/nazwę obiektu (${drawingCategory || '?'}):`);
       if (!name) { draw.delete(f.id); continue; }
       try {
-        await API._invoke('edytor_dzialek_dodaj_obiekt', { nazwa: name.trim(), kategoria: drawingCategory, geometria: f.geometry });
+        const geometryToSave = geometryOverride && geometryOverride.type === f.geometry?.type ? geometryOverride : f.geometry;
+        const res = await API._invoke('edytor_dzialek_dodaj_obiekt', { nazwa: name.trim(), kategoria: drawingCategory, geometria: geometryToSave });
+        createdId = Number(res?.id || 0) || null;
         status('Dodano obiekt');
       } catch (err) { alert(err); draw.delete(f.id); }
     }
     drawingCategory = null;
+    activeDraftFeature = null;
     clearDrawBtns();
     await load();
+    if (createdId) {
+      editGeometry(createdId);
+      status('Dodano obiekt — możesz teraz przesunąć punkty i kliknąć Zapisz');
+    }
   });
 
-  map.on('draw.update', async (e) => {
-    for (const f of e.features) {
-      const id = f.properties?._editingId;
-      if (!id) continue;
-      try {
-        await API._invoke('edytor_dzialek_aktualizuj_geometrie', { id, geometria: f.geometry });
-        status('Zapisano geometrię');
-      } catch (err) { alert(err); }
-    }
+  map.on('draw.update', () => {
+    if (editingObjectId) status('Masz niezapisane zmiany — kliknij Zapisz');
   });
 
   // ---- Panel: kliknięcia ----
@@ -386,19 +797,44 @@ document.addEventListener('DOMContentLoaded', async () => {
   function editGeometry(id) {
     const f = allFeatures[id];
     if (!f) return;
+    drawingCategory = null;
+    clearDrawBtns();
+    $('draw-actions').style.display = 'none';
     draw.deleteAll();
     const feature = { type:'Feature', geometry: f.geometry, properties: { _editingId: id, kategoria: f.properties.kategoria } };
     const ids = draw.add(feature);
-    draw.changeMode('direct_select', { featureId: ids[0] });
+    editingObjectId = id;
+    editingDrawFeatureId = ids[0];
+    if (f.geometry?.type === 'Point') draw.changeMode('simple_select', { featureIds: [ids[0]] });
+    else draw.changeMode('direct_select', { featureId: ids[0] });
     $('dynamic-actions').style.display = 'flex';
     $('dynamic-actions').innerHTML = `
-      <span style="font-weight:600;color:var(--muted)">Tryb edycji — przeciągnij węzły</span>
+      <span style="font-weight:600;color:var(--muted)">Tryb edycji — przeciągnij punkty/węzły</span>
+      <button id="saveEditBtn" class="btn-secondary"><i class="fas fa-save"></i> Zapisz</button>
       <button id="cancelEditBtn" class="btn-secondary">Anuluj</button>`;
+    $('saveEditBtn').onclick = saveEditGeometry;
     $('cancelEditBtn').onclick = async () => {
       draw.deleteAll();
+      editingObjectId = null;
+      editingDrawFeatureId = null;
       $('dynamic-actions').style.display = 'none';
       await load();
     };
+  }
+
+  async function saveEditGeometry() {
+    if (!editingObjectId || !editingDrawFeatureId) return;
+    const feature = draw.get(editingDrawFeatureId) || draw.getAll().features[0];
+    if (!feature?.geometry) return alert('Nie znaleziono edytowanej geometrii.');
+    try {
+      await API._invoke('edytor_dzialek_aktualizuj_geometrie', { id: editingObjectId, geometria: feature.geometry });
+      editingObjectId = null;
+      editingDrawFeatureId = null;
+      $('dynamic-actions').style.display = 'none';
+      draw.deleteAll();
+      await load();
+      status('Zapisano geometrię');
+    } catch (err) { alert(err); }
   }
 
   // ---- CRUD ----
@@ -411,10 +847,43 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   async function changeType(id) {
     const f = allFeatures[id];
-    const n = prompt('Nowa kategoria:', f.properties.kategoria);
-    if (!n) return;
-    await API._invoke('edytor_dzialek_zmien_kategorie', { id, kategoria: n.trim() });
-    await load();
+    if (!f) return;
+    const kind = geometryKind(f.geometry);
+    const allowed = CATEGORY_OPTIONS.filter(o => o.kind === kind);
+    if (!allowed.length) {
+      alert('Nie można zmienić typu dla tej geometrii.');
+      return;
+    }
+
+    // Nie pozwalamy zmienić geometrii liniowej/poligonowej na punktową itd.
+    // Np. droga ma wiele punktów (linia), więc nie może stać się budynkiem,
+    // kapliczką ani obiektem specjalnym, bo te typy są pojedynczym punktem.
+    drawingCategory = null;
+    clearDrawBtns();
+    $('draw-actions').style.display = 'none';
+    try { draw.deleteAll(); } catch {}
+
+    $('dynamic-actions').style.display = 'flex';
+    $('dynamic-actions').innerHTML = `
+      <span style="font-weight:600;color:var(--muted)">Zmień typ:</span>
+      <select id="typeSelect" style="padding:.6rem .8rem;border:1px solid var(--border);border-radius:8px;font-weight:600;background:white;color:var(--text)">
+        ${allowed.map(o => `<option value="${o.value}" ${o.value === f.properties.kategoria ? 'selected' : ''}>${o.label}</option>`).join('')}
+      </select>
+      <button id="saveTypeBtn" class="btn-secondary"><i class="fas fa-save"></i> Zapisz typ</button>
+      <button id="cancelTypeBtn" class="btn-secondary">Anuluj</button>`;
+
+    $('saveTypeBtn').onclick = async () => {
+      const n = $('typeSelect').value;
+      if (!n) return;
+      await API._invoke('edytor_dzialek_zmien_kategorie', { id, kategoria: n });
+      $('dynamic-actions').style.display = 'none';
+      await load();
+      status('Zmieniono typ obiektu');
+    };
+    $('cancelTypeBtn').onclick = () => {
+      $('dynamic-actions').style.display = 'none';
+      status('Anulowano zmianę typu');
+    };
   }
   async function removeParcel(id) {
     if (!confirm('Usunąć obiekt?')) return;
