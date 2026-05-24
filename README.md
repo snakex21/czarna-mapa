@@ -111,7 +111,7 @@ go test ./internal/...
 
 | Wersja | Data       | Zmiany                                                                     |
 |--------|------------|----------------------------------------------------------------------------|
-| v1.1   | maj 2026   | MapLibre GL zamiast Leaflet, zaznaczanie działek z `Lp.X`, tooltip hover, focus mode, wielokolorowa paleta dla wielu właścicieli |
+| v1.1   | maj 2026   | MapLibre GL: mapa + edytor, przeciąganie punktów, wybór kategorii, poprawki cofania |
 | v1.0   | marzec 2026| Pierwsze stabilne wydanie portable — Go + WebView2                          |
 
 ## Autor
