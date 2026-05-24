@@ -5,12 +5,14 @@
 
 ## Nowości w wersji 1.1
 
-- **Nowy silnik mapy** — MapLibre GL zamiast Leaflet. Płynniejsze zoomowanie, lepsza wydajność.
+- **Nowy silnik mapy** — MapLibre GL zamiast Leaflet we wszystkich widokach: mapa główna, edytor działek. Płynniejsze zoomowanie, lepsza wydajność.
+- **Edytor działek na MapLibre GL** — przepisany z Leaflet/Geoman na mapbox-gl-draw. Przeciąganie punktów podczas dodawania, wybór kategorii z listy, cofanie ostatniego punktu bez kasowania całego szkicu.
 - **Zaznaczanie działek** — klikasz właściciela → jego działki podświetlają się fuksjowym kolorem. Rzeczywiste (pełny kolor) i wg protokołu (półprzezroczyste + grubszy obrys).
 - **Plakietki `Lp.X`** — na każdej zaznaczonej działce pojawia się etykieta z numerem protokołu właściciela.
 - **Tooltip na hover** — najeżdżasz na zaznaczoną działkę → widzisz nazwę właściciela + typ posiadania.
 - **Wielu właścicieli** — ze statystyk możesz zobaczyć top 5/10 właścicieli równocześnie, każdy innym kolorem z palety.
 - **Focus mode** — w trybie zaznaczenia reszta mapy jest delikatnie przyciemniona, wybrane działki wyciągnięte na plan.
+- **Wersja 1.1** — okno „O aplikacji” pokazuje już 1.1, technologie wymienione jako MapLibre GL.
 - **Poprawki** — usunięte błędy `line-dasharray` i `promoteId` które blokowały działanie poprzedniej wersji (v1.0).
 
 ## Dlaczego powstała?
@@ -37,7 +39,7 @@ Ta wersja **desktopowa** zastępuje cały stos serwerowy jednym plikiem EXE (~80
 - **Interaktywna mapa katastralna** — przeglądanie działek, właścicieli, obrysów. Silnik MapLibre GL z podkładem satelitarnym, OSM i historycznym (mapa.jpg z 1882 roku). Przeźroczystość podkładu regulowana suwakiem.
 - **Zaznaczanie i podświetlanie** — wybierz właściciela → jego działki flashują fuksjowym kolorem. Działki rzeczywiste (pełny kolor), wg protokołu (półprzezroczyste + grubszy obrys). Plakietki `Lp.X` na każdej działce.
 - **Edytor właścicieli** — dodawanie i edycja protokołów katastralnych ze skanami JPG.
-- **Edytor działek** — rysowanie i modyfikacja obiektów na mapie.
+- **Edytor działek** — rysowanie i modyfikacja obiektów na mapie. Również na MapLibre GL, zastępując Leaflet we wszystkich widokach edycyjnych.
 - **Genealogia** — drzewo genealogiczne mieszkańców, relacje rodzinne, małżeństwa.
 - **Demografia** — dane ludnościowe (katolicy, żydzi, pozostali).
 - **Statystyki i porównywarka protokołów** — linki "Pokaż na mapie" przenoszące do podświetlonych działek.
