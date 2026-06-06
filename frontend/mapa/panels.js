@@ -588,6 +588,7 @@
             <label class="legend-checkbox-row"><input type="checkbox" data-group="parcels" checked> Granice działek i obiekty</label>
             <label class="legend-checkbox-row"><input type="checkbox" data-group="labels" checked> Numery działek/domów</label>
             <label class="legend-checkbox-row"><input type="checkbox" data-group="points" checked> Domy, kapliczki i klastry</label>
+            <label class="legend-checkbox-row"><input type="checkbox" data-group="historical-points" checked> Punkty historyczne (opis + zdjęcia)</label>
             <div class="legend-opacity-row">
                 <div class="legend-opacity-head"><i class="fas fa-adjust"></i> Przezroczystość mapy XIX w.</div>
                 <input type="range" min="0" max="100" value="100" class="opacity-slider legend-opacity-slider" id="opacitySlider">

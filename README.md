@@ -1,7 +1,18 @@
-# Mapa Katastralna Czarna — wersja portable desktop v1.1
+# Mapa Katastralna Czarna — wersja portable desktop v1.2
 
 > Aplikacja desktopowa do przeglądania historycznej mapy katastralnej gminy Czarna z 1882 roku.
 > Działa jako samodzielny program Windows — bez instalacji, bez serwera, zero konfiguracji.
+
+## Nowości w wersji 1.2
+
+- **Punkty historyczne (nowa warstwa mapy)** — wzorowane na warstwie z "Projekt Mapa Czarna". Osobna warstwa na mapie dla obiektów specjalnych (dworce, szkoły, kapliczki itp.) z metadanymi: `display_name`, `description`, `source_note` oraz galerią zdjęć. Markery w brązowym kolorze z białym obwodem, kliknięcie otwiera popup z opisem i galerią.
+- **Edytor punktów historycznych** — nowa strona `admin_punkty_historyczne.html` (dostępna z `index.html` w sekcji Narzędzia). Edycja metadanych, upload zdjęć do galerii (z podpisami i kolejnością), podgląd miniaturek, zmiana kolejności metodą drag-and-drop lub przyciskami.
+- **Galeria zdjęć punktów** — wielozdjęciowa galeria (JPG/PNG/WebP/GIF) per obiekt. Zdjęcia przechowywane w `data/point_photos/`, miniatury generowane na żądanie i cachowane na dysku w `data/obj_thumbs/` (SHA-1 + szerokość → JPEG). Serwowane przez `/point_photos/<plik>` i `/obj_thumb?path=...&w=<px>`.
+- **Migracje bazy SQLite** — dodany moduł `internal/db/migrations.go` z automatycznymi migracjami (idempotentne `ensureTable` / `ensureIndex`). Tabele `historical_points_metadata` i `point_photos` powstają w istniejących bazach bez ręcznej przebudowy. Pole `opis` w punkcie działa out-of-the-box.
+- **Pamięć stanu okna** — nowy moduł `internal/windowstate` zapisuje do `data/window_state.json` rozmiar, pozycję i stan zmaksymalizowania okna. Przy kolejnym uruchomieniu okno otwiera się w tym samym miejscu. Po odmaksymalizowaniu wraca do ostatniego rozmiaru "normalnego". Działa w tle (polling 2s).
+- **Cache nagłówki HTTP** — miniatury mają `Cache-Control: max-age=2592000, immutable` (SHA-1 = unikalne), zdjęcia punktów mają `max-age=86400` (1 dzień). Mniej żądań do serwera, szybsze przeglądanie.
+- **Bezpieczne upload-y** — walidacja rozszerzeń (`jpg/jpeg/png/webp/gif`), limit 8 MB na zdjęcie, sanityzacja nazwy pliku (`filepath.Base` + prefix `unix_ts_sha1`), automatyczne cofanie pliku z dysku gdy wpis w bazie się nie powiedzie.
+- **Okno "O aplikacji" 1.2** — numer wersji w modalu zaktualizowany.
 
 ## Nowości w wersji 1.1
 
@@ -12,7 +23,7 @@
 - **Tooltip na hover** — najeżdżasz na zaznaczoną działkę → widzisz nazwę właściciela + typ posiadania.
 - **Wielu właścicieli** — ze statystyk możesz zobaczyć top 5/10 właścicieli równocześnie, każdy innym kolorem z palety.
 - **Focus mode** — w trybie zaznaczenia reszta mapy jest delikatnie przyciemniona, wybrane działki wyciągnięte na plan.
-- **Wersja 1.1** — okno „O aplikacji” pokazuje już 1.1, technologie wymienione jako MapLibre GL.
+- **Wersja 1.1** — okno „O aplikacji" pokazuje już 1.1, technologie wymienione jako MapLibre GL.
 - **Poprawki** — usunięte błędy `line-dasharray` i `promoteId` które blokowały działanie poprzedniej wersji (v1.0).
 
 ## Dlaczego powstała?
@@ -37,13 +48,16 @@ Ta wersja **desktopowa** zastępuje cały stos serwerowy jednym plikiem EXE (~80
 ## Co potrafi aplikacja?
 
 - **Interaktywna mapa katastralna** — przeglądanie działek, właścicieli, obrysów. Silnik MapLibre GL z podkładem satelitarnym, OSM i historycznym (mapa.jpg z 1882 roku). Przeźroczystość podkładu regulowana suwakiem.
+- **Punkty historyczne (nowa warstwa)** — specjalne obiekty (dworzec, szkoła, kapliczka itp.) z opisem i galerią zdjęć. Markery, popupy, osobna warstwa renderowana na MapLibre GL.
 - **Zaznaczanie i podświetlanie** — wybierz właściciela → jego działki flashują fuksjowym kolorem. Działki rzeczywiste (pełny kolor), wg protokołu (półprzezroczyste + grubszy obrys). Plakietki `Lp.X` na każdej działce.
 - **Edytor właścicieli** — dodawanie i edycja protokołów katastralnych ze skanami JPG.
 - **Edytor działek** — rysowanie i modyfikacja obiektów na mapie. Również na MapLibre GL, zastępując Leaflet we wszystkich widokach edycyjnych.
+- **Edytor punktów historycznych** — pełny panel CRUD dla obiektów specjalnych + galeria (upload, podpisy, kolejność, kasowanie).
 - **Genealogia** — drzewo genealogiczne mieszkańców, relacje rodzinne, małżeństwa.
 - **Demografia** — dane ludnościowe (katolicy, żydzi, pozostali).
 - **Statystyki i porównywarka protokołów** — linki "Pokaż na mapie" przenoszące do podświetlonych działek.
 - **Miejscowości** — zarządzanie wieloma lokalizacjami, każda z własną bazą.
+- **Pamięć stanu okna** — rozmiar, pozycja i zmaksymalizowanie zapamiętywane między uruchomieniami.
 - **Backup i przywracanie** — pełny backup ZIP (JSON, SQLite, protokoły, zdjęcia).
 
 ## Szybki start — Portable
@@ -71,7 +85,7 @@ Obie wersje (desktopowa i serwerowa) używają tego samego formatu JSON. Dzięki
 | Silnik mapy         | MapLibre GL 4.7.1                   |
 | Frontend            | HTML + CSS + JavaScript (vanilla)   |
 | Okno aplikacji      | WebView2 (Microsoft Edge)           |
-| GeoJSON             | `github.com/paulmach/orb`           |
+| Miniatury           | `github.com/disintegration/imaging` |
 | Embedowanie         | `//go:embed all:frontend` (Go 1.16+) |
 
 ## Struktura folderu
@@ -111,6 +125,7 @@ go test ./internal/...
 
 | Wersja | Data       | Zmiany                                                                     |
 |--------|------------|----------------------------------------------------------------------------|
+| v1.2   | czerwiec 2026 | Punkty historyczne (warstwa + edytor + galeria), migracje bazy, pamięć stanu okna, cache miniatur |
 | v1.1   | maj 2026   | MapLibre GL: mapa + edytor, przeciąganie punktów, wybór kategorii, poprawki cofania |
 | v1.0   | marzec 2026| Pierwsze stabilne wydanie portable — Go + WebView2                          |
 

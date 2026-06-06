@@ -1291,10 +1291,6 @@
                                     <i class="fas fa-print"></i>
                                     <span>Drukuj raport</span>
                                 </button>
-                                <button class="tool-btn" id="share-btn">
-                                    <i class="fas fa-share-alt"></i>
-                                    <span>Udostępnij</span>
-                                </button>
                             </div>
                             <!-- Karty z wnioskami analitycznymi -->
                             <div class="insights-grid">
@@ -1377,35 +1373,6 @@
                         <div><kbd>D</kbd> - Przełącz tryb ciemny</div>
                         <div><kbd>F11</kbd> - Pełny ekran</div>
                         <div><kbd>Esc</kbd> - Zamknij okno</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ==========================================================================
-         MODAL UDOSTĘPNIANIA
-         ========================================================================== -->
-    <div class="modal" id="share-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2><i class="fas fa-share-alt"></i> Udostępnij statystyki</h2>
-                <button class="modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="share-section">
-                    <h3><i class="fas fa-link"></i> Link do strony</h3>
-                    <div class="share-link-container">
-                        <input type="text" id="share-link-input" readonly>
-                        <button class="btn-primary" id="copy-link-btn">
-                            <i class="fas fa-copy"></i> Kopiuj
-                        </button>
-                    </div>
-                </div>
-                <div class="share-section">
-                    <h3><i class="fas fa-qrcode"></i> Kod QR</h3>
-                    <div class="qr-code-container">
-                        <div id="qrcode"></div>
                     </div>
                 </div>
             </div>
@@ -1519,8 +1486,6 @@
          ========================================================================== -->
     <!-- SheetJS - obsługa plików Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- QRCode.js - generowanie kodów QR -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <!-- Główny skrypt aplikacji -->
     <script src="stats-script.js"></script>
 

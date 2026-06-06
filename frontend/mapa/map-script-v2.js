@@ -403,9 +403,12 @@ function renderMapDataV2() {
 
     // Warstwa ikon — `symbol` z icon-image. Domyślnie używa ikon PNG dodanych w loadPointIcons().
     // Fallback color circle pod spodem (na wypadek gdyby ikony nie zdążyły się załadować).
+    // Filtr: ukryj obiekt_specjalny — ma własną warstwę historical-points w historical-points.js
+    // (tam display_name, opis, galeria, source_note z osobnego API).
+    const pointNotHistorical = ['!=', ['get', 'kategoria'], 'obiekt_specjalny'];
     map.addLayer({
         id: 'points-circle-fallback', type: 'circle', source: 'points',
-        filter: ['all', ['!', ['has', 'point_count']], ['!', ['has', 'icons_loaded']]],
+        filter: ['all', ['!', ['has', 'point_count']], ['!', ['has', 'icons_loaded']], pointNotHistorical],
         minzoom: 13,
         paint: {
             'circle-color': ['match', ['get', 'kategoria'], 'budynek', '#e67e22', 'kapliczka', '#9b59b6', 'obiekt_specjalny', '#2c3e50', '#3388ff'],
@@ -416,7 +419,7 @@ function renderMapDataV2() {
 
     map.addLayer({
         id: 'points-icons', type: 'symbol', source: 'points',
-        filter: ['!', ['has', 'point_count']],
+        filter: ['all', ['!', ['has', 'point_count']], pointNotHistorical],
         minzoom: 13,
         layout: {
             'icon-image': [
@@ -449,7 +452,7 @@ function renderMapDataV2() {
     // Halo wokół punktu przy hover/highlight — kolorowe kółko POD ikoną dla wyróżnienia.
     map.addLayer({
         id: 'points-halo', type: 'circle', source: 'points',
-        filter: ['!', ['has', 'point_count']],
+        filter: ['all', ['!', ['has', 'point_count']], pointNotHistorical],
         minzoom: 13,
         paint: {
             'circle-color': [
@@ -505,6 +508,12 @@ function renderMapDataV2() {
     // Ikony dla domów / kapliczek / obiektów specjalnych — ładowane z CDN, dodawane
     // jako sprite'y MapLibre. Po załadowaniu wymieniamy `circle` na `symbol` z icon-image.
     loadPointIcons();
+
+    // Warstwa punktów historycznych (osobna, brązowa, z metadanymi + galerią).
+    // Zależy od tego samego obiektu `map`, dodaje source/layers i bind popup.
+    if (window.HistoricalPoints?.init) {
+        window.HistoricalPoints.init(map);
+    }
 
     // Stosujemy parametry URL po wyrenderowaniu — Faza 3 rozszerzy to.
     setTimeout(handleUrlParametersV2, 100);
@@ -672,7 +681,116 @@ function handleObjectClick(feature, lngLat) {
     const props = feature.properties || {};
     const wlasciciele = uniqueOwners(parseMaybeJson(props.wlasciciele));
     const html = buildFeaturePopupHtml(props, wlasciciele);
-    new maplibregl.Popup({ maxWidth: '340px', closeButton: true }).setLngLat(lngLat).setHTML(html).addTo(map);
+    const popup = new maplibregl.Popup({ maxWidth: '340px', closeButton: true }).setLngLat(lngLat).setHTML(html).addTo(map);
+
+    // Obiekty specjalne mają opis + historię + zdjęcie. Doczytujemy asynchronicznie
+    // i podmieniamy zawartość popupu, jeśli są dane.
+    if (props.kategoria === 'obiekt_specjalny' && feature.id != null) {
+        const objId = Number(feature.id);
+        if (Number.isFinite(objId) && objId > 0) {
+            const container = popup.getElement();
+            // Schowaj dotychczasowy opis typu "Kategoria: obiekt specjalny" — w nowym popupie go zastąpimy.
+            window.API.obiekty.pobierzInfo(objId)
+                .then(info => {
+                    if (!info || popup.isOpen?.() === false) return;
+                    const root = popup.getElement();
+                    if (!root) return;
+                    const enriched = enrichPopupWithObjInfo(container, info);
+                    if (enriched) {
+                        container.querySelector('.map-popup-body').innerHTML = enriched;
+                        // Re-bind linków właścicieli w nowej zawartości (buildFeaturePopupHtml ich nie używa, ale na wszelki wypadek).
+                    }
+                })
+                .catch(err => console.warn('Nie udało się pobrać info obiektu:', err));
+        }
+    }
+}
+
+/**
+ * Buduje rich-popup z linkami do protokołów właścicieli.
+ * Dla obiekt_specjalny ciało idzie do <div class="map-popup-body"> — będzie
+ * nadpisane przez enrichPopupWithObjInfo() po dojściu async.
+ */
+function buildFeaturePopupHtml(props, wlasciciele) {
+    const kat = (props.kategoria || '').replace(/_/g, ' ');
+    const numer = props.numer_obiektu || '—';
+    const isSpecial = props.kategoria === 'obiekt_specjalny';
+
+    let html = `<div class="map-popup">`;
+    html += `<div class="map-popup-title">${escapeHtml(numer)}</div>`;
+    html += `<div class="map-popup-body">`;
+
+    if (isSpecial) {
+        // Placeholder — podmieniony po async pobraniu info (opis, historia, zdjęcie).
+        html += `<div class="map-popup-meta"><b>Typ:</b> ${escapeHtml(kat)}</div>`;
+        html += `<div class="map-popup-loading"><i class="fas fa-spinner fa-spin"></i> Ładowanie informacji…</div>`;
+    } else {
+        html += `<div class="map-popup-meta"><b>Typ:</b> ${escapeHtml(kat)}</div>`;
+        if (wlasciciele.length === 1) {
+            const w = wlasciciele[0];
+            const url = `../wlasciciele/protokol.html?ownerId=${encodeURIComponent(w.unikalny_klucz || '')}`;
+            html += `<div class="map-popup-owners"><b>Właściciel:</b> ${escapeHtml(w.nazwa)}</div>
+                <a class="map-popup-btn" href="${url}"><i class="fas fa-file-alt"></i> Otwórz protokół</a>`;
+        } else if (wlasciciele.length > 1) {
+            html += `<div class="map-popup-owners"><b>Właściciele (${wlasciciele.length}):</b></div>
+                <ul class="map-popup-list">`;
+            for (const w of wlasciciele) {
+                const url = `../wlasciciele/protokol.html?ownerId=${encodeURIComponent(w.unikalny_klucz || '')}`;
+                const owner = allOwnersData.find(o => o.unikalny_klucz === w.unikalny_klucz || o.id === w.id);
+                const lp = owner?.numer_protokolu;
+                html += `<li><a href="${url}">${escapeHtml(w.nazwa)}${lp ? ` <span class="map-popup-lp">Lp. ${escapeHtml(String(lp))}</span>` : ''}</a></li>`;
+            }
+            html += `</ul>`;
+        }
+    }
+
+    html += `</div></div>`;
+    return html;
+}
+
+/**
+ * Wzbogaca istniejący popup o info obiektu specjalnego: miniaturka, opis, historia.
+ * Zwraca nowy innerHTML dla .map-popup-body (albo null gdy nie ma nic do pokazania).
+ */
+function enrichPopupWithObjInfo(container, info) {
+    if (!info || !container) return null;
+    const hasOpis = (info.opis || '').trim().length > 0;
+    const hasHistoria = (info.historia || '').trim().length > 0;
+    const hasZdjecie = !!(info.zdjecie);
+
+    if (!hasOpis && !hasHistoria && !hasZdjecie) {
+        // Brak danych — zostaw domyślny placeholder lub pokaż monit
+        return `<div class="map-popup-meta map-popup-empty">
+            <i class="fas fa-info-circle"></i> Brak dodatkowych informacji.
+            Uzupełnij je w edytorze mapy (zakładka „Info obiektu”).
+        </div>`;
+    }
+
+    let html = '';
+    if (hasZdjecie) {
+        // Ścieżka względna: "obj_photos/<id>/<plik>.jpg" → /obj_photos/.../...jpg
+        // Z miniatury: /obj_thumb?path=obj_photos/<id>/<plik>.jpg&w=400
+        const thumbUrl = `/obj_thumb?path=${encodeURIComponent(info.zdjecie)}&w=400`;
+        const fullUrl = `/obj_photos/${info.zdjecie.replace(/^obj_photos\//, '')}`;
+        html += `<a href="${escapeHtml(fullUrl)}" target="_blank" class="map-popup-thumb-link" title="Kliknij, aby powiększyć">
+            <img class="map-popup-thumb" src="${escapeHtml(thumbUrl)}" alt="Zdjęcie obiektu" loading="lazy">
+        </a>`;
+    }
+    if (hasOpis) {
+        const paragraphs = String(info.opis).split(/\n{2,}/).filter(Boolean);
+        html += `<div class="map-popup-opis">
+            <div class="map-popup-section-title"><i class="fas fa-align-left"></i> Opis</div>
+            ${paragraphs.map(p => `<p>${escapeHtml(p).replace(/\n/g, '<br>')}</p>`).join('')}
+        </div>`;
+    }
+    if (hasHistoria) {
+        const paragraphs = String(info.historia).split(/\n{2,}/).filter(Boolean);
+        html += `<div class="map-popup-historia">
+            <div class="map-popup-section-title"><i class="fas fa-book"></i> Historia</div>
+            ${paragraphs.map(p => `<p>${escapeHtml(p).replace(/\n/g, '<br>')}</p>`).join('')}
+        </div>`;
+    }
+    return html;
 }
 
 function showOwnerSelectionPopup(wlasciciele, lngLat) {
@@ -910,37 +1028,6 @@ function markSingleFeature(featureId, color = 'fuchsia') {
     if (cnt) cnt.textContent = 1;
 }
 
-/**
- * Buduje rich-popup z linkami do protokołów właścicieli.
- */
-function buildFeaturePopupHtml(props, wlasciciele) {
-    const kat = (props.kategoria || '').replace(/_/g, ' ');
-    const numer = props.numer_obiektu || '—';
-    let html = `<div class="map-popup">
-        <div class="map-popup-title">${escapeHtml(numer)}</div>
-        <div class="map-popup-meta"><b>Typ:</b> ${escapeHtml(kat)}</div>`;
-
-    if (wlasciciele.length === 1) {
-        const w = wlasciciele[0];
-        const url = `../wlasciciele/protokol.html?ownerId=${encodeURIComponent(w.unikalny_klucz || '')}`;
-        html += `<div class="map-popup-owners"><b>Właściciel:</b> ${escapeHtml(w.nazwa)}</div>
-            <a class="map-popup-btn" href="${url}"><i class="fas fa-file-alt"></i> Otwórz protokół</a>`;
-    } else if (wlasciciele.length > 1) {
-        html += `<div class="map-popup-owners"><b>Właściciele (${wlasciciele.length}):</b></div>
-            <ul class="map-popup-list">`;
-        for (const w of wlasciciele) {
-            const url = `../wlasciciele/protokol.html?ownerId=${encodeURIComponent(w.unikalny_klucz || '')}`;
-            const owner = allOwnersData.find(o => o.unikalny_klucz === w.unikalny_klucz || o.id === w.id);
-            const lp = owner?.numer_protokolu;
-            html += `<li><a href="${url}">${escapeHtml(w.nazwa)}${lp ? ` <span class="map-popup-lp">Lp. ${escapeHtml(String(lp))}</span>` : ''}</a></li>`;
-        }
-        html += `</ul>`;
-    }
-
-    html += `</div>`;
-    return html;
-}
-
 function fitToAll() {
     if (!allParcelsData.length) return;
     let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
@@ -1038,6 +1125,7 @@ function setMapLayerVisibility(group, visible) {
     if (group === 'parcels') ['parcels-fill', 'parcels-line-halo', 'parcels-line', 'settlement-outline', 'lines-layer'].forEach(safe);
     if (group === 'labels') ['parcels-labels', 'points-labels'].forEach(safe);
     if (group === 'points') ['points-clusters', 'points-cluster-count', 'points-circle-fallback', 'points-icons', 'points-halo'].forEach(safe);
+    if (group === 'historical-points') ['historical-points-halo', 'historical-points-circle', 'historical-points-label'].forEach(safe);
 }
 
 function setHistoricalOpacity(opacity) {

@@ -911,6 +911,11 @@
         }
 
         function urlZdjecia(nazwaPliku) {
+            // Miniatura generowana po stronie serwera (cache SHA-1 + Cache-Control immutable).
+            return `/obj_thumb?path=protokoly/${encodeURIComponent(edytowany.unikalny_klucz)}/${encodeURIComponent(nazwaPliku)}&w=160&v=${zdjeciaVersion}`;
+        }
+
+        function urlZdjeciaOryginal(nazwaPliku) {
             return `/protokoly/${encodeURIComponent(edytowany.unikalny_klucz)}/${encodeURIComponent(nazwaPliku)}?v=${zdjeciaVersion}`;
         }
 
@@ -944,7 +949,7 @@
             const current = zdjeciaCache[aktualnyPodgladIndex];
             if (!current) return;
 
-            img.src = urlZdjecia(current.nazwa);
+            img.src = urlZdjeciaOryginal(current.nazwa);
             counter.textContent = `Strona ${aktualnyPodgladIndex + 1} / ${zdjeciaCache.length}`;
             prev.disabled = aktualnyPodgladIndex === 0;
             next.disabled = aktualnyPodgladIndex === zdjeciaCache.length - 1;

@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -187,6 +188,81 @@ func (a *App) handleHistoryPhotos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.ServeFile(w, r, filePath)
+}
+
+// handlePointPhotos serwuje oryginalne zdjęcia z galerii punktów historycznych
+// (data/point_photos/). Miniatury idą przez /obj_thumb?path=point_photos/<plik>&w=...
+// Cache nagłówki: 1 dzień (pliki są niezmienne po uploadzie - unikalna nazwa).
+func (a *App) handlePointPhotos(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		http.Error(w, "Tylko GET", http.StatusMethodNotAllowed)
+		return
+	}
+	rel := strings.TrimPrefix(r.URL.Path, "/point_photos/")
+	rel = filepath.Clean(filepath.FromSlash(rel))
+	if rel == "." || filepath.IsAbs(rel) || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) || rel == ".." {
+		http.Error(w, "Nieprawidlowa sciezka", http.StatusBadRequest)
+		return
+	}
+	base := filepath.Join(a.dataDir, "point_photos")
+	filePath := filepath.Join(base, rel)
+	absBase, _ := filepath.Abs(base)
+	absFile, _ := filepath.Abs(filePath)
+	if absFile != absBase && !strings.HasPrefix(absFile, absBase+string(os.PathSeparator)) {
+		http.Error(w, "Nieprawidlowa sciezka", http.StatusBadRequest)
+		return
+	}
+	ext := strings.ToLower(filepath.Ext(filePath))
+	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".webp" && ext != ".gif" {
+		http.NotFound(w, r)
+		return
+	}
+	if _, err := os.Stat(filePath); err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	w.Header().Set("Cache-Control", "public, max-age=86400")
+	w.Header().Set("Content-Type", service.MimeForExt(ext))
+	http.ServeFile(w, r, filePath)
+}
+
+// handleObjThumb generuje (lub serwuje z cache) miniaturkę dowolnego obrazu
+// w dataDir. Parametry query:
+//   - path — ścieżka względna do dataDir (np. "protokoly/Adam/1.jpg",
+//            "history_photos/dworzec.png", "point_photos/123_abc.jpg")
+//   - w    — żądana szerokość w px (domyślnie 240, max 800)
+func (a *App) handleObjThumb(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		http.Error(w, "Tylko GET", http.StatusMethodNotAllowed)
+		return
+	}
+	path := r.URL.Query().Get("path")
+	if path == "" {
+		http.Error(w, "Brak parametru path", http.StatusBadRequest)
+		return
+	}
+	wStr := r.URL.Query().Get("w")
+	width := 240
+	if wStr != "" {
+		if v, err := strconv.Atoi(wStr); err == nil && v > 0 {
+			width = v
+		}
+	}
+	cachePath, err := service.GenerujThumbnail(a.dataDir, path, width)
+	if err != nil {
+		// Brak pliku źródłowego = cichy 404 (żeby pętle <img> nie zaśmiecały konsoli)
+		if os.IsNotExist(err) {
+			http.NotFound(w, r)
+			return
+		}
+		log.Printf("[THUMB] błąd %s: %v", path, err)
+		http.Error(w, "Błąd generowania miniatury", http.StatusInternalServerError)
+		return
+	}
+	// Cache HTTP — 30 dni, plik jest opisany SHA-1, więc niezmienny
+	w.Header().Set("Cache-Control", "public, max-age=2592000, immutable")
+	w.Header().Set("Content-Type", "image/jpeg")
+	http.ServeFile(w, r, cachePath)
 }
 
 func (a *App) handleLocationConfigJS(w http.ResponseWriter, r *http.Request) {
@@ -603,6 +679,57 @@ func (a *App) dispatch(cmd string, args map[string]interface{}) (interface{}, er
 		id, _ := args["obiekt_id"].(float64)
 		return service.PobierzWlascicieliObiektu(a.db, int64(id))
 
+	// --- Punkty historyczne (obiekty specjalne z metadanymi + galerią) ---
+	case "pobierz_punkty_historyczne":
+		return service.PobierzPunktyHistoryczne(a.db)
+
+	case "pobierz_liste_obiektow_specjalnych":
+		return service.ListaObiektowSpecjalnych(a.db)
+
+	case "pobierz_punkt_historyczny":
+		name, _ := args["object_name"].(string)
+		return service.PobierzPunktHistoryczny(a.db, name)
+
+	case "zapisz_punkt_historyczny":
+		strIfc := func(v interface{}) string { s, _ := v.(string); return s }
+		meta := models.HistoricalPointMetadata{
+			ObjectName:  strIfc(args["object_name"]),
+			DisplayName: strIfc(args["display_name"]),
+			Description: strIfc(args["description"]),
+			SourceNote:  strIfc(args["source_note"]),
+		}
+		return map[string]interface{}{"ok": true}, service.ZapiszPunktHistoryczny(a.db, meta)
+
+	case "dodaj_zdjecie_punktu_historycznego":
+		name, _ := args["object_name"].(string)
+		dataURL, _ := args["data_url"].(string)
+		filename, _ := args["filename"].(string)
+		photo, err := service.DodajZdjeciePunktu(a.db, a.dataDir, name, dataURL, filename)
+		if err != nil {
+			return nil, err
+		}
+		return photo, nil
+
+	case "usun_zdjecie_punktu_historycznego":
+		id, _ := args["id"].(float64)
+		return map[string]interface{}{"ok": true}, service.UsunZdjeciePunktu(a.db, a.dataDir, int64(id))
+
+	case "aktualizuj_caption_zdjecia_punktu":
+		id, _ := args["id"].(float64)
+		caption, _ := args["caption"].(string)
+		return map[string]interface{}{"ok": true}, service.AktualizujCaption(a.db, int64(id), caption)
+
+	case "aktualizuj_kolejnosc_zdjec_punktu":
+		name, _ := args["object_name"].(string)
+		rawIDs, _ := args["ids_in_order"].([]interface{})
+		ids := make([]int64, 0, len(rawIDs))
+		for _, v := range rawIDs {
+			if f, ok := v.(float64); ok {
+				ids = append(ids, int64(f))
+			}
+		}
+		return map[string]interface{}{"ok": true}, service.AktualizujKolejnoscZdjec(a.db, name, ids)
+
 	case "edytor_dzialek_dodaj_obiekt":
 		nazwa, _ := args["nazwa"].(string)
 		kategoria, _ := args["kategoria"].(string)
@@ -633,6 +760,20 @@ func (a *App) dispatch(cmd string, args map[string]interface{}) (interface{}, er
 
 	case "edytor_dzialek_usun_wszystkie":
 		return nil, service.UsunWszystkieObiektyMapy(a.db)
+
+	case "edytor_dzialek_backupy":
+		return a.editorParcelBackups()
+
+	case "edytor_dzialek_utworz_backup":
+		return a.editorCreateParcelBackup()
+
+	case "edytor_dzialek_przywroc_backup":
+		filename, _ := args["filename"].(string)
+		return a.editorRestoreParcelBackup(filename)
+
+	case "edytor_dzialek_usun_backup":
+		filename, _ := args["filename"].(string)
+		return a.editorDeleteParcelBackup(filename)
 
 	// ============ WŁAŚCICIELE ============
 	case "pobierz_wszystkich_wlascicieli":
@@ -918,6 +1059,13 @@ func (a *App) dispatch(cmd string, args map[string]interface{}) (interface{}, er
 			}
 		}
 		return service.ImportCompatibleJSON(a.db, files)
+
+	case "miejscowosci_przeladuj_json":
+		return a.reloadJSONFromDisk()
+
+	case "miejscowosci_import_backup":
+		dataB64, _ := args["data_b64"].(string)
+		return a.importFullBackup(dataB64)
 
 	default:
 		return nil, fmt.Errorf("nieznana komenda: %s", cmd)
@@ -1427,6 +1575,132 @@ func (a *App) saveActiveMapImage(dataURL string) error {
 	return os.Rename(tmp, filepath.Join(a.dataDir, "mapa.jpg"))
 }
 
+func (a *App) editorBackupDir() (string, error) {
+	if strings.TrimSpace(a.dataDir) == "" {
+		return "", fmt.Errorf("brak katalogu danych aktywnej miejscowości")
+	}
+	dir := filepath.Join(a.dataDir, "backups")
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return "", err
+	}
+	return dir, nil
+}
+
+func (a *App) editorParcelBackups() (map[string]interface{}, error) {
+	dir, err := a.editorBackupDir()
+	if err != nil {
+		return nil, err
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	files := []map[string]interface{}{}
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		name := e.Name()
+		if !strings.HasSuffix(strings.ToLower(name), ".json") || !strings.Contains(name, "backup") {
+			continue
+		}
+		info, _ := e.Info()
+		item := map[string]interface{}{"filename": name}
+		if info != nil {
+			item["size"] = info.Size()
+			item["modified"] = info.ModTime().Format("2006-01-02 15:04:05")
+		}
+		files = append(files, item)
+	}
+	sort.Slice(files, func(i, j int) bool { return fmt.Sprint(files[i]["filename"]) > fmt.Sprint(files[j]["filename"]) })
+	return map[string]interface{}{"files": files}, nil
+}
+
+func (a *App) editorLocationMeta() service.LocationJSONMeta {
+	loc, _ := a.activeLocation()
+	if loc == nil {
+		return service.LocationJSONMeta{}
+	}
+	return service.LocationJSONMeta{ID: loc.ID, Name: loc.Name, FullName: loc.FullName, Powiat: loc.Powiat, Region: loc.Region, Year: loc.Year, Century: loc.Century, GminaKatastralna: loc.GminaKatastralna, MiejscowoscProtokol: loc.MiejscowoscProtokol, HomepageDescription: loc.HomepageDescription, HistorySubtitle: loc.HistorySubtitle, HistoryParagraph1: loc.HistoryParagraph1, HistoryParagraph2: loc.HistoryParagraph2, HistoryParagraph3: loc.HistoryParagraph3}
+}
+
+func (a *App) editorCreateParcelBackup() (map[string]interface{}, error) {
+	dir, err := a.editorBackupDir()
+	if err != nil {
+		return nil, err
+	}
+	res, err := service.ExportCompatibleJSON(a.db, a.dataDir, a.editorLocationMeta())
+	if err != nil {
+		return nil, err
+	}
+	src := filepath.Join(res.Dir, "parcels_data.json")
+	stamp := time.Now().Format("20060102_150405")
+	dstName := fmt.Sprintf("parcels_data_backup_%s.json", stamp)
+	dst := filepath.Join(dir, dstName)
+	in, err := os.Open(src)
+	if err != nil {
+		return nil, err
+	}
+	defer in.Close()
+	out, err := os.Create(dst)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := io.Copy(out, in); err != nil {
+		out.Close()
+		return nil, err
+	}
+	if err := out.Close(); err != nil {
+		return nil, err
+	}
+	return map[string]interface{}{"status": "success", "filename": dstName, "message": "Utworzono kopię zapasową działek"}, nil
+}
+
+func (a *App) safeEditorBackupPath(filename string) (string, error) {
+	dir, err := a.editorBackupDir()
+	if err != nil {
+		return "", err
+	}
+	name := filepath.Base(strings.TrimSpace(filename))
+	if name == "." || name == "" || !strings.HasSuffix(strings.ToLower(name), ".json") || !strings.Contains(name, "backup") {
+		return "", fmt.Errorf("nieprawidłowa nazwa backupu")
+	}
+	p := filepath.Join(dir, name)
+	absDir, _ := filepath.Abs(dir)
+	absPath, _ := filepath.Abs(p)
+	if !strings.HasPrefix(absPath, absDir+string(os.PathSeparator)) && absPath != filepath.Join(absDir, name) {
+		return "", fmt.Errorf("nieprawidłowa ścieżka backupu")
+	}
+	return p, nil
+}
+
+func (a *App) editorRestoreParcelBackup(filename string) (map[string]interface{}, error) {
+	p, err := a.safeEditorBackupPath(filename)
+	if err != nil {
+		return nil, err
+	}
+	raw, err := os.ReadFile(p)
+	if err != nil {
+		return nil, err
+	}
+	res, err := service.ImportCompatibleJSON(a.db, map[string]json.RawMessage{"parcels_data.json": json.RawMessage(raw)})
+	if err != nil {
+		return nil, err
+	}
+	return map[string]interface{}{"status": "success", "message": fmt.Sprintf("Przywrócono backup (%d obiektów)", res.Parcels), "parcels": res.Parcels}, nil
+}
+
+func (a *App) editorDeleteParcelBackup(filename string) (map[string]interface{}, error) {
+	p, err := a.safeEditorBackupPath(filename)
+	if err != nil {
+		return nil, err
+	}
+	if err := os.Remove(p); err != nil {
+		return nil, err
+	}
+	return map[string]interface{}{"status": "success", "message": "Usunięto kopię zapasową"}, nil
+}
+
 func (a *App) addActiveHistoryPhoto(dataURL, filename, caption string) (map[string]interface{}, error) {
 	if dataURL == "" {
 		return nil, fmt.Errorf("brak danych zdjęcia")
@@ -1896,6 +2170,315 @@ func zipDir(zw *zip.Writer, srcDir, zipBase string) (int, error) {
 		return err
 	})
 	return count, err
+}
+
+// ============ RELOAD JSON FROM DISK ============
+
+// reloadJSONFromDisk czyta JSON-y z katalogu danych aktywnej miejscowości i importuje je do bazy.
+func (a *App) reloadJSONFromDisk() (interface{}, error) {
+	loc, err := a.activeLocation()
+	if err != nil {
+		return nil, err
+	}
+	jsonDir := filepath.Join(loc.DataDir, "json")
+	jsonFiles := []string{
+		"owner_data_to_import.json",
+		"parcels_data.json",
+		"genealogia.json",
+		"demografia.json",
+		"map_config.json",
+	}
+	files := map[string]json.RawMessage{}
+	for _, name := range jsonFiles {
+		p := filepath.Join(jsonDir, name)
+		data, err := os.ReadFile(p)
+		if err != nil {
+			continue
+		}
+		files[name] = data
+	}
+	if len(files) == 0 {
+		return nil, fmt.Errorf("brak plików JSON w %s — najpierw wykonaj eksport", jsonDir)
+	}
+	res, err := service.ImportCompatibleJSON(a.db, files)
+	if err != nil {
+		return nil, err
+	}
+	res.Dir = jsonDir
+	return res, nil
+}
+
+// ============ IMPORT FULL BACKUP ============
+
+func (a *App) importFullBackup(dataB64 string) (map[string]interface{}, error) {
+	if strings.TrimSpace(dataB64) == "" {
+		return nil, fmt.Errorf("brak danych ZIP (data_b64)")
+	}
+
+	// Remove optional data:... prefix
+	b64 := dataB64
+	if idx := strings.Index(b64, ","); idx >= 0 {
+		b64 = b64[idx+1:]
+	}
+	zipData, err := base64.StdEncoding.DecodeString(b64)
+	if err != nil {
+		return nil, fmt.Errorf("nieprawidłowe dane base64: %w", err)
+	}
+
+	zr, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
+	if err != nil {
+		return nil, fmt.Errorf("nieprawidłowy ZIP: %w", err)
+	}
+
+	// Read manifest
+	var manifest struct {
+		CreatedAt string               `json:"created_at"`
+		Locations []LocationInfo       `json:"locations"`
+		Options   fullBackupOptions    `json:"options"`
+	}
+	if err := readZipJSON(zr, "manifest.json", &manifest); err != nil {
+		return nil, fmt.Errorf("brak manifest.json: %w", err)
+	}
+	if len(manifest.Locations) == 0 {
+		return nil, fmt.Errorf("ZIP nie zawiera miejscowości")
+	}
+
+	// Read locations.json from ZIP to get the registry for import
+	var importedRegistry locationsRegistry
+	_ = readZipJSON(zr, "locations.json", &importedRegistry)
+
+	// Load current registry
+	reg, err := a.loadRegistry()
+	if err != nil {
+		return nil, err
+	}
+
+	results := []map[string]interface{}{}
+
+	for _, loc := range manifest.Locations {
+		baseInZip := filepath.ToSlash(filepath.Join("miejscowosci", loc.ID))
+		locRes := map[string]interface{}{"id": loc.ID, "name": loc.Name}
+
+		// Check if location already exists
+		existingIdx := -1
+		for i, existing := range reg.Locations {
+			if existing.ID == loc.ID {
+				existingIdx = i
+				break
+			}
+		}
+
+		// Prepare location directory
+		locDir := filepath.Join(a.rootDataDir, "locations", loc.ID)
+		if err := os.MkdirAll(filepath.Join(locDir, "protokoly"), 0755); err != nil {
+			locRes["error"] = err.Error()
+			results = append(results, locRes)
+			continue
+		}
+		if err := os.MkdirAll(filepath.Join(locDir, "history_photos"), 0755); err != nil {
+			locRes["error"] = err.Error()
+			results = append(results, locRes)
+			continue
+		}
+
+		// Update location info
+		loc.DataDir = locDir
+		loc.DBPath = filepath.Join(locDir, loc.ID+".db")
+
+		if existingIdx >= 0 {
+			loc.CreatedAt = reg.Locations[existingIdx].CreatedAt
+			loc.Active = reg.Locations[existingIdx].Active
+			loc.AutoOpen = reg.Locations[existingIdx].AutoOpen
+			reg.Locations[existingIdx] = loc
+		} else {
+			if loc.Year == "" {
+				loc.Year = "1882"
+			}
+			if loc.Century == "" {
+				loc.Century = "XIX w."
+			}
+			if loc.GminaKatastralna == "" {
+				loc.GminaKatastralna = loc.Name
+			}
+			if loc.MiejscowoscProtokol == "" {
+				loc.MiejscowoscProtokol = loc.Name
+			}
+			if loc.HomepageTemplate == "" {
+				loc.HomepageTemplate = "praca_inzynierska"
+			}
+			loc.CreatedAt = time.Now().Format(time.RFC3339)
+			reg.Locations = append(reg.Locations, loc)
+		}
+
+		count := 0
+
+		// Restore DB files
+		for _, dbFile := range []string{loc.ID + ".db", loc.ID + ".db-wal", loc.ID + ".db-shm"} {
+			zipPath := filepath.ToSlash(filepath.Join(baseInZip, dbFile))
+			destPath := filepath.Join(locDir, dbFile)
+			if err := extractZipFile(zr, zipPath, destPath); err == nil {
+				count++
+			}
+		}
+
+		// Import JSON data from ZIP
+		jsonFiles := []struct{ zipName, contentKey string }{
+			{"owner_data_to_import.json", "owner_data_to_import.json"},
+			{"parcels_data.json", "parcels_data.json"},
+			{"genealogia.json", "genealogia.json"},
+			{"demografia.json", "demografia.json"},
+			{"map_config.json", "map_config.json"},
+		}
+		jsonData := map[string]json.RawMessage{}
+		for _, jf := range jsonFiles {
+			zipPath := filepath.ToSlash(filepath.Join(baseInZip, "json", jf.zipName))
+			var raw json.RawMessage
+			if err := readZipJSONRaw(zr, zipPath, &raw); err == nil {
+				jsonData[jf.contentKey] = raw
+			}
+		}
+
+		if len(jsonData) > 0 {
+			// Open location DB for import
+			locDB, err := db.Open(loc.DBPath)
+			if err == nil {
+				_, err = service.ImportCompatibleJSON(locDB, jsonData)
+				_ = locDB.Close()
+				if err != nil {
+					locRes["json_import_warning"] = err.Error()
+				}
+			}
+		}
+
+		// Restore map file
+		if err := extractZipFile(zr, filepath.ToSlash(filepath.Join(baseInZip, "mapa.jpg")), filepath.Join(locDir, "mapa.jpg")); err == nil {
+			count++
+		}
+
+		// Restore map_config.json (skip if already imported via JSON)
+		if len(jsonData) == 0 {
+			extractZipFile(zr, filepath.ToSlash(filepath.Join(baseInZip, "map_config.json")), filepath.Join(locDir, "map_config.json"))
+		}
+
+		// Restore icons
+		for _, icon := range []string{"favicon.jpeg", "custom_icon.png", "custom_icon.ico"} {
+			if err := extractZipFile(zr, filepath.ToSlash(filepath.Join(baseInZip, icon)), filepath.Join(locDir, icon)); err == nil {
+				count++
+			}
+		}
+
+		// Restore history photos
+		photosDir := filepath.Join(locDir, "history_photos")
+		count += extractZipDir(zr, filepath.ToSlash(filepath.Join(baseInZip, "history_photos")), photosDir)
+
+		// Restore protocol scans
+		protokolyDir := filepath.Join(locDir, "protokoly")
+		count += extractZipDir(zr, filepath.ToSlash(filepath.Join(baseInZip, "protokoly")), protokolyDir)
+
+		locRes["files_restored"] = count
+		if existingIdx >= 0 {
+			locRes["status"] = "updated"
+		} else {
+			locRes["status"] = "created"
+		}
+		results = append(results, locRes)
+	}
+
+	// Save updated registry
+	if err := a.saveRegistry(reg); err != nil {
+		return map[string]interface{}{"ok": true, "results": results, "registry_error": err.Error()}, nil
+	}
+
+	return map[string]interface{}{"ok": true, "results": results, "total": len(results)}, nil
+}
+
+// readZipJSON finds and unmarshals a JSON file from a zip.Reader.
+func readZipJSON(zr *zip.Reader, name string, target interface{}) error {
+	f, err := openZipFile(zr, name)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return json.NewDecoder(f).Decode(target)
+}
+
+// readZipJSONRaw reads raw JSON from a zip entry.
+func readZipJSONRaw(zr *zip.Reader, name string, target *json.RawMessage) error {
+	f, err := openZipFile(zr, name)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return json.NewDecoder(f).Decode(target)
+}
+
+// openZipFile finds a file by name in the ZIP and returns a ReadCloser.
+func openZipFile(zr *zip.Reader, name string) (io.ReadCloser, error) {
+	for _, f := range zr.File {
+		if filepath.ToSlash(f.Name) == name {
+			return f.Open()
+		}
+	}
+	return nil, fmt.Errorf("not found in ZIP: %s", name)
+}
+
+// extractZipFile extracts a single file from ZIP to a destination path.
+func extractZipFile(zr *zip.Reader, zipName, destPath string) error {
+	f, err := openZipFile(zr, zipName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
+		return err
+	}
+	out, err := os.Create(destPath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+	_, err = io.Copy(out, f)
+	return err
+}
+
+// extractZipDir extracts all files under a ZIP directory prefix to a local directory.
+func extractZipDir(zr *zip.Reader, zipPrefix, destDir string) int {
+	prefix := zipPrefix
+	if !strings.HasSuffix(prefix, "/") {
+		prefix += "/"
+	}
+	count := 0
+	for _, f := range zr.File {
+		name := filepath.ToSlash(f.Name)
+		if !strings.HasPrefix(name, prefix) || name == prefix {
+			continue
+		}
+		rel := strings.TrimPrefix(name, prefix)
+		if rel == "" {
+			continue
+		}
+		dest := filepath.Join(destDir, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil {
+			continue
+		}
+		rc, err := f.Open()
+		if err != nil {
+			continue
+		}
+		out, err := os.Create(dest)
+		if err != nil {
+			rc.Close()
+			continue
+		}
+		_, err = io.Copy(out, rc)
+		rc.Close()
+		out.Close()
+		if err == nil {
+			count++
+		}
+	}
+	return count
 }
 
 // ============ v1 helpers (skopiowane z byłego app.go) ============

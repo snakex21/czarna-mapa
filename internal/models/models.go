@@ -17,6 +17,72 @@ type ObiektGeograficzny struct {
 }
 
 // ============================================================================
+// PUNKT HISTORYCZNY (obiekt specjalny z metadanymi + galerią zdjęć)
+// ============================================================================
+//
+// Wzorzec z "Projekt Mapa Czarna" (FastAPI). Tabela obiekty_geograficzne
+// pozostaje kanonicznym źródłem geometrii (object_name = nazwa_lub_numer).
+// historical_points_metadata trzyma display_name / description / source_note.
+// point_photos to galeria (każdy obiekt może mieć 0..N zdjęć z captionem).
+//
+// Wszystkie trzy warstwy są łączone w PobierzPunktyHistoryczne(), żeby zwrócić
+// FeatureCollection dla mapy i osobno dla admina.
+
+// HistoricalPointMetadata — metadane opisowe punktu historycznego.
+// Powiązanie: object_name = obiekty_geograficzne.nazwa_lub_numer (gdzie kategoria='obiekt_specjalny').
+type HistoricalPointMetadata struct {
+	ObjectName  string `json:"object_name"`
+	DisplayName string `json:"display_name"`
+	Description string `json:"description"`
+	SourceNote  string `json:"source_note"`
+}
+
+// PointPhoto — jedno zdjęcie w galerii punktu historycznego.
+type PointPhoto struct {
+	ID         int64  `json:"id"`
+	ObjectName string `json:"object_name"`
+	Filename   string `json:"filename"`
+	Caption    string `json:"caption"`
+	Position   int    `json:"position"`
+	CreatedAt  string `json:"created_at"`
+}
+
+// HistoricalPoint — pełny obiekt dla admina (z galerią) — do edytora.
+type HistoricalPoint struct {
+	ObjectName  string       `json:"object_name"`
+	DisplayName string       `json:"display_name"`
+	Description string       `json:"description"`
+	SourceNote  string       `json:"source_note"`
+	Photos      []PointPhoto `json:"photos"`
+}
+
+// HistoricalPointFeature — feature GeoJSON dla warstwy mapy (bez pełnej listy
+// zdjęć — ta jest pobierana leniwie albo inline jeśli mała). Pola flat do
+// bezpośredniego użycia w properties GeoJSON.
+type HistoricalPointFeature struct {
+	Type        string         `json:"type"`        // "Feature"
+	Geometry    json.RawMessage `json:"geometry"`    // Point
+	Properties  json.RawMessage `json:"properties"`  // patrz HistoricalPointProperties
+	ID          int64          `json:"id"`
+}
+
+// HistoricalPointProperties — properties dla warstwy mapy.
+// photos jest zserializowane jako string (MapLibre trzyma to jako string).
+type HistoricalPointProperties struct {
+	ObjectName  string             `json:"object_name"`
+	DisplayName string             `json:"display_name"`
+	Description string             `json:"description"`
+	SourceNote  string             `json:"source_note"`
+	Photos      []PointPhotoInline `json:"photos"`
+}
+
+// PointPhotoInline — uproszczone pole zdjęcia w properties (bez created_at).
+type PointPhotoInline struct {
+	Filename string `json:"filename"`
+	Caption  string `json:"caption"`
+}
+
+// ============================================================================
 // WŁAŚCICIEL
 // ============================================================================
 type Wlasciciel struct {

@@ -51,6 +51,12 @@
     #status-message{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--card);padding:.75rem 1.5rem;border-radius:var(--radius);box-shadow:var(--shadow);font-weight:600;opacity:0;transition:.3s;pointer-events:none;z-index:1000}
     #status-message.show{opacity:1}
     .mapbox-gl-draw_ctrl-draw-btn{background-color:white!important}
+    .layer-toggle-panel.maplibregl-ctrl-group{position:absolute!important;top:14px!important;right:14px!important;width:180px!important;min-width:0!important;max-width:none!important;padding:6px!important;display:flex!important;flex-direction:column!important;gap:5px!important;overflow:visible!important;background:rgba(255,255,255,.94)!important;border:1px solid rgba(203,213,225,.9)!important;border-radius:12px!important;box-shadow:0 8px 24px rgba(15,23,42,.16)!important;backdrop-filter:blur(10px);z-index:10}
+    .layer-toggle-panel.maplibregl-ctrl-group .layer-toggle-btn{width:100%!important;height:34px!important;min-width:168px!important;padding:0 7px!important;display:grid!important;grid-template-columns:20px minmax(0,1fr) auto!important;align-items:center!important;gap:6px!important;border:0!important;border-radius:8px!important;background:transparent!important;color:#334155!important;font-family:Inter,system-ui,sans-serif!important;font-size:13px!important;font-weight:700!important;line-height:1!important;white-space:nowrap!important;text-align:left!important;overflow:visible!important;cursor:pointer}
+    .layer-toggle-panel.maplibregl-ctrl-group .layer-toggle-btn:hover{background:#f1f5f9!important}
+    .layer-toggle-panel.maplibregl-ctrl-group .layer-toggle-btn.active{background:rgba(102,126,234,.12)!important;color:#4f63d8!important}
+    .layer-toggle-panel .layer-toggle-icon{font-size:18px!important;line-height:1!important}.layer-toggle-panel .layer-toggle-label{overflow:visible!important;text-overflow:clip!important}.layer-toggle-panel .toggle-indicator{justify-self:end!important;padding:3px 7px!important;border-radius:999px!important;font-size:11px!important;line-height:1!important;font-weight:800!important}.layer-toggle-panel .toggle-indicator.on{background:#22c55e!important;color:#fff!important}.layer-toggle-panel .toggle-indicator.off{background:#94a3b8!important;color:#fff!important}
+    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(5px);z-index:3000;align-items:center;justify-content:center}.modal.open{display:flex}.modal-card{position:relative;background:var(--card);border-radius:16px;width:90%;max-width:720px;max-height:80vh;overflow:hidden;box-shadow:0 20px 45px rgba(15,23,42,.22)}@media(min-width:1400px){.modal-card{max-width:860px}}.modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border)}.modal-head h2{margin:0;font-size:1.25rem;display:flex;gap:10px;align-items:center}.modal-body{padding:20px 24px}.close-button{font-size:2rem;line-height:1;color:#94a3b8;background:none;border:0;cursor:pointer}.close-button:hover{color:var(--text)}#create-backup-btn{width:100%;padding:14px;border:0;border-radius:10px;background:#48bb78;color:#fff;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}#create-backup-btn:hover{background:#38a169}#backup-list-container{max-height:320px;overflow-y:auto;overflow-x:hidden;margin-top:16px}#backup-list{list-style:none;padding:0;margin:0}#backup-list li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;background:#f8fafc}#backup-list li>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.backup-actions{display:flex;gap:8px;flex-shrink:0}.backup-actions button{padding:8px 12px;border-radius:8px;border:0;color:#fff;font-weight:800;cursor:pointer}.backup-actions .btn-restore{background:#4299e1}.backup-actions .btn-delete{background:#f56565}
   </style>
 </head>
 <body>
@@ -58,7 +64,7 @@
   <header class="top-bar">
     <div class="brand"><i class="fas fa-map-marked-alt"></i><h1>Edytor Mapy Katastralnej</h1></div>
     <div class="top-bar-info"><span id="currentDate"></span><span id="currentTime" style="margin-left:.5rem;font-weight:600"></span></div>
-    <div class="controls"><a class="btn-secondary" href="/index.html"><i class="fas fa-home"></i> Start</a><a class="btn-secondary" href="/mapa/mapa.html"><i class="fas fa-map"></i> Mapa</a></div>
+    <div class="controls"><button id="open-backup-manager" class="btn-secondary" type="button"><i class="fas fa-history"></i> Backupy</button><a class="btn-secondary" href="/index.html"><i class="fas fa-home"></i> Start</a><a class="btn-secondary" href="/mapa/mapa.html"><i class="fas fa-map"></i> Mapa</a></div>
   </header>
   <div id="toolbar">
     <div id="create-actions">
@@ -93,6 +99,16 @@
   </main>
 </div>
 <div id="status-message"></div>
+<div class="modal" id="backupModal">
+  <div class="modal-card">
+    <div class="modal-head"><h2><i class="fas fa-history"></i> Kopie Zapasowe</h2><button class="close-button" id="closeBackupModal" aria-label="Zamknij">&times;</button></div>
+    <div class="modal-body">
+      <button id="create-backup-btn"><i class="fas fa-plus-circle"></i> Utwórz Nową Kopię</button>
+      <h3 style="margin:24px 0 10px;color:var(--muted)">Dostępne kopie:</h3>
+      <div id="backup-list-container"><ul id="backup-list"><li><span>Ładowanie...</span></li></ul></div>
+    </div>
+  </div>
+</div>
 
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script src="https://unpkg.com/@mapbox/mapbox-gl-draw@1.5.1/dist/mapbox-gl-draw.js"></script>
@@ -131,7 +147,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   tick(); setInterval(tick, 1000);
   function status(msg) {
     const el = $('status-message');
-    el.textContent = msg; el.classList.add('show');
+    el.textContent = msg || 'Gotowe'; el.classList.add('show');
     setTimeout(() => el.classList.remove('show'), 2200);
   }
   function clearDraftPreview() {
@@ -210,6 +226,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const cal = typeof cfg.calibration === 'string' ? JSON.parse(cfg.calibration) : cfg.calibration;
   const def = typeof cfg.defaults === 'string' ? JSON.parse(cfg.defaults) : cfg.defaults;
 
+  const latPad = (cal.ne.lat - cal.sw.lat) * 0.5;
+  const lngPad = (cal.ne.lng - cal.sw.lng) * 0.8;
+
   map = new maplibregl.Map({
     container: 'map',
     style: {
@@ -227,11 +246,40 @@ document.addEventListener('DOMContentLoaded', async () => {
     center: [def.center.lng, def.center.lat],
     zoom: def.zoom,
     minZoom: 12, maxZoom: 22,
-    maxBounds: [[cal.sw.lng-0.02,cal.sw.lat-0.02],[cal.ne.lng+0.02,cal.ne.lat+0.02]],
+    maxBounds: [[cal.sw.lng-lngPad,cal.sw.lat-latPad],[cal.ne.lng+lngPad,cal.ne.lat+latPad]],
     attributionControl: false,
     renderWorldCopies: false,
   });
   map.addControl(new maplibregl.NavigationControl(), 'top-left');
+
+  const osmVisibility = { visible: true };
+  const histVisibility = { visible: true };
+  const layerToggle = document.createElement('div');
+  layerToggle.className = 'maplibregl-ctrl maplibregl-ctrl-group layer-toggle-panel';
+  layerToggle.innerHTML = `
+    <button id="toggle-osm" class="layer-toggle-btn active" title="Mapa drogowa (OSM)">
+      <span class="layer-toggle-icon">🗺️</span><span class="layer-toggle-label">OSM</span><span class="toggle-indicator on">ON</span>
+    </button>
+    <button id="toggle-hist" class="layer-toggle-btn active" title="Mapa historyczna">
+      <span class="layer-toggle-icon">📜</span><span class="layer-toggle-label">Historyczna</span><span class="toggle-indicator on">ON</span>
+    </button>`;
+  map.getContainer().appendChild(layerToggle);
+  function updateLayerToggleButton(btn, visible) {
+    btn.classList.toggle('active', visible);
+    const indicator = btn.querySelector('.toggle-indicator');
+    indicator.textContent = visible ? 'ON' : 'OFF';
+    indicator.className = `toggle-indicator ${visible ? 'on' : 'off'}`;
+  }
+  $('toggle-osm')?.addEventListener('click', function () {
+    osmVisibility.visible = !osmVisibility.visible;
+    if (map.getLayer('osm-layer')) map.setLayoutProperty('osm-layer', 'visibility', osmVisibility.visible ? 'visible' : 'none');
+    updateLayerToggleButton(this, osmVisibility.visible);
+  });
+  $('toggle-hist')?.addEventListener('click', function () {
+    histVisibility.visible = !histVisibility.visible;
+    if (map.getLayer('historical-layer')) map.setLayoutProperty('historical-layer', 'visibility', histVisibility.visible ? 'visible' : 'none');
+    updateLayerToggleButton(this, histVisibility.visible);
+  });
 
   // mapbox-gl-draw — wygląd jak stary Geoman/Leaflet, ale na MapLibre/WebGL:
   // roboczo rysujemy tylko fioletową linię + fioletowe wierzchołki. Bez fill/obrysu.
@@ -747,8 +795,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     clearDrawBtns();
     await load();
     if (createdId) {
-      editGeometry(createdId);
-      status('Dodano obiekt — możesz teraz przesunąć punkty i kliknąć Zapisz');
+      // Edycja opisu/zdjęć obiektów specjalnych odbywa się w osobnej stronie
+      // admin_punkty_historyczne.html — tutaj tylko geometria.
+      if (allFeatures[createdId]?.properties?.kategoria === 'obiekt_specjalny') {
+        status('Dodano obiekt specjalny — edytuj opis i zdjęcia w menu "Punkty Historyczne"');
+      } else {
+        editGeometry(createdId);
+        status('Dodano obiekt — możesz teraz przesunąć punkty i kliknąć Zapisz');
+      }
     }
   });
 
@@ -890,6 +944,60 @@ document.addEventListener('DOMContentLoaded', async () => {
     await API._invoke('edytor_dzialek_usun_obiekt', { id });
     await load();
   }
+
+  // ---- Backupy działek ----
+  async function loadBackupList() {
+    const list = $('backup-list');
+    if (!list) return;
+    list.innerHTML = '<li><span>Ładowanie...</span></li>';
+    try {
+      const res = await API._invoke('edytor_dzialek_backupy');
+      const files = res.files || [];
+      list.innerHTML = files.length ? files.map(f => {
+        const name = f.filename || f;
+        const meta = f.modified ? ` <small style="color:var(--muted)">${f.modified}</small>` : '';
+        return `<li data-filename="${String(name).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;')}"><span title="${name}">${name}${meta}</span><div class="backup-actions"><button class="btn-restore">Przywróć</button><button class="btn-delete">Usuń</button></div></li>`;
+      }).join('') : '<li><span>Brak kopii.</span></li>';
+    } catch (err) {
+      list.innerHTML = `<li><span>Błąd wczytywania: ${String(err?.message || err)}</span></li>`;
+    }
+  }
+
+  $('open-backup-manager')?.addEventListener('click', async () => {
+    $('backupModal')?.classList.add('open');
+    await loadBackupList();
+  });
+  $('closeBackupModal')?.addEventListener('click', () => $('backupModal')?.classList.remove('open'));
+  $('backupModal')?.addEventListener('click', e => { if (e.target.id === 'backupModal') $('backupModal')?.classList.remove('open'); });
+  $('create-backup-btn')?.addEventListener('click', async () => {
+    try {
+      const res = await API._invoke('edytor_dzialek_utworz_backup');
+      status(res?.message || 'Utworzono kopię zapasową');
+      await loadBackupList();
+    } catch (err) { alert('Błąd backupu: ' + (err?.message || err)); }
+  });
+  $('backup-list')?.addEventListener('click', async e => {
+    const li = e.target.closest('li[data-filename]');
+    if (!li) return;
+    const filename = li.dataset.filename;
+    if (e.target.classList.contains('btn-restore')) {
+      if (!confirm(`Przywrócić backup "${filename}"?\n\nAktualne obiekty mapy zostaną nadpisane.`)) return;
+      try {
+        const res = await API._invoke('edytor_dzialek_przywroc_backup', { filename });
+        status(res?.message || 'Przywrócono backup');
+        await load();
+        await loadBackupList();
+      } catch (err) { alert('Błąd przywracania: ' + (err?.message || err)); }
+    }
+    if (e.target.classList.contains('btn-delete')) {
+      if (!confirm(`Usunąć backup "${filename}"?`)) return;
+      try {
+        const res = await API._invoke('edytor_dzialek_usun_backup', { filename });
+        status(res?.message || 'Usunięto kopię zapasową');
+        await loadBackupList();
+      } catch (err) { alert('Błąd usuwania: ' + (err?.message || err)); }
+    }
+  });
 
   // ---- Geometria: bbox ----
   function bboxGeom(g) {
