@@ -130,6 +130,47 @@
             },
         },
 
+        // Punkty historyczne (obiekty specjalne z metadanymi + galerią).
+        // Wzorzec z "Projekt Mapa Czarna".
+        punktyHistoryczne: {
+            pobierzWszystkie() {
+                return API._invoke('pobierz_punkty_historyczne', {});
+            },
+            pobierzListeObiektow() {
+                return API._invoke('pobierz_liste_obiektow_specjalnych', {});
+            },
+            pobierz(objectName) {
+                return API._invoke('pobierz_punkt_historyczny', { object_name: objectName });
+            },
+            zapisz(meta) {
+                return API._invoke('zapisz_punkt_historyczny', {
+                    object_name: meta.object_name,
+                    display_name: meta.display_name || '',
+                    description: meta.description || '',
+                    source_note: meta.source_note || '',
+                });
+            },
+            dodajZdjecie(objectName, dataUrl, filename) {
+                return API._invoke('dodaj_zdjecie_punktu_historycznego', {
+                    object_name: objectName,
+                    data_url: dataUrl,
+                    filename,
+                });
+            },
+            usunZdjecie(id) {
+                return API._invoke('usun_zdjecie_punktu_historycznego', { id });
+            },
+            aktualizujCaption(id, caption) {
+                return API._invoke('aktualizuj_caption_zdjecia_punktu', { id, caption });
+            },
+            aktualizujKolejnosc(objectName, idsInOrder) {
+                return API._invoke('aktualizuj_kolejnosc_zdjec_punktu', {
+                    object_name: objectName,
+                    ids_in_order: idsInOrder,
+                });
+            },
+        },
+
         genealogia: {
             pobierzDrzewo() {
                 return API._invoke('pobierz_drzewo_genealogiczne');
@@ -208,6 +249,12 @@
             },
             importJSON(files) {
                 return API._invoke('miejscowosci_import_json', { files });
+            },
+            przeladujJSON() {
+                return API._invoke('miejscowosci_przeladuj_json');
+            },
+            importBackup(dataB64) {
+                return API._invoke('miejscowosci_import_backup', { data_b64: dataB64 });
             },
         },
 

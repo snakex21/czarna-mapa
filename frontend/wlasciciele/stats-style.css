@@ -2739,61 +2739,6 @@ kbd {
 }
 
 /* ==========================================================================
-   Modal udostępniania
-   ========================================================================== */
-.share-section {
-  margin-bottom: 2rem;
-}
-
-.share-section h3 {
-  font-size: 1.1rem;
-  margin-bottom: 1rem;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.share-link-container {
-  display: flex;
-  gap: 0.5rem;
-  background: var(--bg-secondary);
-  padding: 0.5rem;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-}
-
-#share-link-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  color: var(--text-primary);
-  padding: 0.5rem 1rem;
-  font-family: inherit;
-  font-size: 0.9rem;
-  outline: none;
-}
-
-.qr-code-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: white;
-  padding: 1.5rem;
-  border-radius: 16px;
-  width: fit-content;
-  margin: 0 auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
-
-#qrcode img,
-#qrcode canvas {
-  display: block;
-  max-width: 100%;
-  height: auto;
-}
-
-/* ==========================================================================
    Modal druku - specjalne ustawienia
    ========================================================================== */
 .print-modal-content {
@@ -3380,26 +3325,6 @@ kbd {
     min-width: auto;
   }
 
-  /* Share modal */
-  .share-link-container {
-    flex-direction: column;
-  }
-
-  #copy-link-btn {
-    width: 100%;
-  }
-
-  .qr-code-container {
-    padding: 1rem;
-  }
-
-  #qrcode canvas,
-  #qrcode img {
-    max-width: 200px !important;
-    max-height: 200px !important;
-    width: 100% !important;
-    height: auto !important;
-  }
 }
 
 

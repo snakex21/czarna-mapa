@@ -1790,6 +1790,264 @@ body.dark-mode .map-popup .map-popup-owners {
     font-size: 0.8rem;
 }
 
+/* ============ OBIEKT SPECJALNY — info, opis, historia ============ */
+.map-popup .map-popup-loading {
+    color: var(--text-secondary, #64748b);
+    font-size: 0.88rem;
+    padding: 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.map-popup .map-popup-empty {
+    color: var(--text-secondary, #64748b);
+    font-size: 0.88rem;
+    font-style: italic;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 6px 0;
+}
+.map-popup .map-popup-empty i {
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+.map-popup .map-popup-thumb-link {
+    display: block;
+    margin: 4px 0 10px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #111;
+    border: 1px solid var(--border-color, #e2e8f0);
+    text-decoration: none;
+    line-height: 0;
+    transition: filter 0.15s ease;
+}
+.map-popup .map-popup-thumb-link:hover {
+    filter: brightness(0.95);
+}
+.map-popup .map-popup-thumb {
+    display: block;
+    width: 100%;
+    max-height: 220px;
+    object-fit: cover;
+    border-radius: 0;
+}
+
+.map-popup .map-popup-section-title {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: var(--accent-color, #4363D8);
+    margin: 8px 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.map-popup .map-popup-opis,
+.map-popup .map-popup-historia {
+    font-size: 0.88rem;
+    line-height: 1.45;
+    color: var(--text-primary, #1f2937);
+    margin-bottom: 4px;
+}
+
+.dark-mode .map-popup .map-popup-opis,
+.dark-mode .map-popup .map-popup-historia,
+html.dark-mode .map-popup .map-popup-opis,
+html.dark-mode .map-popup .map-popup-historia,
+body.dark-mode .map-popup .map-popup-opis,
+body.dark-mode .map-popup .map-popup-historia {
+    color: #e5e7eb;
+}
+
+.map-popup .map-popup-opis p,
+.map-popup .map-popup-historia p {
+    margin: 0 0 6px;
+}
+.map-popup .map-popup-opis p:last-child,
+.map-popup .map-popup-historia p:last-child {
+    margin-bottom: 0;
+}
+
+.map-popup .map-popup-historia {
+    padding-top: 4px;
+    margin-top: 4px;
+    border-top: 1px dashed var(--border-color, #e2e8f0);
+}
+
+/* ============ PUNKTY HISTORYCZNE — popup z galerią ============
+   Wzorzec z "Projekt Mapa Czarna" (FastAPI). */
+.hp-popup {
+    font-family: Inter, system-ui, sans-serif;
+    color: var(--text-primary, #1f2937);
+    line-height: 1.4;
+}
+.hp-popup .hp-popup-title {
+    margin: 0 0 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #3e2723;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 6px;
+}
+.hp-popup .hp-popup-description {
+    font-size: 0.88rem;
+    margin-bottom: 10px;
+    color: #1f2937;
+    white-space: pre-wrap;
+}
+.hp-popup .hp-popup-photos {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin: 10px 0;
+}
+.hp-popup .hp-popup-photo {
+    margin: 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #111;
+    cursor: zoom-in;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.hp-popup .hp-popup-photo:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+.hp-popup .hp-popup-photo img {
+    display: block;
+    width: 100%;
+    max-height: 220px;
+    object-fit: cover;
+    cursor: zoom-in;
+}
+.hp-popup .hp-popup-photo figcaption {
+    background: rgba(255, 248, 220, 0.95);
+    color: #3e2723;
+    font-size: 0.78rem;
+    padding: 6px 10px;
+    line-height: 1.3;
+    border-top: 1px solid #d7c89e;
+}
+.hp-popup .hp-popup-source {
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px dashed #e2e8f0;
+    font-style: italic;
+}
+.hp-popup .hp-popup-source strong {
+    font-style: normal;
+    color: #475569;
+}
+
+/* Dark mode */
+.dark-mode .hp-popup,
+html.dark-mode .hp-popup,
+body.dark-mode .hp-popup {
+    color: #e5e7eb;
+}
+.dark-mode .hp-popup .hp-popup-title,
+html.dark-mode .hp-popup .hp-popup-title,
+body.dark-mode .hp-popup .hp-popup-title {
+    color: #f3e5c4;
+    border-bottom-color: #44403c;
+}
+.dark-mode .hp-popup .hp-popup-description,
+html.dark-mode .hp-popup .hp-popup-description,
+body.dark-mode .hp-popup .hp-popup-description {
+    color: #e5e7eb;
+}
+.dark-mode .hp-popup .hp-popup-photo,
+html.dark-mode .hp-popup .hp-popup-photo,
+body.dark-mode .hp-popup .hp-popup-photo {
+    border-color: #44403c;
+}
+.dark-mode .hp-popup .hp-popup-photo figcaption,
+html.dark-mode .hp-popup .hp-popup-photo figcaption,
+body.dark-mode .hp-popup .hp-popup-photo figcaption {
+    background: #2a2418;
+    color: #f3e5c4;
+    border-top-color: #44403c;
+}
+.dark-mode .hp-popup .hp-popup-source,
+html.dark-mode .hp-popup .hp-popup-source,
+body.dark-mode .hp-popup .hp-popup-source {
+    color: #94a3b8;
+    border-top-color: #44403c;
+}
+
+/* Modal powiększenia zdjęcia */
+.hp-photo-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.hp-photo-modal.open {
+    display: flex;
+}
+.hp-photo-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    cursor: zoom-out;
+}
+.hp-photo-modal-card {
+    position: relative;
+    max-width: 95vw;
+    max-height: 95vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    z-index: 1;
+}
+.hp-photo-modal-img {
+    max-width: 95vw;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
+    background: #111;
+}
+.hp-photo-modal-caption {
+    color: #f3e5c4;
+    font-size: 0.9rem;
+    text-align: center;
+    max-width: 80vw;
+    line-height: 1.4;
+    padding: 0 16px;
+}
+.hp-photo-modal-close {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: white;
+    border: none;
+    font-size: 1.4rem;
+    line-height: 1;
+    color: #1f2937;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+.hp-photo-modal-close:hover {
+    background: #f1f5f9;
+}
+
 .leaflet-control-layers {
     background: var(--bg-panel);
     border-radius: 8px;

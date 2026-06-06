@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"czarna-mapa/internal/db"
 	"czarna-mapa/internal/service"
+	"czarna-mapa/internal/windowstate"
 	"embed"
 	"fmt"
 	"io/fs"
@@ -12,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/webview/webview_go"
@@ -92,6 +94,8 @@ func main() {
 	mux.HandleFunc("/api/genealogia/pdf/", app.handleFamilyCardPDF)
 	mux.HandleFunc("/protokoly/", app.handleProtokoly)
 	mux.HandleFunc("/history_photos/", app.handleHistoryPhotos)
+	mux.HandleFunc("/point_photos/", app.handlePointPhotos)
+	mux.HandleFunc("/obj_thumb", app.handleObjThumb)
 	mux.HandleFunc("/location_favicon", app.handleLocationFavicon)
 	mux.HandleFunc("/location_js/location-config.js", app.handleLocationConfigJS)
 	mux.HandleFunc("/mapa/mapa.jpg", app.handleMapaJPG)
@@ -133,13 +137,114 @@ func main() {
 	url := fmt.Sprintf("http://127.0.0.1:%d%s", port, startPath)
 	log.Printf("Otwieram okno: %s", url)
 
+	// Wczytaj zapamiętany stan okna (rozmiar, pozycja, zmaksymalizowanie).
+	winState := windowstate.Load(dataDir)
+	log.Printf("Stan okna: %dx%d @(%d,%d) max=%v",
+		winState.Width, winState.Height, winState.X, winState.Y, winState.Maximized)
+
 	w := webview.New(true) // true = debug (konsola devtools dostępna)
 	defer w.Destroy()
 	w.SetTitle("Mapa Katastralna Gminy Czarna")
 	setWindowIcon(w.Window())
-	w.SetSize(1400, 900, webview.HintNone)
+	w.SetSize(winState.Width, winState.Height, webview.HintNone)
+	// Ustaw pozycję i stan zmaksymalizowania (Win32, tylko Windows).
+	hwnd := hwndFromWebview(w)
+	applyWindowState(hwnd, winState)
 	w.Navigate(url)
+
+	// Polling stanu okna w tle - zapisuje do pliku gdy user zmieni rozmiar/pozycję.
+	startWindowStateWatcher(hwnd, dataDir, winState)
+
 	w.Run()
+
+	// Przy zamknięciu: ostatni zapis aktualnego stanu.
+	if final, err := readWindowState(hwnd); err == nil {
+		_ = windowstate.Save(dataDir, final)
+	}
+}
+
+// hwndFromWebview konwertuje unsafe.Pointer z webview_go na uintptr (HWND).
+// Wrapper dodany dla bezpieczeństwa typów.
+func hwndFromWebview(w webview.WebView) uintptr {
+	return uintptr(w.Window())
+}
+
+// startWindowStateWatcher uruchamia goroutine, która co 2s sprawdza
+// aktualny rozmiar/pozycję/zmaksymalizowanie okna i zapisuje do pliku
+// gdy cokolwiek się zmieni. Pamięta ostatni "normalny" rect, żeby po
+// odmaksymalizowaniu przywrócić właściwy rozmiar.
+func startWindowStateWatcher(hwnd uintptr, dataDir string, initial windowstate.State) {
+	if dataDir == "" {
+		return
+	}
+	var (
+		mu        sync.Mutex
+		lastSaved windowstate.State = initial
+		// lastNormal: ostatni rect odczytany GDY okno NIE było zmaksymalizowane.
+		// To jest rozmiar do przywrócenia po WM_SYSCOMMAND/SC_RESTORE.
+		lastNormal Rect
+	)
+	if !initial.Maximized && initial.Width > 0 && initial.Height > 0 {
+		lastNormal = Rect{
+			Left:   int32(initial.X),
+			Top:    int32(initial.Y),
+			Right:  int32(initial.X + initial.Width),
+			Bottom: int32(initial.Y + initial.Height),
+		}
+	}
+
+	go func() {
+		ticker := time.NewTicker(2 * time.Second)
+		defer ticker.Stop()
+		for range ticker.C {
+			cur, err := readWindowState(hwnd)
+			if err != nil {
+				continue
+			}
+			mu.Lock()
+			if !cur.Maximized {
+				lastNormal = Rect{
+					Left:   int32(cur.X),
+					Top:    int32(cur.Y),
+					Right:  int32(cur.X + cur.Width),
+					Bottom: int32(cur.Y + cur.Height),
+				}
+			} else if lastNormal.Width() > 0 && lastNormal.Height() > 0 {
+				// Przy zapisie zmaksymalizowanego okna zachowaj ostatni normalny rect.
+				cur.X = lastNormal.X()
+				cur.Y = lastNormal.Y()
+				cur.Width = lastNormal.Width()
+				cur.Height = lastNormal.Height()
+			}
+			changed := cur != lastSaved
+			if changed {
+				_ = windowstate.Save(dataDir, cur)
+				lastSaved = cur
+			}
+			mu.Unlock()
+		}
+	}()
+}
+
+// readWindowState odczytuje aktualny rect i stan zmaksymalizowania z Win32.
+func readWindowState(hwnd uintptr) (windowstate.State, error) {
+	r, err := GetWindowRect(hwnd)
+	if err != nil {
+		return windowstate.State{}, err
+	}
+	return windowstate.State{
+		X:         r.X(),
+		Y:         r.Y(),
+		Width:     r.Width(),
+		Height:    r.Height(),
+		Maximized: IsZoomed(hwnd),
+	}, nil
+}
+
+// applyWindowState ustawia pozycję/rozmiar/zmaksymalizowanie okna.
+// Placeholder na platformy inne niż Windows (pusty w *_other.go).
+func applyWindowState(hwnd uintptr, s windowstate.State) {
+	applyWindowStateOS(hwnd, s)
 }
 
 func (a *App) handleDynamicIndex(w http.ResponseWriter, r *http.Request, frontendFS fs.FS) {

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Punkty Historyczne — edytor</title>
+  <link rel="icon" href="/location_favicon" type="image/x-icon">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+  <script src="/assets/js/api.js"></script>
+  <style>
+    :root{
+      --primary-gradient:linear-gradient(135deg,#8b4513 0%,#3e2723 100%);
+      --primary:#8b4513;
+      --primary-soft:#f3e5c4;
+      --danger:#f56565;
+      --success:#48bb78;
+      --bg:#f7fafc;
+      --card:#fff;
+      --text:#2d3748;
+      --muted:#718096;
+      --border:#e2e8f0;
+      --radius:12px;
+      --shadow:0 10px 25px rgba(0,0,0,.1);
+      --header:64px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+    .app-container{height:100%;display:flex;flex-direction:column}
+    .top-bar{height:var(--header);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;box-shadow:0 1px 3px rgba(0,0,0,.08);flex-shrink:0}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand i{font-size:1.5rem;background:var(--primary-gradient);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .brand h1{font-size:1.2rem}
+    .brand small{color:var(--muted);font-size:.8rem;margin-left:8px}
+    .top-controls{display:flex;gap:10px;align-items:center}
+    .top-btn{padding:.5rem .9rem;border-radius:8px;border:1px solid var(--border);background:white;color:var(--text);font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;text-decoration:none}
+    .top-btn:hover{background:#f8fafc}
+    .top-btn.primary{background:var(--primary);color:white;border-color:var(--primary)}
+    .top-btn.primary:hover{background:#6d3410}
+
+    .main{flex:1;display:grid;grid-template-columns:340px 1fr;overflow:hidden}
+
+    /* ====== LEWA KOLUMNA: LISTA ====== */
+    .left-pane{background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+    .left-head{padding:14px 16px;border-bottom:1px solid var(--border);background:#faf7f0;display:flex;align-items:center;gap:8px}
+    .left-head i{color:var(--primary);font-size:1.1rem}
+    .left-head h2{font-size:1rem;color:#3e2723}
+    .left-head .badge{margin-left:auto;background:var(--primary-soft);color:#3e2723;padding:2px 10px;border-radius:999px;font-size:.78rem;font-weight:700}
+    .left-search{padding:10px 12px;border-bottom:1px solid var(--border)}
+    .left-search input{width:100%;padding:.5rem .75rem;border:1px solid var(--border);border-radius:8px;font-size:.88rem}
+    .left-list{flex:1;overflow-y:auto}
+    .object-card{display:grid;grid-template-columns:48px 1fr;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:.15s}
+    .object-card:hover{background:#faf7f0}
+    .object-card.active{background:var(--primary-soft);border-left:3px solid var(--primary);padding-left:11px}
+    .object-card .thumb{width:48px;height:48px;border-radius:8px;background:#e2e8f0 center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.3rem;overflow:hidden;flex-shrink:0}
+    .object-card .thumb img{width:100%;height:100%;object-fit:cover}
+    .object-card .name{font-weight:600;font-size:.92rem;color:#1f2937;line-height:1.2;word-break:break-word}
+    .object-card .meta{font-size:.72rem;color:var(--muted);margin-top:2px;display:flex;gap:8px;align-items:center}
+    .object-card .empty{color:#cbd5e0;font-size:.75rem;font-style:italic}
+
+    /* ====== PRAWA KOLUMNA: EDYCJA ====== */
+    .right-pane{display:flex;flex-direction:column;overflow:hidden}
+    .editor-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#94a3b8;padding:40px;text-align:center}
+    .editor-empty i{font-size:3.5rem;margin-bottom:14px;color:#cbd5e0}
+    .editor-empty p{max-width:380px;line-height:1.5}
+
+    .editor{display:none;flex:1;flex-direction:column;overflow:hidden}
+    .editor.open{display:flex}
+    .editor-head{padding:16px 22px;background:linear-gradient(135deg,#3e2723 0%,#5d4037 100%);color:#f3e5c4;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .editor-head h2{font-family:'Playfair Display',serif;font-size:1.2rem;display:flex;gap:10px;align-items:center;margin:0}
+    .editor-head h2 i{font-size:1rem;opacity:.85}
+    .editor-head .actions{display:flex;gap:8px}
+    .editor-head .actions button{padding:.4rem .8rem;border-radius:8px;border:1px solid rgba(243,229,196,.3);background:rgba(255,255,255,.08);color:#f3e5c4;font-weight:600;cursor:pointer;font-size:.85rem;display:inline-flex;align-items:center;gap:.4rem}
+    .editor-head .actions button:hover{background:rgba(255,255,255,.18)}
+    .editor-head .actions button.danger{background:#c53030;border-color:#c53030;color:#fff}
+    .editor-head .actions button.danger:hover{background:#9b2c2c}
+    .editor-body{flex:1;overflow-y:auto;padding:20px 22px;display:flex;flex-direction:column;gap:18px}
+
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field label{font-weight:700;font-size:.82rem;color:#4a5568;display:flex;align-items:center;gap:6px}
+    .field label .hint{font-weight:400;color:var(--muted);font-size:.75rem}
+    .field input,.field textarea{width:100%;padding:.65rem .8rem;border:1px solid var(--border);border-radius:8px;font-size:.92rem;font-family:inherit;background:white;color:var(--text);resize:vertical}
+    .field input:focus,.field textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(139,69,19,.15)}
+    .field textarea{min-height:90px;line-height:1.5}
+    .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+    /* Galeria */
+    .gallery-block{background:#faf7f0;border:1px solid #e9ddc0;border-radius:var(--radius);padding:14px 16px}
+    .gallery-block h3{font-size:.95rem;color:#3e2723;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+    .gallery-block h3 .count{background:var(--primary-soft);color:#3e2723;padding:2px 10px;border-radius:999px;font-size:.75rem;margin-left:auto;font-weight:700}
+    .gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+    .photo-card{background:white;border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+    .photo-card .photo-img{height:140px;background:#1f2937 center/cover no-repeat;position:relative;cursor:zoom-in}
+    .photo-card .photo-img .photo-actions{position:absolute;top:6px;right:6px;display:flex;gap:4px}
+    .photo-card .photo-img button{width:28px;height:28px;border-radius:6px;border:0;background:rgba(0,0,0,.55);color:white;cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+    .photo-card .photo-img button:hover{background:rgba(0,0,0,.8)}
+    .photo-card .photo-img .photo-position{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.6);color:white;padding:2px 8px;border-radius:999px;font-size:.72rem;font-weight:700}
+    .photo-card .photo-caption{padding:8px 10px;display:flex;flex-direction:column;gap:4px}
+    .photo-card .photo-caption input{border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.82rem;font-family:inherit;background:white}
+    .photo-card .photo-caption input:focus{outline:none;border-color:var(--primary)}
+    .photo-card .photo-caption .reorder{display:flex;gap:4px;margin-top:2px}
+    .photo-card .photo-caption .reorder button{flex:1;padding:4px;border:1px solid var(--border);background:white;border-radius:6px;cursor:pointer;font-size:.78rem;color:var(--muted)}
+    .photo-card .photo-caption .reorder button:hover:not(:disabled){background:var(--primary-soft);color:var(--primary);border-color:var(--primary)}
+    .photo-card .photo-caption .reorder button:disabled{opacity:.4;cursor:not-allowed}
+
+    .dropzone{border:2px dashed #c4a878;background:#fffdf5;border-radius:10px;padding:22px 16px;text-align:center;cursor:pointer;transition:.15s}
+    .dropzone:hover,.dropzone.drag-over{background:#fef5e0;border-color:var(--primary);color:var(--primary)}
+    .dropzone i{font-size:1.8rem;color:var(--primary);display:block;margin-bottom:8px}
+    .dropzone p{font-size:.88rem;color:#5d4037;margin-bottom:4px}
+    .dropzone small{color:var(--muted);font-size:.75rem}
+
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card);padding:.7rem 1.4rem;border-radius:var(--radius);box-shadow:var(--shadow);font-weight:600;opacity:0;transition:.25s;pointer-events:none;z-index:5000;display:flex;align-items:center;gap:8px}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .toast.success{background:#f0fff4;color:#22543d;border:1px solid #9ae6b4}
+    .toast.error{background:#fff5f5;color:#742a2a;border:1px solid #feb2b2}
+
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:4000;align-items:center;justify-content:center}
+    .modal-bg.open{display:flex}
+    .modal-confirm{background:white;border-radius:12px;padding:22px 24px;max-width:420px;width:90%;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+    .modal-confirm h3{margin-bottom:10px;color:#1f2937;display:flex;align-items:center;gap:8px}
+    .modal-confirm p{color:#4a5568;line-height:1.5;margin-bottom:18px}
+    .modal-confirm .buttons{display:flex;gap:8px;justify-content:flex-end}
+    .modal-confirm .buttons button{padding:.55rem 1.1rem;border-radius:8px;border:1px solid var(--border);background:white;cursor:pointer;font-weight:600}
+    .modal-confirm .buttons .btn-confirm-danger{background:var(--danger);color:white;border-color:var(--danger)}
+    .modal-confirm .buttons .btn-confirm-danger:hover{background:#c53030}
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header class="top-bar">
+      <div class="brand">
+        <i class="fas fa-landmark"></i>
+        <h1>Punkty Historyczne <small>obiekty specjalne z opisem i galerią</small></h1>
+      </div>
+      <div class="top-controls">
+        <a href="/mapa/mapa.html" class="top-btn"><i class="fas fa-map"></i> Mapa</a>
+        <a href="/index.html" class="top-btn"><i class="fas fa-home"></i> Menu</a>
+      </div>
+    </header>
+
+    <div class="main">
+      <aside class="left-pane">
+        <div class="left-head">
+          <i class="fas fa-list"></i>
+          <h2>Obiekty specjalne</h2>
+          <span class="badge" id="objectCount">0</span>
+        </div>
+        <div class="left-search">
+          <input type="text" id="searchInput" placeholder="🔍 Szukaj obiektu...">
+        </div>
+        <div class="left-list" id="objectList">
+          <div style="padding:30px 16px;text-align:center;color:var(--muted);">
+            <i class="fas fa-spinner fa-spin"></i> Ładowanie...
+          </div>
+        </div>
+      </aside>
+
+      <main class="right-pane">
+        <div class="editor-empty" id="editorEmpty">
+          <i class="fas fa-hand-pointer"></i>
+          <h2 style="margin-bottom:8px;color:#475569;">Wybierz obiekt z listy</h2>
+          <p>Kliknij obiekt specjalny po lewej stronie, aby edytować jego opis, źródło i galerię zdjęć.</p>
+          <p style="margin-top:14px;font-size:.85rem;color:#94a3b8;">
+            <i class="fas fa-info-circle"></i>
+            Obiekty specjalne (kategoria <code>obiekt_specjalny</code>) pojawiają się na mapie jako brązowe punkty z opisem i zdjęciami.
+          </p>
+        </div>
+
+        <div class="editor" id="editor">
+          <div class="editor-head">
+            <h2><i class="fas fa-monument"></i> <span id="editorObjectName">—</span></h2>
+            <div class="actions">
+              <button id="saveMetaBtn"><i class="fas fa-save"></i> Zapisz opis</button>
+            </div>
+          </div>
+          <div class="editor-body">
+            <div class="field">
+              <label>Nazwa wyświetlana <span class="hint">(display_name — w popupie mapy)</span></label>
+              <input type="text" id="fieldDisplayName" placeholder="np. Dawny dworzec kolejowy w Czarnej">
+            </div>
+
+            <div class="field">
+              <label>Opis <span class="hint">(description — tekst w popupie, przed zdjęciami)</span></label>
+              <textarea id="fieldDescription" rows="5" placeholder="Opis obiektu: historia, lokalizacja, ciekawostki..."></textarea>
+            </div>
+
+            <div class="field">
+              <label>Źródło <span class="hint">(source_note — cytat, autor, archiwum)</span></label>
+              <textarea id="fieldSourceNote" rows="2" placeholder="np. Archiwum Główne Akt Dawnych, sygn. 123/4, s. 12"></textarea>
+            </div>
+
+            <div class="gallery-block">
+              <h3><i class="fas fa-images"></i> Galeria zdjęć <span class="count" id="photoCount">0</span></h3>
+
+              <div class="dropzone" id="dropzone">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p><strong>Kliknij lub przeciągnij zdjęcia</strong></p>
+                <small>JPG, PNG, WEBP, GIF — wiele plików naraz</small>
+                <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
+              </div>
+
+              <div class="gallery-grid" id="galleryGrid" style="margin-top:14px;"></div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="modal-bg" id="confirmModal">
+    <div class="modal-confirm">
+      <h3 id="confirmTitle">Potwierdź</h3>
+      <p id="confirmText">Czy na pewno?</p>
+      <div class="buttons">
+        <button id="confirmCancel">Anuluj</button>
+        <button class="btn-confirm-danger" id="confirmOk">Usuń</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      const PHOTO_BASE = '/point_photos/';
+      const THUMB_BASE = '/obj_thumb?path=point_photos/';
+
+      const $ = (sel) => document.querySelector(sel);
+      const $$ = (sel) => document.querySelectorAll(sel);
+
+      const state = {
+        objects: [],         // [{object_name, display_name, description, source_note, photo_count, first_photo}]
+        filtered: [],
+        selected: null,      // object_name
+        detail: null,        // {object_name, display_name, description, source_note, photos:[]}
+        searchTerm: '',
+      };
+
+      const toast = (msg, type = 'success') => {
+        const t = $('#toast');
+        t.className = 'toast show ' + type;
+        const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+        t.innerHTML = '<i class="fas fa-' + icon + '"></i> ' + msg;
+        setTimeout(() => t.classList.remove('show'), 2400);
+      };
+
+      const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[c]));
+
+      // ====== LISTA OBIEKTÓW ======
+      const renderList = () => {
+        const list = $('#objectList');
+        const term = state.searchTerm.trim().toLowerCase();
+        const items = state.objects.filter((o) =>
+          !term ||
+          (o.display_name || '').toLowerCase().includes(term) ||
+          (o.object_name || '').toLowerCase().includes(term) ||
+          (o.description || '').toLowerCase().includes(term)
+        );
+        state.filtered = items;
+        $('#objectCount').textContent = state.objects.length;
+
+        if (items.length === 0) {
+          list.innerHTML = '<div style="padding:30px 16px;text-align:center;color:var(--muted);font-size:.88rem;">' +
+            (state.objects.length === 0
+              ? 'Brak obiektów specjalnych w bazie.'
+              : 'Brak wyników wyszukiwania.') +
+            '</div>';
+          return;
+        }
+
+        list.innerHTML = items.map((o) => {
+          const firstPhoto = (o.photos && o.photos.length > 0) ? o.photos[0].filename : null;
+          const photoCount = (o.photos && o.photos.length) || 0;
+          const thumb = firstPhoto
+            ? '<img src="' + THUMB_BASE + encodeURIComponent(firstPhoto) + '&w=80" alt="">'
+            : '<i class="fas fa-landmark"></i>';
+          const isActive = o.object_name === state.selected ? ' active' : '';
+          const name = o.display_name || o.object_name;
+          return '<div class="object-card' + isActive + '" data-name="' + esc(o.object_name) + '">' +
+            '<div class="thumb">' + thumb + '</div>' +
+            '<div>' +
+              '<div class="name">' + esc(name) + '</div>' +
+              '<div class="meta">' +
+                '<span><i class="fas fa-images"></i> ' + photoCount + '</span>' +
+                (firstPhoto ? '' : '<span class="empty">brak zdjęcia</span>') +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+
+        list.querySelectorAll('.object-card').forEach((el) => {
+          el.addEventListener('click', () => selectObject(el.dataset.name));
+        });
+      };
+
+      // ====== SZCZEGÓŁY OBIEKTU ======
+      const selectObject = async (objectName) => {
+        state.selected = objectName;
+        state.detail = null;
+        renderList();
+
+        $('#editorEmpty').style.display = 'none';
+        const ed = $('#editor');
+        ed.classList.add('open');
+        $('#editorObjectName').textContent = objectName;
+
+        try {
+          const res = await window.API.punktyHistoryczne.pobierz(objectName);
+          if (!res) {
+            toast('Nie udało się pobrać obiektu.', 'error');
+            return;
+          }
+          state.detail = res;
+          fillEditor(res);
+        } catch (e) {
+          toast('Błąd: ' + e.message, 'error');
+        }
+      };
+
+      const fillEditor = (d) => {
+        $('#fieldDisplayName').value = d.display_name || '';
+        $('#fieldDescription').value = d.description || '';
+        $('#fieldSourceNote').value = d.source_note || '';
+        renderGallery(d.photos || []);
+      };
+
+      const renderGallery = (photos) => {
+        const grid = $('#galleryGrid');
+        $('#photoCount').textContent = photos.length;
+        if (photos.length === 0) {
+          grid.innerHTML = '<div style="grid-column:1/-1;padding:20px;text-align:center;color:var(--muted);font-size:.85rem;">' +
+            '<i class="fas fa-image" style="font-size:1.6rem;display:block;margin-bottom:8px;color:#cbd5e0;"></i>' +
+            'Brak zdjęć. Przeciągnij pliki powyżej, aby dodać.' +
+          '</div>';
+          return;
+        }
+        grid.innerHTML = photos.map((p, idx) => {
+          const thumbSrc = THUMB_BASE + encodeURIComponent(p.filename) + '&w=240';
+          return '<div class="photo-card" data-id="' + p.id + '">' +
+            '<div class="photo-img" style="background-image:url(\'' + thumbSrc + '\')" data-orig="' + PHOTO_BASE + encodeURIComponent(p.filename) + '">' +
+              '<span class="photo-position">#' + (idx + 1) + '</span>' +
+              '<div class="photo-actions">' +
+                '<button title="Powiększ" class="btn-zoom"><i class="fas fa-search-plus"></i></button>' +
+                '<button title="Przenieś w górę" class="btn-up"' + (idx === 0 ? ' disabled' : '') + '><i class="fas fa-arrow-up"></i></button>' +
+                '<button title="Przenieś w dół" class="btn-down"' + (idx === photos.length - 1 ? ' disabled' : '') + '><i class="fas fa-arrow-down"></i></button>' +
+                '<button title="Usuń" class="btn-delete-photo"><i class="fas fa-trash"></i></button>' +
+              '</div>' +
+            '</div>' +
+            '<div class="photo-caption">' +
+              '<input type="text" class="caption-input" placeholder="Podpis zdjęcia..." value="' + esc(p.caption || '') + '" maxlength="500">' +
+            '</div>' +
+          '</div>';
+        }).join('');
+
+        // Bind akcje
+        grid.querySelectorAll('.photo-card').forEach((card) => {
+          const id = parseInt(card.dataset.id, 10);
+          card.querySelector('.btn-zoom').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const orig = card.querySelector('.photo-img').dataset.orig;
+            window.open(orig, '_blank');
+          });
+          card.querySelector('.btn-delete-photo').addEventListener('click', (e) => {
+            e.stopPropagation();
+            confirmDelete('Usuń zdjęcie?', 'Tej operacji nie można cofnąć.', async () => {
+              const res = await window.API.punktyHistoryczne.usunZdjecie(id);
+              if (res) {
+                toast('Zdjęcie usunięte.');
+                if (state.detail) state.detail.photos = state.detail.photos.filter((p) => p.id !== id);
+                renderGallery(state.detail?.photos || []);
+                await reloadList();
+              } else {
+                toast('Błąd usuwania.', 'error');
+              }
+            });
+          });
+          card.querySelector('.btn-up').addEventListener('click', (e) => {
+            e.stopPropagation();
+            movePhoto(id, -1);
+          });
+          card.querySelector('.btn-down').addEventListener('click', (e) => {
+            e.stopPropagation();
+            movePhoto(id, 1);
+          });
+          const capInput = card.querySelector('.caption-input');
+          let capTimer = null;
+          capInput.addEventListener('input', () => {
+            clearTimeout(capTimer);
+            const newCaption = capInput.value;
+            capTimer = setTimeout(async () => {
+              const res = await window.API.punktyHistoryczne.aktualizujCaption(id, newCaption);
+              if (res) {
+                if (state.detail) {
+                  const ph = state.detail.photos.find((p) => p.id === id);
+                  if (ph) ph.caption = newCaption;
+                }
+              } else {
+                toast('Błąd zapisu podpisu.', 'error');
+              }
+            }, 700);
+          });
+        });
+      };
+
+      const movePhoto = async (id, direction) => {
+        if (!state.detail) return;
+        const arr = state.detail.photos;
+        const idx = arr.findIndex((p) => p.id === id);
+        if (idx < 0) return;
+        const newIdx = idx + direction;
+        if (newIdx < 0 || newIdx >= arr.length) return;
+        [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+        renderGallery(arr);
+        // Wyślij nową kolejność
+        const res = await window.API.punktyHistoryczne.aktualizujKolejnosc(
+          state.selected, arr.map((p) => p.id)
+        );
+        if (!res) {
+          toast('Błąd zmiany kolejności.', 'error');
+        }
+      };
+
+      // ====== UPLOAD ======
+      const uploadFile = async (file) => {
+        if (!state.selected) return;
+        if (!file.type.startsWith('image/')) {
+          toast('Plik "' + file.name + '" nie jest obrazem.', 'error');
+          return;
+        }
+        const dataUrl = await fileToDataUrl(file);
+        try {
+          const res = await window.API.punktyHistoryczne.dodajZdjecie(
+            state.selected, dataUrl, file.name
+          );
+          // Backend zwraca obiekt PointPhoto bezpośrednio (id, filename, ...)
+          if (res && res.id) {
+            if (state.detail) state.detail.photos.push(res);
+            renderGallery(state.detail?.photos || []);
+            toast('Dodano "' + file.name + '".');
+            await reloadList();
+          } else {
+            toast('Błąd uploadu: ' + (res?.error || 'nieznany błąd'), 'error');
+          }
+        } catch (e) {
+          toast('Wyjątek: ' + e.message, 'error');
+        }
+      };
+
+      const fileToDataUrl = (file) => new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result);
+        r.onerror = () => reject(new Error('FileReader error'));
+        r.readAsDataURL(file);
+      });
+
+      // ====== ZAPIS METADANYCH ======
+      const saveMeta = async () => {
+        if (!state.selected) return;
+        const res = await window.API.punktyHistoryczne.zapisz({
+          object_name: state.selected,
+          display_name: $('#fieldDisplayName').value,
+          description: $('#fieldDescription').value,
+          source_note: $('#fieldSourceNote').value,
+        });
+        if (res) {
+          toast('Zapisano opis i źródło.');
+          await reloadList();
+        } else {
+          toast('Błąd zapisu.', 'error');
+        }
+      };
+
+      // ====== POTWIERDZENIE ======
+      const confirmDelete = (title, text, onOk) => {
+        $('#confirmTitle').textContent = title;
+        $('#confirmText').textContent = text;
+        $('#confirmOk').textContent = 'Usuń';
+        const m = $('#confirmModal');
+        m.classList.add('open');
+        const close = () => {
+          m.classList.remove('open');
+          $('#confirmOk').onclick = null;
+          $('#confirmCancel').onclick = null;
+        };
+        $('#confirmOk').onclick = () => { close(); onOk(); };
+        $('#confirmCancel').onclick = close;
+      };
+
+      // ====== ŁADOWANIE LISTY ======
+      const reloadList = async () => {
+        try {
+          const res = await window.API.punktyHistoryczne.pobierzListeObiektow();
+          // Backend zwraca bezpośrednio []HistoricalPoint (bez envelope).
+          if (Array.isArray(res)) {
+            state.objects = res;
+            renderList();
+          } else if (res && Array.isArray(res.objects)) {
+            state.objects = res.objects;
+            renderList();
+          } else {
+            toast('Błąd ładowania listy.', 'error');
+          }
+        } catch (e) {
+          toast('Wyjątek ładowania: ' + e.message, 'error');
+        }
+      };
+
+      // ====== INIT ======
+      document.addEventListener('DOMContentLoaded', async () => {
+        $('#searchInput').addEventListener('input', (e) => {
+          state.searchTerm = e.target.value;
+          renderList();
+        });
+        $('#saveMetaBtn').addEventListener('click', saveMeta);
+
+        const dz = $('#dropzone');
+        const fi = $('#fileInput');
+        dz.addEventListener('click', () => fi.click());
+        dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('drag-over'); });
+        dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+        dz.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dz.classList.remove('drag-over');
+          if (!state.selected) {
+            toast('Najpierw wybierz obiekt z listy.', 'error');
+            return;
+          }
+          Array.from(e.dataTransfer.files).forEach(uploadFile);
+        });
+        fi.addEventListener('change', (e) => {
+          if (!state.selected) {
+            toast('Najpierw wybierz obiekt z listy.', 'error');
+            fi.value = '';
+            return;
+          }
+          Array.from(fi.files).forEach(uploadFile);
+          fi.value = '';
+        });
+
+        await reloadList();
+      });
+    })();
+  </script>
+</body>
+</html>

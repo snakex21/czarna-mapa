@@ -16,6 +16,19 @@ dist/
 *.db-journal
 *.log
 
+# Generated caches (runtime)
+data/obj_thumbs/
+data/point_photos/
+data/json/
+data/window_state.json
+data/owner_data_to_import.json
+
+# Test artifacts
+test_upload.png
+
+# Playwright MCP cache
+.playwright-mcp/
+
 # Environment
 .env
 

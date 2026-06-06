@@ -1,8 +1,9 @@
 # PROJECT_SKILL — Mapa Katastralna Czarna (Go + Wails)
 
 ## Język
-**Go 1.22+** z frameworkiem **Wails v2** (desktop app z webview).
+**Go 1.22+** z `webview/webview_go` (lekki wrapper na WebView2, NIE Wails v2 — to własny mini-RPC).
 Zero CGO — `modernc.org/sqlite` zamiast `mattn/go-sqlite3`.
+Miniatury JPG/PNG: `github.com/disintegration/imaging`.
 
 ## Architektura
 
@@ -25,6 +26,8 @@ czarna-mapa/
 │   │   ├── owner.go             # Właściciele, działki, CRUD
 │   │   ├── genealogy.go         # Drzewo genealogiczne, osoby
 │   │   ├── protocol.go          # Skanowane protokoły (JPG, base64)
+│   │   ├── obj_info.go          # Info obiektu (opis, historia, zdjęcie)
+│   │   ├── thumb.go             # Generowanie miniatur z cache dyskowym
 │   │   ├── demography.go        # Demografia
 │   │   └── config.go            # Konfiguracja mapy/systemu
 │   └── geo/
@@ -80,16 +83,36 @@ czarna-mapa/
 
 ### Metoda bindowana (odpowiednik Tauri command)
 ```go
-// app.go
-func (a *App) PobierzObiektyWidok(swLat, swLng, neLat, neLng float64) []models.Obiekt {
-    return service.PobierzObiekty(a.db, swLat, swLng, neLat, neLng)
+// rpc.go (nie app.go! — to NIE jest Wails, to ręczny JSON-RPC)
+func (a *App) dispatch(cmd string, args map[string]interface{}) (interface{}, error) {
+    switch cmd {
+    case "pobierz_obiekty_widok":
+        // ...
+    }
 }
+
+// Nowy case dodajemy TUTAJ, nie jako osobną metodę
 ```
 
 ### Frontend wywołanie
 ```js
-// JS — Wails automatycznie generuje binding
-const obiekty = await window.go.main.App.PobierzObiektyWidok(50.04, 21.22, 50.08, 21.26);
+// JS — ręczny RPC przez fetch
+const res = await fetch('/api/rpc', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({cmd: 'pobierz_obiekty_widok', args: {sw_lat: 50.04, sw_lng: 21.22, ne_lat: 50.08, ne_lng: 21.26}})
+});
+const obiekty = await res.json();
+```
+
+### Miniatura z cache (helper dla wszystkich widoków)
+```js
+// Thumbnail serwowany z cache dyskowego (data/obj_thumbs/<hash>_<w>w.jpg)
+const thumb = `/obj_thumb?path=${encodeURIComponent(srcRelPath)}&w=240`;
+// Obsługiwane srcRelPath:
+//   protokoly/<Klucz>/<plik>.jpg   → skan protokołu
+//   history_photos/<plik>.jpg      → zdjęcie miejscowości
+//   obj_photos/<id>/<plik>.jpg     → zdjęcie obiektu
 ```
 
 ### Dostęp do bazy

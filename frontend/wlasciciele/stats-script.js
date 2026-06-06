@@ -357,7 +357,7 @@ function clearHighlights(container) {
 }
 
 /**
- * Przyciski akcji: eksport wykresów, pokaz na mapie, eksport Excel, druk, share.
+ * Przyciski akcji: eksport wykresów, pokaz na mapie, eksport Excel, druk.
  */
 function initActionButtons() {
   // Eksport wykresów
@@ -416,7 +416,6 @@ function initActionButtons() {
   document.getElementById('compare-btn')?.addEventListener('click', openPeriodComparison);  // ← DODAJ TU
   document.getElementById('export-btn')?.addEventListener('click', exportToExcel);
   document.getElementById('print-btn')?.addEventListener('click', printReport);
-  document.getElementById('share-btn')?.addEventListener('click', shareReport);
 }
 
 /**
@@ -2690,47 +2689,6 @@ function generateReportHTML(sections) {
 </html > `;
 
   return html;
-}
-
-/** Otwiera modal z linkiem i kodem QR do udostępniania */
-function shareReport() {
-  const modal = document.getElementById('share-modal');
-  const linkInput = document.getElementById('share-link-input');
-  const qrcodeContainer = document.getElementById('qrcode');
-  const copyBtn = document.getElementById('copy-link-btn');
-
-  // Ustaw link w polu tekstowym
-  linkInput.value = window.location.href;
-
-  // Wyczyść poprzedni kod QR jeśli istnieje
-  qrcodeContainer.innerHTML = '';
-
-  // Generuj nowy kod QR
-  new QRCode(qrcodeContainer, {
-    text: window.location.href,
-    width: 256,
-    height: 256,
-    colorDark: '#000000',
-    colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.H
-  });
-
-  // Pokaż modal
-  modal.classList.add('active');
-
-  // Obsługa kopiowania linku
-  copyBtn.onclick = () => {
-    linkInput.select();
-    navigator.clipboard.writeText(window.location.href);
-    showToast('success', 'Sukces', 'Link skopiowany do schowka');
-  };
-
-  // Obsługa zamykania modalu
-  const closeBtn = modal.querySelector('.modal-close');
-  closeBtn.onclick = () => modal.classList.remove('active');
-  modal.onclick = (e) => {
-    if (e.target === modal) modal.classList.remove('active');
-  };
 }
 
 /**

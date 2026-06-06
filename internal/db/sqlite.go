@@ -51,5 +51,9 @@ func migrate(db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("błąd wykonania schematu: %w", err)
 	}
+	// Migracje dodatkowe (ALTER TABLE) wykonywane po pełnym schemacie.
+	if err := migrateExtra(db); err != nil {
+		return fmt.Errorf("migracje dodatkowe: %w", err)
+	}
 	return nil
 }
