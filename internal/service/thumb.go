@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/disintegration/imaging"
+	_ "golang.org/x/image/webp"
 )
 
 // ============================================================================
@@ -61,8 +62,8 @@ func GenerujThumbnail(dataDir, srcRel string, w int) (string, error) {
 		return "", err
 	}
 
-	// Klucz cache: hash(srcRel) + rozmiar pliku + w
-	sum := sha1.Sum([]byte(srcRel + "|" + strconv.FormatInt(srcInfo.Size(), 10) + "|" + strconv.Itoa(w)))
+	// Klucz cache obejmuje czas zmiany, również dla podmiany o tej samej długości.
+	sum := sha1.Sum([]byte(srcRel + "|" + strconv.FormatInt(srcInfo.Size(), 10) + "|" + strconv.FormatInt(srcInfo.ModTime().UnixNano(), 10) + "|" + strconv.Itoa(w)))
 	cacheKey := fmt.Sprintf("%x_%dw.jpg", sum, w)
 	cacheDir := filepath.Join(dataDir, ThumbBaseDir)
 	cachePath := filepath.Join(cacheDir, cacheKey)
