@@ -1,18 +1,17 @@
 @echo off
-title Dev - Mapa Czarna (Go + Wails)
+title Dev - Mapa Czarna (Go + WebView2)
 cd /d "%~dp0.."
 echo ========================================
 echo    MAPA KATASTRALNA - TRYB DEV
-echo    Go + Wails (hot-reload)
+echo    go run (okno WebView2 + konsola z logami)
 echo ========================================
 echo.
-where wails >nul 2>&1
+where go >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [BLAD] Wails CLI nie znaleziony!
-    echo Zainstaluj: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+    echo [BLAD] Go nie znaleziony! Zainstaluj: https://go.dev/dl/
     pause
     exit /b 1
 )
-echo [INFO] Uruchamianie w trybie dev z hot-reload...
-wails dev
+set CGO_ENABLED=1
+go run .
 pause
