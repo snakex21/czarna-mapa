@@ -42,3 +42,6 @@ Thumbs.db
 
 # Go build cache
 vendor/
+
+# Lokalne uruchomienia testowe (kopie bazy uzytkownika) - nigdy nie commitowac
+/.localrun/
