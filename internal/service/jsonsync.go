@@ -144,32 +144,65 @@ func exportOwnersJSON(db *sql.DB, path string) (int, error) {
 		rec["agriculturalPlots"] = []string{}
 		rec["realbuildingPlots"] = []string{}
 		rec["realagriculturalPlots"] = []string{}
+		rec["plotLinks"] = []map[string]interface{}{}
 		out[key] = rec
 		ownerIDs[id] = key
 	}
-	linkRows, err := db.Query(`SELECT dw.wlasciciel_id,o.nazwa_lub_numer,o.kategoria,COALESCE(dw.typ_posiadania,'') FROM dzialki_wlasciciele dw JOIN obiekty_geograficzne o ON o.id=dw.obiekt_id ORDER BY o.nazwa_lub_numer`)
-	if err == nil {
-		defer linkRows.Close()
-		for linkRows.Next() {
-			var oid int64
-			var num, cat, typ string
-			if linkRows.Scan(&oid, &num, &cat, &typ) != nil {
-				continue
-			}
-			key := ownerIDs[oid]
-			if key == "" {
-				continue
-			}
-			field := "agriculturalPlots"
-			if cat == "budowlana" {
-				field = "buildingPlots"
-			}
-			if strings.Contains(strings.ToLower(typ), "rzeczywista") {
-				field = "real" + field
-			}
-			arr, _ := out[key][field].([]string)
-			out[key][field] = append(arr, num)
+	// Powiązania działka-właściciel. Pola legacy (buildingPlots itd.) zostają
+	// dla zgodności ze starszymi wersjami, a pełna informacja (kategoria
+	// obiektu, typ_posiadania, opis_udzialu) trafia do "plotLinks".
+	linkRows, err := db.Query(`SELECT dw.wlasciciel_id,o.nazwa_lub_numer,o.kategoria,dw.typ_posiadania,dw.opis_udzialu FROM dzialki_wlasciciele dw JOIN obiekty_geograficzne o ON o.id=dw.obiekt_id ORDER BY o.nazwa_lub_numer,o.kategoria,COALESCE(dw.typ_posiadania,''),dw.id`)
+	if err != nil {
+		return 0, err
+	}
+	defer linkRows.Close()
+	for linkRows.Next() {
+		var oid int64
+		var num, cat string
+		var typ, opis sql.NullString
+		if err := linkRows.Scan(&oid, &num, &cat, &typ, &opis); err != nil {
+			return 0, err
 		}
+		key := ownerIDs[oid]
+		if key == "" {
+			continue
+		}
+		field := "agriculturalPlots"
+		if cat == "budowlana" {
+			field = "buildingPlots"
+		}
+		if strings.Contains(strings.ToLower(typ.String), "rzeczywista") {
+			field = "real" + field
+		}
+		arr, _ := out[key][field].([]string)
+		out[key][field] = append(arr, num)
+		link := map[string]interface{}{"plot": num, "kategoria": cat, "typ_posiadania": nullStr(typ), "opis_udzialu": nullStr(opis)}
+		links, _ := out[key]["plotLinks"].([]map[string]interface{})
+		out[key]["plotLinks"] = append(links, link)
+	}
+	if err := linkRows.Err(); err != nil {
+		return 0, err
+	}
+	relRows, err := db.Query(`SELECT wlasciciel_id_1,wlasciciel_id_2,typ_relacji,opis_relacji FROM powiazania_protokolow ORDER BY id`)
+	if err != nil {
+		return 0, err
+	}
+	defer relRows.Close()
+	for relRows.Next() {
+		var a, b int64
+		var typ, opis sql.NullString
+		if err := relRows.Scan(&a, &b, &typ, &opis); err != nil {
+			return 0, err
+		}
+		ka, kb := ownerIDs[a], ownerIDs[b]
+		if ka == "" || kb == "" {
+			continue
+		}
+		rels, _ := out[ka]["protocolRelations"].([]map[string]interface{})
+		out[ka]["protocolRelations"] = append(rels, map[string]interface{}{"ownerKey": kb, "typ_relacji": nullStr(typ), "opis_relacji": nullStr(opis)})
+	}
+	if err := relRows.Err(); err != nil {
+		return 0, err
 	}
 	return len(out), writeJSON(path, out)
 }
@@ -188,10 +221,18 @@ func exportParcelsJSON(db *sql.DB, path string) (int, error) {
 			return 0, err
 		}
 		rec := map[string]interface{}{"kategoria": cat}
-		if geom.Valid {
+		if geom.Valid && strings.TrimSpace(geom.String) != "" {
+			// "geometria" to stary format (pierścień [lat,lng]); "geojson"
+			// zachowuje dokładną geometrię (Point, LineString, wiele pierścieni).
 			rec["geometria"] = geoJSONToOldLatLng(geom.String)
+			if json.Valid([]byte(geom.String)) {
+				rec["geojson"] = json.RawMessage(geom.String)
+			}
 		}
 		out[num+"_"+cat] = rec
+	}
+	if err := rows.Err(); err != nil {
+		return 0, err
 	}
 	return len(out), writeJSON(path, out)
 }
@@ -257,23 +298,37 @@ func exportGenealogyJSON(db *sql.DB, path string) (int, error) {
 	}
 	spouses := map[int64][]int64{}
 	marriages := map[int64][]map[string]interface{}{}
-	mr, _ := db.Query(`SELECT malzonek1_id,malzonek2_id,rok_slubu FROM malzenstwa`)
-	if mr != nil {
-		defer mr.Close()
-		for mr.Next() {
-			var a, b int64
-			var y *int32
-			if mr.Scan(&a, &b, &y) == nil {
-				ja, oka := dbToJSON[a]
-				jb, okb := dbToJSON[b]
-				if oka && okb {
-					spouses[a] = append(spouses[a], jb)
-					spouses[b] = append(spouses[b], ja)
-					marriages[a] = append(marriages[a], map[string]interface{}{"spouseId": jb, "date": yearObj(y)})
-					marriages[b] = append(marriages[b], map[string]interface{}{"spouseId": ja, "date": yearObj(y)})
-				}
-			}
+	mr, err := db.Query(`SELECT malzonek1_id,malzonek2_id,rok_slubu,miesiac_slubu,dzien_slubu,data_slubu FROM malzenstwa ORDER BY malzonek1_id,malzonek2_id`)
+	if err != nil {
+		return 0, err
+	}
+	defer mr.Close()
+	for mr.Next() {
+		var a, b int64
+		var y, m, d *int32
+		var text sql.NullString
+		if err := mr.Scan(&a, &b, &y, &m, &d, &text); err != nil {
+			return 0, err
 		}
+		ja, oka := dbToJSON[a]
+		jb, okb := dbToJSON[b]
+		if !oka || !okb {
+			continue
+		}
+		date := marriageDateObj(y, m, d)
+		spouses[a] = append(spouses[a], jb)
+		spouses[b] = append(spouses[b], ja)
+		ma := map[string]interface{}{"spouseId": jb, "date": date}
+		mb := map[string]interface{}{"spouseId": ja, "date": date}
+		if text.Valid && text.String != "" {
+			ma["dateText"] = text.String
+			mb["dateText"] = text.String
+		}
+		marriages[a] = append(marriages[a], ma)
+		marriages[b] = append(marriages[b], mb)
+	}
+	if err := mr.Err(); err != nil {
+		return 0, err
 	}
 	persons := []map[string]interface{}{}
 	for _, r := range raws {
@@ -359,17 +414,25 @@ func importParcelsJSON(tx *sql.Tx, raw []byte) (int, error) {
 		if cat == "" {
 			cat = "rolna"
 		}
-		num := key
-		if i := strings.LastIndex(key, "_"); i > 0 {
-			num = key[:i]
+		num := parcelNumberFromKey(key, cat)
+		var geomStr string
+		if g, ok := rec["geojson"]; ok && g != nil {
+			b, err := json.Marshal(g)
+			if err != nil {
+				return 0, err
+			}
+			geomStr = string(b)
+		} else {
+			geomStr = oldGeomToGeoJSON(rec["geometria"])
 		}
-		geomStr := oldGeomToGeoJSON(rec["geometria"])
-		bbox := geo.CalculateBBox(geomStr)
-		var minLat, minLng, maxLat, maxLng interface{}
-		if bbox != nil {
-			minLng, minLat, maxLng, maxLat = (*bbox)[0], (*bbox)[1], (*bbox)[2], (*bbox)[3]
+		var geomVal, minLat, minLng, maxLat, maxLng interface{}
+		if geomStr != "" {
+			geomVal = geomStr
+			if bbox := geo.CalculateBBox(geomStr); bbox != nil {
+				minLng, minLat, maxLng, maxLat = (*bbox)[0], (*bbox)[1], (*bbox)[2], (*bbox)[3]
+			}
 		}
-		if _, err := tx.Exec(`INSERT INTO obiekty_geograficzne (nazwa_lub_numer,kategoria,geometria_geojson,bbox_min_lat,bbox_min_lng,bbox_max_lat,bbox_max_lng) VALUES (?,?,?,?,?,?,?)`, num, cat, geomStr, minLat, minLng, maxLat, maxLng); err != nil {
+		if _, err := tx.Exec(`INSERT INTO obiekty_geograficzne (nazwa_lub_numer,kategoria,geometria_geojson,bbox_min_lat,bbox_min_lng,bbox_max_lat,bbox_max_lng) VALUES (?,?,?,?,?,?,?)`, num, cat, geomVal, minLat, minLng, maxLat, maxLng); err != nil {
 			return 0, err
 		}
 	}
@@ -382,6 +445,9 @@ func importOwnersJSON(tx *sql.Tx, raw []byte) (int, error) {
 		return 0, err
 	}
 	if _, err := tx.Exec(`DELETE FROM dzialki_wlasciciele`); err != nil {
+		return 0, err
+	}
+	if _, err := tx.Exec(`DELETE FROM powiazania_protokolow`); err != nil {
 		return 0, err
 	}
 	if _, err := tx.Exec(`DELETE FROM wlasciciele`); err != nil {
@@ -406,6 +472,27 @@ func importOwnersJSON(tx *sql.Tx, raw []byte) (int, error) {
 	for _, key := range keys {
 		oid := ownerIDs[key]
 		v := data[key]
+		if links, ok := v["plotLinks"].([]interface{}); ok {
+			// Pełny format (v1.3+): dokładna kategoria, typ i opis udziału.
+			for _, l := range links {
+				m, ok := l.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				num := strings.TrimSpace(strAny(m["plot"]))
+				if num == "" {
+					continue
+				}
+				objID, err := ensureObjectCatTx(tx, num, strAny(m["kategoria"]))
+				if err != nil {
+					return 0, err
+				}
+				if _, err := tx.Exec(`INSERT OR IGNORE INTO dzialki_wlasciciele (wlasciciel_id,obiekt_id,typ_posiadania,opis_udzialu) VALUES (?,?,?,?)`, oid, objID, m["typ_posiadania"], m["opis_udzialu"]); err != nil {
+					return 0, err
+				}
+			}
+			continue
+		}
 		for _, field := range []string{"realbuildingPlots", "realagriculturalPlots", "buildingPlots", "agriculturalPlots"} {
 			arr := toStringArray(v[field])
 			real := strings.HasPrefix(field, "real")
@@ -420,6 +507,22 @@ func importOwnersJSON(tx *sql.Tx, raw []byte) (int, error) {
 					return 0, err
 				}
 				_, _ = tx.Exec(`INSERT INTO dzialki_wlasciciele (wlasciciel_id,obiekt_id,typ_posiadania,opis_udzialu) VALUES (?,?,?,?)`, oid, objID, typ, "")
+			}
+		}
+	}
+	for _, key := range keys {
+		rels, _ := data[key]["protocolRelations"].([]interface{})
+		for _, r := range rels {
+			m, ok := r.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			other, ok := ownerIDs[strAny(m["ownerKey"])]
+			if !ok {
+				continue
+			}
+			if _, err := tx.Exec(`INSERT INTO powiazania_protokolow (wlasciciel_id_1,wlasciciel_id_2,typ_relacji,opis_relacji) VALUES (?,?,?,?)`, ownerIDs[key], other, m["typ_relacji"], m["opis_relacji"]); err != nil {
+				return 0, err
 			}
 		}
 	}
@@ -585,23 +688,47 @@ func importGenealogyJSON(tx *sql.Tx, raw []byte) (int, error) {
 		}
 	}
 	seen := map[string]bool{}
+	addMarriage := func(a, b int64, date map[string]interface{}, text interface{}) error {
+		if a == 0 || b == 0 || a == b {
+			return nil
+		}
+		x, y := a, b
+		if x > y {
+			x, y = y, x
+		}
+		k := fmt.Sprintf("%d:%d", x, y)
+		if seen[k] {
+			return nil
+		}
+		seen[k] = true
+		var yr, mo, dy interface{}
+		if date != nil {
+			yr, mo, dy = intOrNil(date["year"]), intOrNil(date["month"]), intOrNil(date["day"])
+		}
+		_, err := tx.Exec(`INSERT INTO malzenstwa (malzonek1_id,malzonek2_id,rok_slubu,miesiac_slubu,dzien_slubu,data_slubu) VALUES (?,?,?,?,?,?)`, x, y, yr, mo, dy, text)
+		return err
+	}
+	// Najpierw "marriages" (z datą ślubu), potem "spouseIds" bez daty.
+	for _, p := range wrapper.Persons {
+		a := jsonToDB[int64Val(p["id"])]
+		ms, _ := p["marriages"].([]interface{})
+		for _, mm := range ms {
+			m, ok := mm.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			date, _ := m["date"].(map[string]interface{})
+			if err := addMarriage(a, jsonToDB[int64Val(m["spouseId"])], date, nilStrAny(m["dateText"])); err != nil {
+				return 0, err
+			}
+		}
+	}
 	for _, p := range wrapper.Persons {
 		a := jsonToDB[int64Val(p["id"])]
 		for _, sid := range toInt64Array(p["spouseIds"]) {
-			b := jsonToDB[sid]
-			if a == 0 || b == 0 || a == b {
-				continue
+			if err := addMarriage(a, jsonToDB[sid], nil, nil); err != nil {
+				return 0, err
 			}
-			x, y := a, b
-			if x > y {
-				x, y = y, x
-			}
-			k := fmt.Sprintf("%d:%d", x, y)
-			if seen[k] {
-				continue
-			}
-			seen[k] = true
-			_, _ = tx.Exec(`INSERT INTO malzenstwa (malzonek1_id,malzonek2_id) VALUES (?,?)`, x, y)
 		}
 	}
 	return len(wrapper.Persons), nil
@@ -718,6 +845,64 @@ func yearFromObj(v interface{}) interface{} {
 		return intOrNil(m["year"])
 	}
 	return nil
+}
+
+// parcelNumberFromKey odcina z klucza "<numer>_<kategoria>" sufiks kategorii.
+// Kategorie mogą zawierać "_" (np. "obiekt_specjalny"), więc nie wystarczy
+// ostatni znak "_".
+func parcelNumberFromKey(key, cat string) string {
+	if cat != "" && strings.HasSuffix(key, "_"+cat) && len(key) > len(cat)+1 {
+		return key[:len(key)-len(cat)-1]
+	}
+	if i := strings.LastIndex(key, "_"); i > 0 {
+		return key[:i]
+	}
+	return key
+}
+
+// ensureObjectCatTx zwraca obiekt o dokładnie tym numerze i kategorii
+// (tworzy go, jeśli nie istnieje). Bez kategorii działa jak ensureObjectTx.
+func ensureObjectCatTx(tx *sql.Tx, num, cat string) (int64, error) {
+	if cat == "" {
+		return ensureObjectTx(tx, num, false)
+	}
+	var id int64
+	err := tx.QueryRow(`SELECT id FROM obiekty_geograficzne WHERE nazwa_lub_numer=? AND kategoria=?`, num, cat).Scan(&id)
+	if err == nil {
+		return id, nil
+	}
+	if err != sql.ErrNoRows {
+		return 0, err
+	}
+	res, err := tx.Exec(`INSERT INTO obiekty_geograficzne (nazwa_lub_numer,kategoria) VALUES (?,?)`, num, cat)
+	if err != nil {
+		return 0, err
+	}
+	return res.LastInsertId()
+}
+
+func nullStr(v sql.NullString) interface{} {
+	if !v.Valid {
+		return nil
+	}
+	return v.String
+}
+
+func marriageDateObj(y, m, d *int32) interface{} {
+	if y == nil && m == nil && d == nil {
+		return nil
+	}
+	out := map[string]int32{}
+	if y != nil {
+		out["year"] = *y
+	}
+	if m != nil {
+		out["month"] = *m
+	}
+	if d != nil {
+		out["day"] = *d
+	}
+	return out
 }
 
 func ensureObjectTx(tx *sql.Tx, num string, building bool) (int64, error) {
