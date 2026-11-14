@@ -28,8 +28,8 @@
           "caption": "Fragment dokumentacji katastralnej."
         }
       ],
-      "db_path": "C:\\Users\\ASRock\\Desktop\\czarna-mapa\\data\\czarna.db",
-      "data_dir": "C:\\Users\\ASRock\\Desktop\\czarna-mapa\\data",
+      "db_path": "czarna.db",
+      "data_dir": ".",
       "active": true,
       "auto_open": true,
       "created_at": "2026-05-20T15:28:02+02:00"

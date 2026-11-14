@@ -1178,15 +1178,72 @@ func (a *App) loadRegistry() (*locationsRegistry, error) {
 	for i := range reg.Locations {
 		reg.Locations[i].Active = reg.Locations[i].ID == reg.ActiveID
 		reg.Locations[i].AutoOpen = reg.AutoOpen && reg.Locations[i].Active
+		a.resolveLocationPaths(&reg.Locations[i])
 	}
 	return &reg, nil
+}
+
+// resolveLocationPaths zamienia ścieżki z rejestru na absolutne.
+// Ścieżki względne są liczone od katalogu rejestru. Ścieżki absolutne, które
+// nie istnieją (np. rejestr skopiowany z innego komputera albo paczka
+// portable rozpakowana w inne miejsce), są przepinane na katalog danych,
+// jeśli tam leży baza o tej samej nazwie. Dzięki temu aplikacja nie tworzy
+// pustych baz ani katalogów pod nieistniejącymi ścieżkami.
+func (a *App) resolveLocationPaths(loc *LocationInfo) {
+	root := filepath.Dir(a.registryPath())
+	if loc.DataDir != "" && !filepath.IsAbs(loc.DataDir) {
+		loc.DataDir = filepath.Join(root, filepath.FromSlash(loc.DataDir))
+	}
+	if loc.DBPath != "" && !filepath.IsAbs(loc.DBPath) {
+		loc.DBPath = filepath.Join(root, filepath.FromSlash(loc.DBPath))
+	}
+	if loc.DBPath == "" {
+		return
+	}
+	if _, err := os.Stat(loc.DBPath); err == nil {
+		return
+	}
+	base := filepath.Base(loc.DBPath)
+	candidates := []string{root}
+	if validLocationID(loc.ID) {
+		candidates = append(candidates, filepath.Join(root, "locations", loc.ID))
+	}
+	for _, dir := range candidates {
+		if _, err := os.Stat(filepath.Join(dir, base)); err == nil {
+			log.Printf("[REJESTR] %s: nieistniejąca ścieżka %s przepięta na %s", loc.ID, loc.DBPath, dir)
+			loc.DataDir = dir
+			loc.DBPath = filepath.Join(dir, base)
+			return
+		}
+	}
+}
+
+// relativeToRoot zwraca ścieżkę względną (z ukośnikami), jeśli p leży w root.
+func relativeToRoot(root, p string) string {
+	if p == "" || !filepath.IsAbs(p) {
+		return p
+	}
+	rel, err := filepath.Rel(root, p)
+	if err != nil || !filepath.IsLocal(rel) && rel != "." {
+		return p
+	}
+	return filepath.ToSlash(rel)
 }
 
 func (a *App) saveRegistry(reg *locationsRegistry) error {
 	if err := os.MkdirAll(filepath.Dir(a.registryPath()), 0755); err != nil {
 		return err
 	}
-	b, err := json.MarshalIndent(reg, "", "  ")
+	// Zapisuj ścieżki względne, żeby paczka portable działała po przeniesieniu.
+	root := filepath.Dir(a.registryPath())
+	out := *reg
+	out.Locations = make([]LocationInfo, len(reg.Locations))
+	for i, loc := range reg.Locations {
+		loc.DataDir = relativeToRoot(root, loc.DataDir)
+		loc.DBPath = relativeToRoot(root, loc.DBPath)
+		out.Locations[i] = loc
+	}
+	b, err := json.MarshalIndent(&out, "", "  ")
 	if err != nil {
 		return err
 	}

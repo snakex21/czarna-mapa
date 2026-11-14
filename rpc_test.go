@@ -275,3 +275,41 @@ func mustImport(t *testing.T, app *App, zipData []byte) interface{} {
 	}
 	return res
 }
+
+// Rejestr z absolutnymi ścieżkami z innego komputera (jak data/locations.json
+// w wersji v1.2) musi zostać przepięty na lokalny katalog danych, a zapis
+// rejestru ma używać ścieżek względnych.
+func TestRegistryStaleAbsolutePathsAreRebased(t *testing.T) {
+	app := newTestApp(t)
+	stale := filepath.Join(t.TempDir(), "nie", "istnieje")
+	reg := locationsRegistry{ActiveID: "czarna", AutoOpen: true, Locations: []LocationInfo{{
+		ID: "czarna", Name: "Czarna", DBPath: filepath.Join(stale, "czarna.db"), DataDir: stale,
+	}}}
+	b, _ := json.Marshal(reg)
+	if err := os.WriteFile(app.registryPath(), b, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	got, err := app.loadRegistry()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Locations[0].DBPath != app.dbPath || got.Locations[0].DataDir != app.dataDir {
+		t.Fatalf("ścieżki nie przepięte: %+v", got.Locations[0])
+	}
+	if err := app.saveRegistry(got); err != nil {
+		t.Fatal(err)
+	}
+	raw, _ := os.ReadFile(app.registryPath())
+	var saved locationsRegistry
+	_ = json.Unmarshal(raw, &saved)
+	if saved.Locations[0].DBPath != "czarna.db" || saved.Locations[0].DataDir != "." {
+		t.Fatalf("zapisane ścieżki nie są względne: %+v", saved.Locations[0])
+	}
+	if _, err := os.Stat(stale); !os.IsNotExist(err) {
+		t.Fatal("aplikacja utworzyła katalog pod nieistniejącą ścieżką")
+	}
+	// Ścieżki poza katalogiem danych zostają absolutne.
+	if r := relativeToRoot(app.dataDir, stale); r != stale {
+		t.Fatalf("ścieżka spoza root zrelatywizowana: %q", r)
+	}
+}
