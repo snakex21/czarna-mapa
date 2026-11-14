@@ -193,7 +193,10 @@
         try {
             const res = await fetch('/api/rpc', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Czarna-Token': window.__CZARNA_RPC_TOKEN || '',
+                },
                 body: JSON.stringify({ cmd: API_CMD, args: {} }),
             });
             if (!res.ok) {
