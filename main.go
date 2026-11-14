@@ -140,7 +140,9 @@ func main() {
 	log.Printf("Stan okna: %dx%d @(%d,%d) max=%v",
 		winState.Width, winState.Height, winState.X, winState.Y, winState.Maximized)
 
-	w := webview.New(true) // true = debug (konsola devtools dostępna)
+	debug := devToolsEnabled(os.Args[1:], os.Getenv)
+	log.Printf("DevTools: %v", debug)
+	w := webview.New(debug) // DevTools tylko z --debug / CZARNA_DEBUG=1
 	defer w.Destroy()
 	// Wstrzyknij token sesji do każdej strony z naszego originu.
 	w.Init(guard.initScript())
