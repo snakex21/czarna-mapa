@@ -305,6 +305,17 @@ func TestRegistryStaleAbsolutePathsAreRebased(t *testing.T) {
 	if saved.Locations[0].DBPath != "czarna.db" || saved.Locations[0].DataDir != "." {
 		t.Fatalf("zapisane ścieżki nie są względne: %+v", saved.Locations[0])
 	}
+	// Start aplikacji normalizuje rejestr na dysku.
+	if err := os.WriteFile(app.registryPath(), b, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := app.ensureLocationsRegistry(); err != nil {
+		t.Fatal(err)
+	}
+	raw, _ = os.ReadFile(app.registryPath())
+	if strings.Contains(string(raw), "istnieje") {
+		t.Fatalf("rejestr po starcie nadal zawiera starą ścieżkę: %s", raw)
+	}
 	if _, err := os.Stat(stale); !os.IsNotExist(err) {
 		t.Fatal("aplikacja utworzyła katalog pod nieistniejącą ścieżką")
 	}
