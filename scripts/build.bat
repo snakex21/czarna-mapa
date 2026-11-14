@@ -65,15 +65,35 @@ mkdir "%PKG%\data"
 copy /Y "Mapa Katastralna Czarna.exe" "%PKG%\" >nul
 rem Tylko dane startowe: bez logow, cache, backupow, stanu okna i danych roboczych.
 robocopy data "%PKG%\data" /E /NFL /NDL /NJH /NJS /NP ^
-    /XD obj_thumbs backups json point_photos locations ^
+    /XD obj_thumbs backups json point_photos locations protokoly ^
     /XF app.log window_state.json window_state.json.tmp owner_data_to_import.json launcher_db_config.json *.db-wal *.db-shm *.db-journal
 if %errorlevel% geq 8 (
     echo [BLAD] Kopiowanie danych nie powiodlo sie!
     exit /b 1
 )
+rem Skany protokolow: do paczki ida kopie JPEG q85 (EXIF/ICC zachowane),
+rem oryginaly w data\protokoly zostaja bez zmian.
+if exist "data\protokoly" (
+    echo [INFO] Rekompresja skanow do paczki ^(JPEG q85^)...
+    go run ./tools/jpegpack -src data\protokoly -dst "%PKG%\data\protokoly" -q 85
+    if errorlevel 1 (
+        echo [BLAD] Rekompresja skanow nie powiodla sie!
+        exit /b 1
+    )
+)
 powershell -NoProfile -ExecutionPolicy Bypass -Command "Compress-Archive -Path '%PKG%\*' -DestinationPath '%PKG%.zip' -CompressionLevel Optimal -Force; (Get-FileHash '%PKG%.zip' -Algorithm SHA256).Hash.ToLower() + '  MapaKatastralnaCzarna_Portable.zip' | Out-File -Encoding ascii '%PKG%.zip.sha256'"
 if %errorlevel% neq 0 (
     echo [WARN] Nie udalo sie utworzyc ZIP, ale EXE zostal zbudowany.
+)
+rem Opcjonalna paczka z oryginalnymi skanami (pelna jakosc), osobny asset.
+if exist "data\protokoly" (
+    echo [INFO] Paczka oryginalnych skanow...
+    "%SystemRoot%\System32\tar.exe" -a -c -f "dist\MapaKatastralnaCzarna_skany-oryginalne.zip" -C data protokoly
+    if errorlevel 1 (
+        echo [WARN] Nie udalo sie utworzyc paczki oryginalnych skanow.
+    ) else (
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "(Get-FileHash 'dist\MapaKatastralnaCzarna_skany-oryginalne.zip' -Algorithm SHA256).Hash.ToLower() + '  MapaKatastralnaCzarna_skany-oryginalne.zip' | Out-File -Encoding ascii 'dist\MapaKatastralnaCzarna_skany-oryginalne.zip.sha256'"
+    )
 )
 
 :done
@@ -82,4 +102,5 @@ echo ========================================
 echo    GOTOWE!
 echo    Mapa Katastralna Czarna.exe
 if /i not "%~1"=="nopack" echo    %PKG%.zip (+ .sha256)
+if /i not "%~1"=="nopack" echo    dist\MapaKatastralnaCzarna_skany-oryginalne.zip (+ .sha256)
 echo ========================================
