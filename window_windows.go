@@ -14,13 +14,13 @@ import (
 )
 
 var (
-	winUser32              = windows.NewLazySystemDLL("user32.dll")
-	procGetWindowRect      = winUser32.NewProc("GetWindowRect")
-	procIsZoomed           = winUser32.NewProc("IsZoomed")
-	procSetWindowPos       = winUser32.NewProc("SetWindowPos")
-	procShowWindow         = winUser32.NewProc("ShowWindow")
+	winUser32               = windows.NewLazySystemDLL("user32.dll")
+	procGetWindowRect       = winUser32.NewProc("GetWindowRect")
+	procIsZoomed            = winUser32.NewProc("IsZoomed")
+	procSetWindowPos        = winUser32.NewProc("SetWindowPos")
+	procShowWindow          = winUser32.NewProc("ShowWindow")
 	procEnumDisplayMonitors = winUser32.NewProc("EnumDisplayMonitors")
-	procGetMonitorInfo     = winUser32.NewProc("GetMonitorInfoW")
+	procGetMonitorInfo      = winUser32.NewProc("GetMonitorInfoW")
 )
 
 // Rect jest prostokątem okna w screen-coordinates (górny lewy + dolny prawy).
@@ -67,7 +67,7 @@ func ShowWindow(hwnd uintptr, cmd int) {
 }
 
 const (
-	SW_RESTORE      = 9
+	SW_RESTORE       = 9
 	SW_SHOWMAXIMIZED = 3
 )
 

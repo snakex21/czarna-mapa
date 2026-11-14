@@ -103,15 +103,24 @@ func extractFromJSON(v interface{}, minLat, minLng, maxLat, maxLng *float64) {
 }
 
 func updateBBox(lat, lng float64, minLat, minLng, maxLat, maxLng *float64) {
-	if lat < *minLat { *minLat = lat }
-	if lat > *maxLat { *maxLat = lat }
-	if lng < *minLng { *minLng = lng }
-	if lng > *maxLng { *maxLng = lng }
+	if lat < *minLat {
+		*minLat = lat
+	}
+	if lat > *maxLat {
+		*maxLat = lat
+	}
+	if lng < *minLng {
+		*minLng = lng
+	}
+	if lng > *maxLng {
+		*maxLng = lng
+	}
 }
 
 func toFloat(v interface{}) float64 {
 	switch n := v.(type) {
-	case float64: return n
+	case float64:
+		return n
 	case json.Number:
 		f, _ := n.Float64()
 		return f

@@ -12,11 +12,11 @@ import (
 //
 // v1 (2026-06): punktów historycznych — dwie nowe tabele obok obiekty_geograficzne:
 //   - historical_points_metadata: metadane (display_name, description, source_note)
-//                                  powiązane z obiektem specjalnym po object_name.
+//     powiązane z obiektem specjalnym po object_name.
 //   - point_photos: galeria zdjęć (filename, caption, position) dla obiektu.
-//                  Zdjęcia fizycznie w data/point_photos/<plik>.
-//                Wzorzec z "Projekt Mapa Czarna" — osobna warstwa na mapie
-//                z popupem display_name + description + galeria + source_note.
+//     Zdjęcia fizycznie w data/point_photos/<plik>.
+//     Wzorzec z "Projekt Mapa Czarna" — osobna warstwa na mapie
+//     z popupem display_name + description + galeria + source_note.
 func migrateExtra(db *sql.DB) error {
 	if err := ensureTable(db, `historical_points_metadata`, `(
 			object_name  TEXT PRIMARY KEY,

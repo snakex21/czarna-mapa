@@ -45,6 +45,12 @@ jobs:
           go version
           gcc --version
 
+      - name: gofmt
+        shell: bash
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then echo "gofmt needed:"; echo "$unformatted"; exit 1; fi
+
       - name: go vet
         env:
           CGO_ENABLED: "1"
