@@ -23,8 +23,12 @@ import (
 var frontend embed.FS
 
 func main() {
+	startedAt := time.Now()
 	// Znajdź katalog z plikiem wykonywalnym (dla protokołów i bazy dev)
-	exePath, _ := os.Executable()
+	exePath, err := os.Executable()
+	if err != nil {
+		exePath = "."
+	}
 	exeDir := filepath.Dir(exePath)
 
 	// Baza: AppData (release) lub lokalnie obok EXE (dev)
@@ -45,6 +49,7 @@ func main() {
 		log.SetOutput(logFile)
 		defer logFile.Close()
 	}
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 	log.Printf("Baza danych: %s", dbPath)
 
 	// Otwórz bazę
@@ -55,10 +60,12 @@ func main() {
 	defer database.Close()
 
 	var count int64
-	database.QueryRow("SELECT COUNT(*) FROM obiekty_geograficzne").Scan(&count)
-	if count == 0 {
+	if err := database.QueryRow("SELECT COUNT(*) FROM obiekty_geograficzne").Scan(&count); err != nil {
+		log.Printf("Nie można policzyć obiektów: %v", err)
+	} else if count == 0 {
 		log.Println("UWAGA: Baza danych jest pusta.")
 	}
+	log.Printf("[STARTUP] baza otwarta: %v", time.Since(startedAt))
 
 	// Utwórz App (handler RPC)
 	app := &App{
@@ -78,35 +85,13 @@ func main() {
 	} else if repaired > 0 {
 		log.Printf("Uzupełniono brakujące powiązania działka-właściciel: %d", repaired)
 	}
+	log.Printf("[STARTUP] naprawy powiązań zakończone: %v", time.Since(startedAt))
 
 	// Serwuj frontend z embed
 	frontendFS, err := fs.Sub(frontend, "frontend")
 	if err != nil {
 		log.Fatalf("Blad embed: %v", err)
 	}
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/api/rpc", app.handleRPC)
-	mux.HandleFunc("/api/wlasciciel/", app.handleLegacyAPI)
-	mux.HandleFunc("/api/genealogia/", app.handleLegacyAPI)
-	mux.HandleFunc("/api/dzialki", app.handleLegacyAPI)
-	mux.HandleFunc("/api/genealogia/persons-format", app.handleLegacyAPI)
-	mux.HandleFunc("/api/genealogia/pdf/", app.handleFamilyCardPDF)
-	mux.HandleFunc("/protokoly/", app.handleProtokoly)
-	mux.HandleFunc("/history_photos/", app.handleHistoryPhotos)
-	mux.HandleFunc("/point_photos/", app.handlePointPhotos)
-	mux.HandleFunc("/obj_thumb", app.handleObjThumb)
-	mux.HandleFunc("/location_favicon", app.handleLocationFavicon)
-	mux.HandleFunc("/location_js/location-config.js", app.handleLocationConfigJS)
-	mux.HandleFunc("/mapa/mapa.jpg", app.handleMapaJPG)
-	fileServer := http.FileServer(http.FS(frontendFS))
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" || r.URL.Path == "/index.html" {
-			app.handleDynamicIndex(w, r, frontendFS)
-			return
-		}
-		fileServer.ServeHTTP(w, r)
-	})
 
 	// Użyj stałego portu, żeby localStorage przetrwał restart aplikacji.
 	// Port 57200 — mało prawdopodobne, żeby był zajęty przez inny program.
@@ -121,13 +106,23 @@ func main() {
 	}
 	port := listener.Addr().(*net.TCPAddr).Port
 
+	// Token sesji wymagany przez /api/rpc (patrz server.go).
+	token, err := newSessionToken()
+	if err != nil {
+		log.Fatalf("Nie można wygenerować tokena sesji: %v", err)
+	}
+	guard := newRequestGuard(port, token)
+	app.startedAt = startedAt
+	srv := newHTTPServer(guard.wrap(buildMux(app, frontendFS, guard)))
+
 	// Start serwera HTTP w tle
 	go func() {
 		log.Printf("Serwer na http://127.0.0.1:%d", port)
-		if err := http.Serve(listener, mux); err != nil {
+		if err := srv.Serve(listener); err != nil && err != http.ErrServerClosed {
 			log.Printf("Serwer zatrzymany: %v", err)
 		}
 	}()
+	log.Printf("[STARTUP] serwer HTTP gotowy: %v", time.Since(startedAt))
 
 	// Okno WebView
 	startPath := "/"
@@ -144,6 +139,8 @@ func main() {
 
 	w := webview.New(true) // true = debug (konsola devtools dostępna)
 	defer w.Destroy()
+	// Wstrzyknij token sesji do każdej strony z naszego originu.
+	w.Init(guard.initScript())
 	w.SetTitle("Mapa Katastralna Gminy Czarna")
 	setWindowIcon(w.Window())
 	w.SetSize(winState.Width, winState.Height, webview.HintNone)

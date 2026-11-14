@@ -37,7 +37,11 @@
     async function rpcInvoke(cmd, args = {}) {
         const resp = await fetch('/api/rpc', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                // Token sesji wstrzykiwany przez aplikację (webview.Init) — bez niego serwer odrzuca RPC.
+                'X-Czarna-Token': window.__CZARNA_RPC_TOKEN || ''
+            },
             body: JSON.stringify({ cmd, args })
         });
         if (!resp.ok) {
