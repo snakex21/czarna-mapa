@@ -35,8 +35,9 @@ type App struct {
 	rootDataDir string
 	dbPath      string
 
-	// startedAt i firstMapRPC służą do pomiaru czasu startu (log [STARTUP]).
+	// startedAt, firstRPC i firstMapRPC służą do pomiaru czasu startu (log [STARTUP]).
 	startedAt   time.Time
+	firstRPC    sync.Once
 	firstMapRPC sync.Once
 }
 
@@ -321,6 +322,11 @@ func (a *App) handleRPC(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result, err := a.dispatch(req.Cmd, req.Args)
+	if !a.startedAt.IsZero() {
+		a.firstRPC.Do(func() {
+			log.Printf("[STARTUP] pierwsze RPC (%s): %v", req.Cmd, time.Since(a.startedAt))
+		})
+	}
 	if (req.Cmd == "api_dzialki" || req.Cmd == "pobierz_obiekty_widok") && err == nil && !a.startedAt.IsZero() {
 		a.firstMapRPC.Do(func() {
 			log.Printf("[STARTUP] pierwsze dane mapy wysłane: %v", time.Since(a.startedAt))
@@ -2450,6 +2456,7 @@ func (a *App) restoreLocationFromZip(zr *zip.Reader, root *os.Root, baseInZip st
 			return count, err
 		}
 	}
+	dbRestored := findZipFile(zr, baseInZip+"/"+loc.ID+".db") != nil
 
 	// Import JSON data from ZIP
 	jsonFiles := []string{
@@ -2466,7 +2473,12 @@ func (a *App) restoreLocationFromZip(zr *zip.Reader, root *os.Root, baseInZip st
 			jsonData[name] = raw
 		}
 	}
-	if len(jsonData) > 0 {
+	// Jeśli backup zawiera bazę, to ona jest źródłem prawdy: JSON jest jej
+	// pochodną i nie przenosi wszystkich powiązań (np. części działek
+	// ułamkowych), więc nakładanie go na odtworzoną bazę gubiło relacje.
+	if len(jsonData) > 0 && dbRestored {
+		locRes["json_import"] = "pominięty (odtworzono bazę SQLite z backupu)"
+	} else if len(jsonData) > 0 {
 		locDB, err := db.Open(filepath.Join(root.Name(), loc.ID+".db"))
 		if err == nil {
 			_, err = service.ImportCompatibleJSON(locDB, jsonData)
