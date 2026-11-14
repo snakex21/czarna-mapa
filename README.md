@@ -1,15 +1,21 @@
-# Mapa Katastralna Czarna — wersja portable desktop v1.3 (w przygotowaniu)
+# Mapa Katastralna Czarna — wersja portable desktop v1.3
 
 > Aplikacja desktopowa do przeglądania historycznej mapy katastralnej gminy Czarna z 1882 roku.
 > Działa jako samodzielny program Windows — bez instalacji, bez serwera, zero konfiguracji.
 
-## Nowości w wersji 1.3 (gałąź `fix/security-v1.3`)
+## Nowości w wersji 1.3
 
 - **Bezpieczeństwo: import backupu ZIP (Zip Slip)** — złośliwy ZIP nie może już zapisać plików poza katalogiem miejscowości. Całe archiwum jest sprawdzane przed zapisem (ścieżki absolutne, `..`, litery dysków, `:`/ADS, backslashe, nazwy urządzeń Windows, symlinki), zapis idzie wyłącznie przez `os.Root`, są limity liczby wpisów i rozmiaru (ochrona przed zip bombą).
 - **Bezpieczeństwo: lokalne API** — `/api/rpc` przyjmuje tylko żądania z okna aplikacji: dokładny `Host`, dozwolony `Origin`, `Content-Type: application/json` i losowy token sesji. Strona otwarta w zwykłej przeglądarce nie może już wywołać komend aplikacji (CSRF / DNS rebinding).
 - **Zależności** — Go 1.26.11, `golang.org/x/image` v0.48.0, `modernc.org/sqlite` v1.62.0; `govulncheck` bez znalezisk.
 - **Backup** — import pełnego backupu z bazą SQLite nie nadpisuje już odtworzonej bazy JSON-em (wcześniej gubił część powiązań działka–właściciel).
 - **Portable** — rejestr miejscowości (`data/locations.json`) trzyma ścieżki względne; po przeniesieniu folderu aplikacja nie tworzy pustych baz pod starymi ścieżkami.
+- **Backup z bazą domyślnie** — w oknie pełnego backupu „Baza SQLite” jest zaznaczona domyślnie.
+- **Bezstratny eksport JSON** — eksport przenosi `typ_posiadania`, `opis_udzialu`, wszystkie relacje (działki–właściciele z kategorią obiektu, powiązania protokołów, rodzice, małżeństwa z datą, protokół osoby) i dokładne geometrie (punkty, linie, otwory); stare pola zostają dla zgodności. Test round-trip na bazie z repozytorium.
+- **DevTools wyłączone w release** — konsolę WebView2 włącza tylko `--debug` albo `CZARNA_DEBUG=1`.
+- **MapLibre offline** — MapLibre GL 4.7.1 i mapbox-gl-draw 1.5.1 są w EXE (`frontend/assets/vendor`), nie z unpkg.com.
+- **Mniejsza paczka** — skany protokołów w paczce są zapisane jako JPEG q85 (436 skanów: 1837 MB → 604 MB, bez widocznej utraty czytelności pisma); ZIP 1,91 GB → 0,64 GB. Oryginały w pełnej jakości są osobnym plikiem `MapaKatastralnaCzarna_skany-oryginalne.zip`.
+- **Porządki** — brak ścieżek z Pulpitu dewelopera, `gofmt` w CI, aktualny `PROJECT_SKILL.md`.
 - **Mniejszy EXE** — 71 MB → ~32 MB (`-trimpath -s -w`, odchudzone zrzuty ekranu w dokumentacji, usunięty duplikat `mapa.jpg`).
 - **Testy i CI** — testy bazy, RPC, importu/eksportu i bezpieczeństwa; GitHub Actions (`go vet`, `go test`, `govulncheck`, build).
 
@@ -78,8 +84,13 @@ Ta wersja **desktopowa** zastępuje cały stos serwerowy jednym plikiem EXE (~32
 
 > Nie przenoś samego EXE bez folderu `data` — aplikacja potrzebuje go obok siebie.
 
-Wymagania: Windows 10/11 z WebView2 Runtime (w Windows 11 jest wbudowany). Biblioteka MapLibre
-i podkłady satelitarny/OSM są ładowane z internetu; dane działek, skany i mapa 1882 są lokalne.
+Wymagania: Windows 10/11 z WebView2 Runtime (w Windows 11 jest wbudowany). MapLibre, dane działek,
+skany i mapa 1882 są lokalne. Z internetu ładowane są tylko podkłady satelitarny/OSM, ikony
+Font Awesome, czcionki Google i biblioteki części widoków (np. wykresy, eksport PDF/XLSX, graf).
+
+Skany w paczce mają jakość JPEG q85. Jeśli potrzebujesz oryginałów (pełna jakość, ~1,84 GB),
+pobierz `MapaKatastralnaCzarna_skany-oryginalne.zip` z tego samego wydania i rozpakuj go do
+`data\` (zastąpi folder `protokoly`).
 
 ## Gdzie są dane
 
@@ -96,8 +107,9 @@ i podkłady satelitarny/OSM są ładowane z internetu; dane działek, skany i ma
 ## Backup i przywracanie
 
 - **Backup**: *Miejscowości → JSON / Backup → Utwórz pełny backup ZIP*. Plik trafia do
-  `data\backups\backup_<id>_<data>.zip`. Zaznacz „Baza SQLite robocza / awaryjna”, jeśli backup
-  ma być pełną kopią (JSON nie przenosi wszystkich szczegółów powiązań działka–właściciel).
+  `data\backups\backup_<id>_<data>.zip`. „Baza SQLite robocza / awaryjna” jest zaznaczona
+  domyślnie, więc backup jest pełną kopią. JSON (od v1.3) też przenosi wszystkie powiązania,
+  ale baza jest najpewniejszym źródłem.
 - **Przywracanie**: *Import ZIP → Wybierz plik → Importuj backup ZIP*, potem uruchom program
   ponownie. Miejscowość jest odtwarzana do `data\locations\<id>\`. Jeśli ZIP zawiera bazę,
   to ona jest źródłem prawdy, a JSON z paczki jest pomijany.
@@ -116,8 +128,10 @@ i podkłady satelitarny/OSM są ładowane z internetu; dane działek, skany i ma
   z losowym tokenem (256 bitów) generowanym przy każdym starcie. Token jest wstrzykiwany do
   stron okna aplikacji przez WebView2 (`webview.Init`) i nie jest dostępny pod żadnym adresem HTTP.
 - Body RPC jest ograniczone do 768 MiB; serwer ma timeouty nagłówków i połączeń bezczynnych.
-- Znane ograniczenia: DevTools WebView2 są włączone także w buildzie release; dane i skany
-  w `data\` nie są szyfrowane (każdy z dostępem do folderu może je czytać).
+- DevTools WebView2 są wyłączone; włącza je tylko `--debug` lub `CZARNA_DEBUG=1`.
+- Znane ograniczenia: dane i skany w `data\` nie są szyfrowane (każdy z dostępem do folderu może
+  je czytać); backup ZIP ze skanami (~620 MB) jest większy niż limit importu z okna (575 MB),
+  więc do przywracania przez okno używaj backupu bez skanów, a skany kopiuj ręcznie.
 
 ## Wymiana danych z wersją serwerową
 
@@ -180,18 +194,23 @@ go build -trimpath -ldflags="-s -w -H windowsgui" -o "Mapa Katastralna Czarna.ex
 
 Paczka portable zawiera EXE i tylko dane startowe z `data\` (bez `app.log`, `window_state.json`,
 `obj_thumbs`, `backups`, `json`, `point_photos`, `locations`, plików `-wal/-shm`). Paczkę release
-najlepiej budować ze świeżego klona, żeby nie zabrać lokalnych zmian bazy. Ok. 97% paczki
-(~1,84 GB) to skany protokołów JPG zapisane w bardzo wysokiej jakości.
+najlepiej budować ze świeżego klona, żeby nie zabrać lokalnych zmian bazy. Skany trafiają do paczki
+przez `tools/jpegpack` jako JPEG q85 (EXIF i profil ICC zachowane, `data\protokoly` w repo bez zmian);
+`build.bat` tworzy też `dist\MapaKatastralnaCzarna_skany-oryginalne.zip` z oryginałami.
 
 ## Testy
 
 ```bat
+gofmt -l .
 go vet ./...
 go test ./...
 go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+:: round-trip JSON na kopii innej bazy (np. własnej):
+set CZARNA_ROUNDTRIP_DB=C:\sciezka\do\kopii.db && go test -run RoundTripRepoDatabase .
 ```
 
-Testy działają na tymczasowych bazach (`t.TempDir()`) i nie dotykają `data\`. Obejmują:
+Testy działają na tymczasowych bazach (`t.TempDir()`) i nie zapisują nic w `data\`
+(round-trip JSON czyta kopię `data\czarna.db`). Obejmują:
 bazę i migracje, stan okna, komendy RPC (właściciele, obiekty mapy, backupy działek),
 round-trip eksport/import JSON i pełnego backupu ZIP, ochronę przed Zip Slip / zip bombą
 (spreparowane ZIP-y) oraz zabezpieczenia `/api/rpc` (obcy Origin, zły Host, brak tokena,
@@ -218,7 +237,7 @@ Wynik: zrzuty PNG i `smoke_report.json` w katalogu `CZARNA_SMOKE_OUT`.
 
 | Wersja | Data       | Zmiany                                                                     |
 |--------|------------|----------------------------------------------------------------------------|
-| v1.3   | w przygotowaniu | Poprawki bezpieczeństwa (Zip Slip, ochrona lokalnego API), aktualizacje zależności, testy + CI, mniejszy EXE |
+| v1.3   | 2026-11-14 | Poprawki bezpieczeństwa (Zip Slip, ochrona lokalnego API, DevTools off), zależności, bezstratny eksport JSON, backup z bazą domyślnie, MapLibre offline, mniejszy EXE i paczka (skany q85) |
 | v1.2   | czerwiec 2026 | Punkty historyczne (warstwa + edytor + galeria), migracje bazy, pamięć stanu okna, cache miniatur |
 | v1.1   | maj 2026   | MapLibre GL: mapa + edytor, przeciąganie punktów, wybór kategorii, poprawki cofania |
 | v1.0   | marzec 2026| Pierwsze stabilne wydanie portable — Go + WebView2                          |

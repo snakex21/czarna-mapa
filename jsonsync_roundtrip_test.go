@@ -154,6 +154,11 @@ func TestJSONRoundTripPreservesRelations(t *testing.T) {
 // Ten sam round-trip na kopii bazy z repozytorium (dane historyczne).
 func TestJSONRoundTripRepoDatabase(t *testing.T) {
 	srcPath := filepath.Join("data", "czarna.db")
+	// Można wskazać inną bazę (np. kopię bazy użytkownika); test i tak
+	// pracuje na kopii w katalogu tymczasowym.
+	if p := os.Getenv("CZARNA_ROUNDTRIP_DB"); p != "" {
+		srcPath = p
+	}
 	in, err := os.Open(srcPath)
 	if err != nil {
 		t.Skipf("brak %s: %v", srcPath, err)
