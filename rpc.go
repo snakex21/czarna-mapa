@@ -1121,6 +1121,11 @@ func (a *App) ensureLocationsRegistry() error {
 		if err != nil {
 			return err
 		}
+		// Zapisz znormalizowany rejestr (ścieżki względne / przepięte),
+		// żeby przepinanie starych ścieżek odbyło się tylko raz.
+		if err := a.saveRegistry(reg); err != nil {
+			log.Printf("Nie można zapisać rejestru miejscowości: %v", err)
+		}
 		if reg.ActiveID != "" {
 			for _, loc := range reg.Locations {
 				if loc.ID == reg.ActiveID {
