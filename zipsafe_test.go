@@ -76,17 +76,17 @@ func TestValidateZipEntryName(t *testing.T) {
 		"/abs/evil.txt",
 		"C:/Windows/evil.txt",
 		"C:evil.txt",
-		"miejscowosci/czarna/czarna.db:hidden",  // ADS
-		"miejscowosci/czarna/czarna.db::$DATA",  // ADS
-		`miejscowosci\..\..\evil.txt`,           // backslash
-		`\\server\share\evil.txt`,               // UNC
-		"miejscowosci//czarna/a.txt",            // nieznormalizowane
+		"miejscowosci/czarna/czarna.db:hidden", // ADS
+		"miejscowosci/czarna/czarna.db::$DATA", // ADS
+		`miejscowosci\..\..\evil.txt`,          // backslash
+		`\\server\share\evil.txt`,              // UNC
+		"miejscowosci//czarna/a.txt",           // nieznormalizowane
 		"miejscowosci/./czarna/a.txt",
-		"miejscowosci/czarna/NUL",               // urządzenie Windows
+		"miejscowosci/czarna/NUL", // urządzenie Windows
 		"miejscowosci/czarna/con.txt",
 		"miejscowosci/czarna/COM1.jpg",
-		"miejscowosci/czarna/evil.",             // Windows obcina kropkę
-		"miejscowosci/czarna/evil ",             // ... i spację
+		"miejscowosci/czarna/evil.", // Windows obcina kropkę
+		"miejscowosci/czarna/evil ", // ... i spację
 		"miejscowosci/czarna/a\x00b",
 		"..",
 	}
