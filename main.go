@@ -22,6 +22,9 @@ import (
 //go:embed all:frontend
 var frontend embed.FS
 
+// testHook jest ustawiany wyłącznie przez harness smoke testu (-tags smoke).
+var testHook func(w webview.WebView, hwnd uintptr)
+
 func main() {
 	startedAt := time.Now()
 	// Znajdź katalog z plikiem wykonywalnym (dla protokołów i bazy dev)
@@ -147,6 +150,9 @@ func main() {
 	// Ustaw pozycję i stan zmaksymalizowania (Win32, tylko Windows).
 	hwnd := hwndFromWebview(w)
 	applyWindowState(hwnd, winState)
+	if testHook != nil { // tylko w buildzie z -tags smoke (smoke_windows.go)
+		testHook(w, hwnd)
+	}
 	w.Navigate(url)
 
 	// Polling stanu okna w tle - zapisuje do pliku gdy user zmieni rozmiar/pozycję.
