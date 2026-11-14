@@ -11,10 +11,10 @@ import (
 
 // State opisuje wymiary i pozycję okna przy ostatnim zamknięciu aplikacji.
 type State struct {
-	Width     int  `json:"width"`     // szerokość okna w px
-	Height    int  `json:"height"`    // wysokość okna w px
-	X         int  `json:"x"`         // pozycja lewego górnego rogu (klient/outer wg implementacji)
-	Y         int `json:"y"`
+	Width     int  `json:"width"`  // szerokość okna w px
+	Height    int  `json:"height"` // wysokość okna w px
+	X         int  `json:"x"`      // pozycja lewego górnego rogu (klient/outer wg implementacji)
+	Y         int  `json:"y"`
 	Maximized bool `json:"maximized"` // true = okno było zmaksymalizowane przy zamknięciu
 }
 

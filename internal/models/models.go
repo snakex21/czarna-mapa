@@ -60,10 +60,10 @@ type HistoricalPoint struct {
 // zdjęć — ta jest pobierana leniwie albo inline jeśli mała). Pola flat do
 // bezpośredniego użycia w properties GeoJSON.
 type HistoricalPointFeature struct {
-	Type        string         `json:"type"`        // "Feature"
-	Geometry    json.RawMessage `json:"geometry"`    // Point
-	Properties  json.RawMessage `json:"properties"`  // patrz HistoricalPointProperties
-	ID          int64          `json:"id"`
+	Type       string          `json:"type"`       // "Feature"
+	Geometry   json.RawMessage `json:"geometry"`   // Point
+	Properties json.RawMessage `json:"properties"` // patrz HistoricalPointProperties
+	ID         int64           `json:"id"`
 }
 
 // HistoricalPointProperties — properties dla warstwy mapy.
