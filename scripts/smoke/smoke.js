@@ -34,17 +34,26 @@
         await sleep(9000);
         R.mapCanvas = !!document.querySelector('canvas.maplibregl-canvas');
         R.mapFeatures = (await API._invoke('api_dzialki')).features.length;
+        const res = performance.getEntriesByType('resource').map(e => e.name);
+        R.maplibreLocal = res.some(n => n.includes('/assets/vendor/maplibre-gl-'));
+        R.unpkgRequests = res.filter(n => n.includes('unpkg.com')).length;
+        const owners = await API._invoke('pobierz_wszystkich_wlascicieli');
+        const key = owners && owners.length ? owners[0].unikalny_klucz : '';
+        R.scanThumbStatus = key ? (await fetch('/obj_thumb?path=' + encodeURIComponent('protokoly/' + key + '/1.jpg') + '&w=240')).status : 'brak wlascicieli';
         await window.smokeShot('02_mapa.png');
         s.step = 2; save(s);
         location.href = '/miejscowosci.html';
       } else if (s.step === 2) {
         await sleep(2500);
         page.openSyncModal();
-        document.querySelector('.backup-opt[data-key="include_db"]').checked = true;
+        // v1.3: baza SQLite ma być zaznaczona domyślnie (nie zaznaczamy jej ręcznie).
+        R.includeDbDefault = document.querySelector('.backup-opt[data-key="include_db"]').checked;
+        // Skany pomijamy: ZIP ze skanami (~600 MB) przekracza limit importu z okna (575 MB).
+        document.querySelector('.backup-opt[data-key="include_protocol_scans"]').checked = false;
         await sleep(500);
         await window.smokeShot('03_okno_backupu.png');
         await page.createFullBackup();
-        await sleep(1000);
+        for (let i = 0; i < 240 && !/\.zip$/m.test(document.getElementById('sync-result').textContent); i++) await sleep(500);
         R.backupResult = document.getElementById('sync-result').textContent;
         showResult();
         await window.smokeShot('04_backup_utworzony.png');
@@ -65,6 +74,7 @@
         showResult();
         await window.smokeShot('06_zlosliwy_zip_odrzucony.png');
         R.dialogs = dialogs;
+        R.jsonExport = await API._invoke('miejscowosci_eksport_json');
 
         // Ta sama strona bez tokena (jak obca strona, która zgadnie port).
         const call = async (headers) => (await fetch('/api/rpc', { method: 'POST', headers, body: JSON.stringify({ cmd: 'miejscowosci_lista', args: {} }) })).status;
