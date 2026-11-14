@@ -313,3 +313,41 @@ func TestRegistryStaleAbsolutePathsAreRebased(t *testing.T) {
 		t.Fatalf("ścieżka spoza root zrelatywizowana: %q", r)
 	}
 }
+
+// Gdy backup zawiera bazę, import nie może nakładać na nią JSON-a
+// (JSON nie przenosi wszystkich relacji działka-właściciel).
+func TestFullBackupWithDBKeepsDBAuthoritative(t *testing.T) {
+	src := newTestApp(t)
+	seedSampleData(t, src)
+	// Relacja, której nie ma w eksporcie JSON (nietypowy typ posiadania).
+	if _, err := src.db.Exec(`INSERT INTO dzialki_wlasciciele (wlasciciel_id, obiekt_id, typ_posiadania, opis_udzialu)
+		SELECT w.id, o.id, 'dzierzawa', '1/2' FROM wlasciciele w, obiekty_geograficzne o WHERE w.unikalny_klucz='Anna_Nowak_3' AND o.nazwa_lub_numer='12'`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := src.db.Exec("PRAGMA wal_checkpoint(TRUNCATE)"); err != nil {
+		t.Fatal(err)
+	}
+	want := countRows(t, src, "dzialki_wlasciciele")
+	created := asMap(t, mustDispatch(t, src, "miejscowosci_pelny_backup", map[string]interface{}{"include_json": true, "include_db": true}))
+	zipData, err := os.ReadFile(created["path"].(string))
+	if err != nil {
+		t.Fatal(err)
+	}
+	dst := newTestApp(t)
+	res := asMap(t, mustImport(t, dst, zipData))
+	r0 := res["results"].([]interface{})[0].(map[string]interface{})
+	if r0["json_import"] == nil {
+		t.Fatalf("JSON nałożony na odtworzoną bazę: %v", r0)
+	}
+	restored, err := db.Open(filepath.Join(dst.rootDataDir, "locations", "czarna", "czarna.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer restored.Close()
+	var got, share int
+	_ = restored.QueryRow("SELECT COUNT(*) FROM dzialki_wlasciciele").Scan(&got)
+	_ = restored.QueryRow("SELECT COUNT(*) FROM dzialki_wlasciciele WHERE typ_posiadania='dzierzawa' AND opis_udzialu='1/2'").Scan(&share)
+	if got != want || share != 1 {
+		t.Fatalf("relacje działka-właściciel: %d (oczekiwano %d), z udziałem 1/2: %d", got, want, share)
+	}
+}
