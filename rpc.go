@@ -3,17 +3,17 @@ package main
 import (
 	"archive/zip"
 	"bytes"
-	"errors"
-	"io/fs"
 	"czarna-mapa/internal/db"
 	"czarna-mapa/internal/models"
 	"czarna-mapa/internal/service"
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html"
 	"io"
+	"io/fs"
 	"log"
 	"math"
 	"net/http"
@@ -237,7 +237,7 @@ func (a *App) handlePointPhotos(w http.ResponseWriter, r *http.Request) {
 // handleObjThumb generuje (lub serwuje z cache) miniaturkę dowolnego obrazu
 // w dataDir. Parametry query:
 //   - path — ścieżka względna do dataDir (np. "protokoly/Adam/1.jpg",
-//            "history_photos/dworzec.png", "point_photos/123_abc.jpg")
+//     "history_photos/dworzec.png", "point_photos/123_abc.jpg")
 //   - w    — żądana szerokość w px (domyślnie 240, max 800)
 func (a *App) handleObjThumb(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
@@ -1267,12 +1267,12 @@ func (a *App) ensureGenealogyProtocolLinks() error {
 	if linked > 0 {
 		return nil
 	}
+	// Tylko katalogi danych aplikacji (bez ścieżek z komputera dewelopera).
 	paths := []string{
 		filepath.Join(a.dataDir, "json", "genealogia.json"),
+		filepath.Join(a.dataDir, "genealogia.json"),
 		filepath.Join(a.rootDataDir, "json", "genealogia.json"),
-	}
-	if home, err := os.UserHomeDir(); err == nil {
-		paths = append(paths, filepath.Join(home, "Desktop", "Projekt Mapa Czarna", "backup", "Czarna", "genealogia.json"))
+		filepath.Join(a.rootDataDir, "genealogia.json"),
 	}
 	var raw []byte
 	for _, p := range paths {
