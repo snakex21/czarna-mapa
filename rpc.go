@@ -9,9 +9,11 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html"
 	"io"
+	"io/fs"
 	"log"
 	"math"
 	"net/http"
@@ -22,6 +24,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -31,6 +34,11 @@ type App struct {
 	dataDir     string
 	rootDataDir string
 	dbPath      string
+
+	// startedAt, firstRPC i firstMapRPC służą do pomiaru czasu startu (log [STARTUP]).
+	startedAt   time.Time
+	firstRPC    sync.Once
+	firstMapRPC sync.Once
 }
 
 type HistoryPhotoInfo struct {
@@ -229,7 +237,7 @@ func (a *App) handlePointPhotos(w http.ResponseWriter, r *http.Request) {
 // handleObjThumb generuje (lub serwuje z cache) miniaturkę dowolnego obrazu
 // w dataDir. Parametry query:
 //   - path — ścieżka względna do dataDir (np. "protokoly/Adam/1.jpg",
-//            "history_photos/dworzec.png", "point_photos/123_abc.jpg")
+//     "history_photos/dworzec.png", "point_photos/123_abc.jpg")
 //   - w    — żądana szerokość w px (domyślnie 240, max 800)
 func (a *App) handleObjThumb(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
@@ -304,11 +312,26 @@ func (a *App) handleRPC(w http.ResponseWriter, r *http.Request) {
 		Args map[string]interface{} `json:"args"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		var tooLarge *http.MaxBytesError
+		if errors.As(err, &tooLarge) {
+			http.Error(w, "Żądanie za duże", http.StatusRequestEntityTooLarge)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	result, err := a.dispatch(req.Cmd, req.Args)
+	if !a.startedAt.IsZero() {
+		a.firstRPC.Do(func() {
+			log.Printf("[STARTUP] pierwsze RPC (%s): %v", req.Cmd, time.Since(a.startedAt))
+		})
+	}
+	if (req.Cmd == "api_dzialki" || req.Cmd == "pobierz_obiekty_widok") && err == nil && !a.startedAt.IsZero() {
+		a.firstMapRPC.Do(func() {
+			log.Printf("[STARTUP] pierwsze dane mapy wysłane: %v", time.Since(a.startedAt))
+		})
+	}
 	if err != nil {
 		log.Printf("[RPC] %s → ERROR: %v", req.Cmd, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -1098,6 +1121,11 @@ func (a *App) ensureLocationsRegistry() error {
 		if err != nil {
 			return err
 		}
+		// Zapisz znormalizowany rejestr (ścieżki względne / przepięte),
+		// żeby przepinanie starych ścieżek odbyło się tylko raz.
+		if err := a.saveRegistry(reg); err != nil {
+			log.Printf("Nie można zapisać rejestru miejscowości: %v", err)
+		}
 		if reg.ActiveID != "" {
 			for _, loc := range reg.Locations {
 				if loc.ID == reg.ActiveID {
@@ -1161,15 +1189,72 @@ func (a *App) loadRegistry() (*locationsRegistry, error) {
 	for i := range reg.Locations {
 		reg.Locations[i].Active = reg.Locations[i].ID == reg.ActiveID
 		reg.Locations[i].AutoOpen = reg.AutoOpen && reg.Locations[i].Active
+		a.resolveLocationPaths(&reg.Locations[i])
 	}
 	return &reg, nil
+}
+
+// resolveLocationPaths zamienia ścieżki z rejestru na absolutne.
+// Ścieżki względne są liczone od katalogu rejestru. Ścieżki absolutne, które
+// nie istnieją (np. rejestr skopiowany z innego komputera albo paczka
+// portable rozpakowana w inne miejsce), są przepinane na katalog danych,
+// jeśli tam leży baza o tej samej nazwie. Dzięki temu aplikacja nie tworzy
+// pustych baz ani katalogów pod nieistniejącymi ścieżkami.
+func (a *App) resolveLocationPaths(loc *LocationInfo) {
+	root := filepath.Dir(a.registryPath())
+	if loc.DataDir != "" && !filepath.IsAbs(loc.DataDir) {
+		loc.DataDir = filepath.Join(root, filepath.FromSlash(loc.DataDir))
+	}
+	if loc.DBPath != "" && !filepath.IsAbs(loc.DBPath) {
+		loc.DBPath = filepath.Join(root, filepath.FromSlash(loc.DBPath))
+	}
+	if loc.DBPath == "" {
+		return
+	}
+	if _, err := os.Stat(loc.DBPath); err == nil {
+		return
+	}
+	base := filepath.Base(loc.DBPath)
+	candidates := []string{root}
+	if validLocationID(loc.ID) {
+		candidates = append(candidates, filepath.Join(root, "locations", loc.ID))
+	}
+	for _, dir := range candidates {
+		if _, err := os.Stat(filepath.Join(dir, base)); err == nil {
+			log.Printf("[REJESTR] %s: nieistniejąca ścieżka %s przepięta na %s", loc.ID, loc.DBPath, dir)
+			loc.DataDir = dir
+			loc.DBPath = filepath.Join(dir, base)
+			return
+		}
+	}
+}
+
+// relativeToRoot zwraca ścieżkę względną (z ukośnikami), jeśli p leży w root.
+func relativeToRoot(root, p string) string {
+	if p == "" || !filepath.IsAbs(p) {
+		return p
+	}
+	rel, err := filepath.Rel(root, p)
+	if err != nil || !filepath.IsLocal(rel) && rel != "." {
+		return p
+	}
+	return filepath.ToSlash(rel)
 }
 
 func (a *App) saveRegistry(reg *locationsRegistry) error {
 	if err := os.MkdirAll(filepath.Dir(a.registryPath()), 0755); err != nil {
 		return err
 	}
-	b, err := json.MarshalIndent(reg, "", "  ")
+	// Zapisuj ścieżki względne, żeby paczka portable działała po przeniesieniu.
+	root := filepath.Dir(a.registryPath())
+	out := *reg
+	out.Locations = make([]LocationInfo, len(reg.Locations))
+	for i, loc := range reg.Locations {
+		loc.DataDir = relativeToRoot(root, loc.DataDir)
+		loc.DBPath = relativeToRoot(root, loc.DBPath)
+		out.Locations[i] = loc
+	}
+	b, err := json.MarshalIndent(&out, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -1182,12 +1267,12 @@ func (a *App) ensureGenealogyProtocolLinks() error {
 	if linked > 0 {
 		return nil
 	}
+	// Tylko katalogi danych aplikacji (bez ścieżek z komputera dewelopera).
 	paths := []string{
 		filepath.Join(a.dataDir, "json", "genealogia.json"),
+		filepath.Join(a.dataDir, "genealogia.json"),
 		filepath.Join(a.rootDataDir, "json", "genealogia.json"),
-	}
-	if home, err := os.UserHomeDir(); err == nil {
-		paths = append(paths, filepath.Join(home, "Desktop", "Projekt Mapa Czarna", "backup", "Czarna", "genealogia.json"))
+		filepath.Join(a.rootDataDir, "genealogia.json"),
 	}
 	var raw []byte
 	for _, p := range paths {
@@ -2224,28 +2309,40 @@ func (a *App) importFullBackup(dataB64 string) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("nieprawidłowe dane base64: %w", err)
 	}
+	return a.importFullBackupZip(zipData, defaultZipLimits)
+}
 
+// importFullBackupZip importuje backup z surowych bajtów ZIP. Całe archiwum
+// (nazwy wpisów, typy, limity, ID miejscowości) jest walidowane przed
+// zapisaniem czegokolwiek; pliki są zapisywane wyłącznie przez os.Root
+// zakotwiczony w katalogu danej miejscowości.
+func (a *App) importFullBackupZip(zipData []byte, limits zipLimits) (map[string]interface{}, error) {
 	zr, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
 	if err != nil {
 		return nil, fmt.Errorf("nieprawidłowy ZIP: %w", err)
 	}
+	if err := validateZipArchive(zr, limits); err != nil {
+		log.Printf("[BACKUP] odrzucono ZIP: %v", err)
+		return nil, fmt.Errorf("odrzucono ZIP: %w", err)
+	}
 
 	// Read manifest
 	var manifest struct {
-		CreatedAt string               `json:"created_at"`
-		Locations []LocationInfo       `json:"locations"`
-		Options   fullBackupOptions    `json:"options"`
+		CreatedAt string            `json:"created_at"`
+		Locations []LocationInfo    `json:"locations"`
+		Options   fullBackupOptions `json:"options"`
 	}
-	if err := readZipJSON(zr, "manifest.json", &manifest); err != nil {
+	if err := readZipJSONLimited(zr, "manifest.json", limits, &manifest); err != nil {
 		return nil, fmt.Errorf("brak manifest.json: %w", err)
 	}
 	if len(manifest.Locations) == 0 {
 		return nil, fmt.Errorf("ZIP nie zawiera miejscowości")
 	}
-
-	// Read locations.json from ZIP to get the registry for import
-	var importedRegistry locationsRegistry
-	_ = readZipJSON(zr, "locations.json", &importedRegistry)
+	for _, loc := range manifest.Locations {
+		if !validLocationID(loc.ID) {
+			return nil, fmt.Errorf("odrzucono ZIP: nieprawidłowe ID miejscowości %q", loc.ID)
+		}
+	}
 
 	// Load current registry
 	reg, err := a.loadRegistry()
@@ -2253,10 +2350,11 @@ func (a *App) importFullBackup(dataB64 string) (map[string]interface{}, error) {
 		return nil, err
 	}
 
+	budget := newZipBudget(limits)
 	results := []map[string]interface{}{}
 
 	for _, loc := range manifest.Locations {
-		baseInZip := filepath.ToSlash(filepath.Join("miejscowosci", loc.ID))
+		baseInZip := "miejscowosci/" + loc.ID
 		locRes := map[string]interface{}{"id": loc.ID, "name": loc.Name}
 
 		// Check if location already exists
@@ -2280,11 +2378,24 @@ func (a *App) importFullBackup(dataB64 string) (map[string]interface{}, error) {
 			results = append(results, locRes)
 			continue
 		}
+		root, err := os.OpenRoot(locDir)
+		if err != nil {
+			locRes["error"] = err.Error()
+			results = append(results, locRes)
+			continue
+		}
+
+		count, err := a.restoreLocationFromZip(zr, root, baseInZip, &loc, locRes, budget, limits)
+		_ = root.Close()
+		if err != nil {
+			// Błąd zapisu lub przekroczony limit: przerywamy cały import,
+			// rejestr nie jest modyfikowany.
+			return nil, fmt.Errorf("%s: %w", loc.ID, err)
+		}
 
 		// Update location info
 		loc.DataDir = locDir
 		loc.DBPath = filepath.Join(locDir, loc.ID+".db")
-
 		if existingIdx >= 0 {
 			loc.CreatedAt = reg.Locations[existingIdx].CreatedAt
 			loc.Active = reg.Locations[existingIdx].Active
@@ -2310,71 +2421,6 @@ func (a *App) importFullBackup(dataB64 string) (map[string]interface{}, error) {
 			reg.Locations = append(reg.Locations, loc)
 		}
 
-		count := 0
-
-		// Restore DB files
-		for _, dbFile := range []string{loc.ID + ".db", loc.ID + ".db-wal", loc.ID + ".db-shm"} {
-			zipPath := filepath.ToSlash(filepath.Join(baseInZip, dbFile))
-			destPath := filepath.Join(locDir, dbFile)
-			if err := extractZipFile(zr, zipPath, destPath); err == nil {
-				count++
-			}
-		}
-
-		// Import JSON data from ZIP
-		jsonFiles := []struct{ zipName, contentKey string }{
-			{"owner_data_to_import.json", "owner_data_to_import.json"},
-			{"parcels_data.json", "parcels_data.json"},
-			{"genealogia.json", "genealogia.json"},
-			{"demografia.json", "demografia.json"},
-			{"map_config.json", "map_config.json"},
-		}
-		jsonData := map[string]json.RawMessage{}
-		for _, jf := range jsonFiles {
-			zipPath := filepath.ToSlash(filepath.Join(baseInZip, "json", jf.zipName))
-			var raw json.RawMessage
-			if err := readZipJSONRaw(zr, zipPath, &raw); err == nil {
-				jsonData[jf.contentKey] = raw
-			}
-		}
-
-		if len(jsonData) > 0 {
-			// Open location DB for import
-			locDB, err := db.Open(loc.DBPath)
-			if err == nil {
-				_, err = service.ImportCompatibleJSON(locDB, jsonData)
-				_ = locDB.Close()
-				if err != nil {
-					locRes["json_import_warning"] = err.Error()
-				}
-			}
-		}
-
-		// Restore map file
-		if err := extractZipFile(zr, filepath.ToSlash(filepath.Join(baseInZip, "mapa.jpg")), filepath.Join(locDir, "mapa.jpg")); err == nil {
-			count++
-		}
-
-		// Restore map_config.json (skip if already imported via JSON)
-		if len(jsonData) == 0 {
-			extractZipFile(zr, filepath.ToSlash(filepath.Join(baseInZip, "map_config.json")), filepath.Join(locDir, "map_config.json"))
-		}
-
-		// Restore icons
-		for _, icon := range []string{"favicon.jpeg", "custom_icon.png", "custom_icon.ico"} {
-			if err := extractZipFile(zr, filepath.ToSlash(filepath.Join(baseInZip, icon)), filepath.Join(locDir, icon)); err == nil {
-				count++
-			}
-		}
-
-		// Restore history photos
-		photosDir := filepath.Join(locDir, "history_photos")
-		count += extractZipDir(zr, filepath.ToSlash(filepath.Join(baseInZip, "history_photos")), photosDir)
-
-		// Restore protocol scans
-		protokolyDir := filepath.Join(locDir, "protokoly")
-		count += extractZipDir(zr, filepath.ToSlash(filepath.Join(baseInZip, "protokoly")), protokolyDir)
-
 		locRes["files_restored"] = count
 		if existingIdx >= 0 {
 			locRes["status"] = "updated"
@@ -2392,93 +2438,87 @@ func (a *App) importFullBackup(dataB64 string) (map[string]interface{}, error) {
 	return map[string]interface{}{"ok": true, "results": results, "total": len(results)}, nil
 }
 
-// readZipJSON finds and unmarshals a JSON file from a zip.Reader.
-func readZipJSON(zr *zip.Reader, name string, target interface{}) error {
-	f, err := openZipFile(zr, name)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	return json.NewDecoder(f).Decode(target)
-}
-
-// readZipJSONRaw reads raw JSON from a zip entry.
-func readZipJSONRaw(zr *zip.Reader, name string, target *json.RawMessage) error {
-	f, err := openZipFile(zr, name)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	return json.NewDecoder(f).Decode(target)
-}
-
-// openZipFile finds a file by name in the ZIP and returns a ReadCloser.
-func openZipFile(zr *zip.Reader, name string) (io.ReadCloser, error) {
-	for _, f := range zr.File {
-		if filepath.ToSlash(f.Name) == name {
-			return f.Open()
-		}
-	}
-	return nil, fmt.Errorf("not found in ZIP: %s", name)
-}
-
-// extractZipFile extracts a single file from ZIP to a destination path.
-func extractZipFile(zr *zip.Reader, zipName, destPath string) error {
-	f, err := openZipFile(zr, zipName)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
-		return err
-	}
-	out, err := os.Create(destPath)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-	_, err = io.Copy(out, f)
-	return err
-}
-
-// extractZipDir extracts all files under a ZIP directory prefix to a local directory.
-func extractZipDir(zr *zip.Reader, zipPrefix, destDir string) int {
-	prefix := zipPrefix
-	if !strings.HasSuffix(prefix, "/") {
-		prefix += "/"
-	}
+// restoreLocationFromZip odtwarza pliki jednej miejscowości do root (katalog
+// locations/<id>). Brak opcjonalnego wpisu nie jest błędem; błąd zapisu lub
+// przekroczenie limitu przerywa import.
+func (a *App) restoreLocationFromZip(zr *zip.Reader, root *os.Root, baseInZip string, loc *LocationInfo, locRes map[string]interface{}, budget *zipBudget, limits zipLimits) (int, error) {
 	count := 0
-	for _, f := range zr.File {
-		name := filepath.ToSlash(f.Name)
-		if !strings.HasPrefix(name, prefix) || name == prefix {
-			continue
-		}
-		rel := strings.TrimPrefix(name, prefix)
-		if rel == "" {
-			continue
-		}
-		dest := filepath.Join(destDir, filepath.FromSlash(rel))
-		if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil {
-			continue
-		}
-		rc, err := f.Open()
-		if err != nil {
-			continue
-		}
-		out, err := os.Create(dest)
-		if err != nil {
-			rc.Close()
-			continue
-		}
-		_, err = io.Copy(out, rc)
-		rc.Close()
-		out.Close()
+	restore := func(zipName, rel string) error {
+		err := extractZipEntry(zr, baseInZip+"/"+zipName, root, rel, budget)
 		if err == nil {
 			count++
+			return nil
+		}
+		if errors.Is(err, fs.ErrNotExist) && findZipFile(zr, baseInZip+"/"+zipName) == nil {
+			return nil
+		}
+		return err
+	}
+
+	// Restore DB files
+	for _, dbFile := range []string{loc.ID + ".db", loc.ID + ".db-wal", loc.ID + ".db-shm"} {
+		if err := restore(dbFile, dbFile); err != nil {
+			return count, err
 		}
 	}
-	return count
+	dbRestored := findZipFile(zr, baseInZip+"/"+loc.ID+".db") != nil
+
+	// Import JSON data from ZIP
+	jsonFiles := []string{
+		"owner_data_to_import.json",
+		"parcels_data.json",
+		"genealogia.json",
+		"demografia.json",
+		"map_config.json",
+	}
+	jsonData := map[string]json.RawMessage{}
+	for _, name := range jsonFiles {
+		var raw json.RawMessage
+		if err := readZipJSONLimited(zr, baseInZip+"/json/"+name, limits, &raw); err == nil {
+			jsonData[name] = raw
+		}
+	}
+	// Jeśli backup zawiera bazę, to ona jest źródłem prawdy: JSON jest jej
+	// pochodną i nie przenosi wszystkich powiązań (np. części działek
+	// ułamkowych), więc nakładanie go na odtworzoną bazę gubiło relacje.
+	if len(jsonData) > 0 && dbRestored {
+		locRes["json_import"] = "pominięty (odtworzono bazę SQLite z backupu)"
+	} else if len(jsonData) > 0 {
+		locDB, err := db.Open(filepath.Join(root.Name(), loc.ID+".db"))
+		if err == nil {
+			_, err = service.ImportCompatibleJSON(locDB, jsonData)
+			_ = locDB.Close()
+		}
+		if err != nil {
+			locRes["json_import_warning"] = err.Error()
+		}
+	}
+
+	// Restore map file
+	if err := restore("mapa.jpg", "mapa.jpg"); err != nil {
+		return count, err
+	}
+	// Restore map_config.json (skip if already imported via JSON)
+	if len(jsonData) == 0 {
+		if err := restore("map_config.json", "map_config.json"); err != nil {
+			return count, err
+		}
+	}
+	// Restore icons
+	for _, icon := range []string{"favicon.jpeg", "custom_icon.png", "custom_icon.ico"} {
+		if err := restore(icon, icon); err != nil {
+			return count, err
+		}
+	}
+	// Restore history photos and protocol scans
+	for _, dir := range []string{"history_photos", "protokoly"} {
+		n, err := extractZipDirTo(zr, baseInZip+"/"+dir, root, dir, budget)
+		count += n
+		if err != nil {
+			return count, err
+		}
+	}
+	return count, nil
 }
 
 // ============ v1 helpers (skopiowane z byłego app.go) ============

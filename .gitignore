@@ -2,7 +2,7 @@
 *.exe
 *.test
 *.out
-*.syso
+# rsrc.syso (ikona exe) JEST w repo celowo: CI i build bez narzędzia rsrc go potrzebują.
 
 # Node
 node_modules/
@@ -22,6 +22,8 @@ data/point_photos/
 data/json/
 data/window_state.json
 data/owner_data_to_import.json
+# Konfiguracja launchera wersji serwerowej (nieużywana przez desktop)
+data/launcher_db_config.json
 
 # Test artifacts
 test_upload.png
@@ -40,5 +42,8 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Go build cache
-vendor/
+# Go vendor (tylko w katalogu głównym; frontend/assets/vendor to biblioteki JS)
+/vendor/
+
+# Lokalne uruchomienia testowe (kopie bazy uzytkownika) - nigdy nie commitowac
+/.localrun/

@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [master, "fix/**", "feature/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      # Repo ma ~1,9 GB skanów w data/. Testy ich nie potrzebują, więc
+      # pobieramy tylko kod (sparse checkout bez blobów z data/).
+      - uses: actions/checkout@v7
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            frontend
+            internal
+            resources
+            scripts
+            .github
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # webview_go wymaga CGO (gcc/MinGW-w64).
+      - name: Ensure gcc (MinGW-w64)
+        shell: pwsh
+        run: |
+          if (-not (Get-Command gcc -ErrorAction SilentlyContinue)) {
+            choco install mingw -y --no-progress
+            echo "C:\ProgramData\mingw64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+          }
+
+      - name: Tool versions
+        run: |
+          go version
+          gcc --version
+
+      - name: gofmt
+        shell: bash
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then echo "gofmt needed:"; echo "$unformatted"; exit 1; fi
+
+      - name: go vet
+        env:
+          CGO_ENABLED: "1"
+        run: |
+          go vet ./...
+          go vet -tags smoke ./...
+
+      - name: go test
+        env:
+          CGO_ENABLED: "1"
+        run: go test -count=1 ./...
+
+      - name: govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+
+      - name: Build (stripped, release flags)
+        env:
+          CGO_ENABLED: "1"
+        run: go build -trimpath -ldflags "-s -w -H windowsgui" -o "Mapa Katastralna Czarna.exe" .
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: mapa-katastralna-czarna-exe
+          path: Mapa Katastralna Czarna.exe
+          retention-days: 7

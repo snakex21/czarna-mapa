@@ -75,18 +75,6 @@ func ProtoBaseDir(db *sql.DB, fallbackDir string) string {
 		filepath.Join(exeDir, "protokoly"),
 	)
 
-	if home, err := os.UserHomeDir(); err == nil {
-		desktop := filepath.Join(home, "Desktop")
-		candidates = append(candidates,
-			// typowa lokalizacja aktualnego przepisanego projektu
-			filepath.Join(desktop, "czarna-mapa", "data", "protokoly", "protokoly"),
-			filepath.Join(desktop, "czarna-mapa", "data", "protokoly"),
-			// typowa lokalizacja starego projektu Flask
-			filepath.Join(desktop, "Projekt Mapa Czarna", "backup", "Czarna", "protokoly"),
-			filepath.Join(desktop, "Projekt Mapa Czarna", "protokoly"),
-		)
-	}
-
 	for _, c := range candidates {
 		if info, err := os.Stat(c); err == nil && info.IsDir() && hasProtocolImageFolders(c) {
 			absPath, _ := filepath.Abs(c)

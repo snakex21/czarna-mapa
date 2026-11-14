@@ -1,73 +1,106 @@
 @echo off
+setlocal
 title Budowa EXE - Mapa Czarna (Go + WebView2)
 cd /d "%~dp0.."
 
 echo ========================================
 echo    MAPA KATASTRALNA - BUDOWA .EXE
-echo    Go + WebView2
+echo    Go + WebView2 (CGO)
 echo ========================================
+echo.
+echo Uzycie: scripts\build.bat          - exe + paczka portable (dist\)
+echo         scripts\build.bat nopack   - tylko exe
 echo.
 
 where go >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [BLAD] Go nie znaleziony!
-    echo Zainstaluj: https://go.dev/dl/
+    echo [BLAD] Go nie znaleziony! Zainstaluj: https://go.dev/dl/
     exit /b 1
 )
+where gcc >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [BLAD] gcc nie znaleziony! webview_go wymaga CGO - zainstaluj MinGW-w64 ^(np. MSYS2^).
+    exit /b 1
+)
+set CGO_ENABLED=1
 
 if not exist "data\czarna.db" (
-    echo [INFO] Brak bazy - uruchamiam migracje...
-    if exist "tools\migrate_data.py" (
-        python tools\migrate_data.py
-    ) else (
-        echo [WARN] Nie znaleziono skryptu migracji. Baza zostanie utworzona automatycznie.
-    )
+    echo [WARN] Brak data\czarna.db - baza zostanie utworzona pusta przy pierwszym starcie.
 )
 
-echo.
-echo [INFO] Pobieranie zaleznosci...
-go mod tidy
-if %errorlevel% neq 0 (
-    echo [BLAD] go mod tidy nie powiodlo sie!
+rem Uwaga: build NIE robi "go mod tidy" (nie modyfikuje repozytorium).
+
+if not exist "resources\app.ico" goto build
+where rsrc >nul 2>&1
+if errorlevel 1 (
+    echo [INFO] rsrc nie znaleziony - uzywam istniejacego rsrc.syso.
+    goto build
+)
+echo [INFO] Generowanie zasobu ikony...
+rsrc -arch amd64 -ico resources\app.ico -o rsrc.syso
+if errorlevel 1 (
+    echo [BLAD] rsrc nie powiodlo sie!
     exit /b 1
 )
 
-if exist "resources\app.ico" (
-    where rsrc >nul 2>&1
-    if %errorlevel% equ 0 (
-        echo [INFO] Generowanie zasobu ikony...
-        rsrc -arch amd64 -ico resources\app.ico -o rsrc.syso
-        if %errorlevel% neq 0 (
-            echo [BLAD] rsrc nie powiodlo sie!
-            exit /b 1
-        )
-    ) else (
-        echo [WARN] rsrc nie znaleziony - uzywam istniejacego rsrc.syso, jesli jest.
-    )
-)
+:build
 
 echo.
-echo [INFO] Budowanie aplikacji...
-go build -ldflags="-H windowsgui" -o "Mapa Katastralna Czarna.exe" .
+echo [INFO] Budowanie aplikacji (-trimpath -s -w)...
+go build -trimpath -ldflags="-s -w -H windowsgui" -o "Mapa Katastralna Czarna.exe" .
 if %errorlevel% neq 0 (
     echo [BLAD] Budowa nie powiodla sie!
     exit /b 1
 )
+if /i "%~1"=="nopack" goto done
 
 echo.
-echo [INFO] Aktualizacja paczki portable...
-if not exist "dist\MapaKatastralnaCzarna_Portable" mkdir "dist\MapaKatastralnaCzarna_Portable"
-copy /Y "Mapa Katastralna Czarna.exe" "dist\MapaKatastralnaCzarna_Portable\Mapa Katastralna Czarna.exe" >nul
-if exist "data" xcopy "data" "dist\MapaKatastralnaCzarna_Portable\data\" /E /I /Y >nul
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Compress-Archive -Path 'dist\MapaKatastralnaCzarna_Portable\*' -DestinationPath 'dist\MapaKatastralnaCzarna_Portable.zip' -Force"
+echo [INFO] Budowanie paczki portable...
+set "PKG=dist\MapaKatastralnaCzarna_Portable"
+if exist "%PKG%" (
+    echo [BLAD] %PKG% juz istnieje - usun go recznie przed nowym buildem.
+    exit /b 1
+)
+mkdir "%PKG%\data"
+copy /Y "Mapa Katastralna Czarna.exe" "%PKG%\" >nul
+rem Tylko dane startowe: bez logow, cache, backupow, stanu okna i danych roboczych.
+robocopy data "%PKG%\data" /E /NFL /NDL /NJH /NJS /NP ^
+    /XD obj_thumbs backups json point_photos locations protokoly ^
+    /XF app.log window_state.json window_state.json.tmp owner_data_to_import.json launcher_db_config.json *.db-wal *.db-shm *.db-journal
+if %errorlevel% geq 8 (
+    echo [BLAD] Kopiowanie danych nie powiodlo sie!
+    exit /b 1
+)
+rem Skany protokolow: do paczki ida kopie JPEG q85 (EXIF/ICC zachowane),
+rem oryginaly w data\protokoly zostaja bez zmian.
+if exist "data\protokoly" (
+    echo [INFO] Rekompresja skanow do paczki ^(JPEG q85^)...
+    go run ./tools/jpegpack -src data\protokoly -dst "%PKG%\data\protokoly" -q 85
+    if errorlevel 1 (
+        echo [BLAD] Rekompresja skanow nie powiodla sie!
+        exit /b 1
+    )
+)
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Compress-Archive -Path '%PKG%\*' -DestinationPath '%PKG%.zip' -CompressionLevel Optimal -Force; (Get-FileHash '%PKG%.zip' -Algorithm SHA256).Hash.ToLower() + '  MapaKatastralnaCzarna_Portable.zip' | Out-File -Encoding ascii '%PKG%.zip.sha256'"
 if %errorlevel% neq 0 (
     echo [WARN] Nie udalo sie utworzyc ZIP, ale EXE zostal zbudowany.
 )
+rem Opcjonalna paczka z oryginalnymi skanami (pelna jakosc), osobny asset.
+if exist "data\protokoly" (
+    echo [INFO] Paczka oryginalnych skanow...
+    "%SystemRoot%\System32\tar.exe" -a -c -f "dist\MapaKatastralnaCzarna_skany-oryginalne.zip" -C data protokoly
+    if errorlevel 1 (
+        echo [WARN] Nie udalo sie utworzyc paczki oryginalnych skanow.
+    ) else (
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "(Get-FileHash 'dist\MapaKatastralnaCzarna_skany-oryginalne.zip' -Algorithm SHA256).Hash.ToLower() + '  MapaKatastralnaCzarna_skany-oryginalne.zip' | Out-File -Encoding ascii 'dist\MapaKatastralnaCzarna_skany-oryginalne.zip.sha256'"
+    )
+)
 
+:done
 echo.
 echo ========================================
 echo    GOTOWE!
 echo    Mapa Katastralna Czarna.exe
-echo    dist\MapaKatastralnaCzarna_Portable\
-echo    dist\MapaKatastralnaCzarna_Portable.zip
+if /i not "%~1"=="nopack" echo    %PKG%.zip (+ .sha256)
+if /i not "%~1"=="nopack" echo    dist\MapaKatastralnaCzarna_skany-oryginalne.zip (+ .sha256)
 echo ========================================

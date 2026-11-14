@@ -1,0 +1,2 @@
+# Go: zawsze LF (gofmt w CI na Windows)
+*.go text eol=lf
